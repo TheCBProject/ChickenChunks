@@ -1,4 +1,4 @@
-package codechicken.chunkloader;
+package codechicken.chunkloader.item;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemBlock;

@@ -1,12 +1,17 @@
-package codechicken.chunkloader;
+package codechicken.chunkloader.gui;
 
+import codechicken.chunkloader.network.ChunkLoaderCPH;
+import codechicken.chunkloader.tile.TileChunkLoader;
 import codechicken.lib.util.LangProxy;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
+import net.minecraft.client.renderer.GlStateManager;
 import org.lwjgl.opengl.GL11;
 
 import codechicken.lib.render.CCRenderState;
+
+import java.io.IOException;
 
 public class GuiChunkLoader extends GuiScreen
 {
@@ -38,7 +43,7 @@ public class GuiChunkLoader extends GuiScreen
     }
 
     public void updateScreen() {
-        if (mc.theWorld.getTileEntity(tile.xCoord, tile.yCoord, tile.zCoord) != tile)//tile changed
+        if (mc.theWorld.getTileEntity(tile.getPos()) != tile)//tile changed
         {
             mc.currentScreen = null;
             mc.setIngameFocus();
@@ -53,8 +58,10 @@ public class GuiChunkLoader extends GuiScreen
 
         super.drawScreen(i, j, f);//buttons
 
-        GL11.glDisable(GL11.GL_LIGHTING);
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        //GL11.glDisable(GL11.GL_LIGHTING);
+        GlStateManager.disableLighting();
+        //GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GlStateManager.disableDepth();
 
         drawCentered(lang.translate("name"), width / 2 - 40, height / 2 - 74, 0x303030);
         if (tile.owner != null)
@@ -68,8 +75,10 @@ public class GuiChunkLoader extends GuiScreen
         //TODO: sradius = "Total "+ChunkLoaderManager.activeChunkLoaders+"/"+ChunkLoaderManager.allowedChunkloaders+" Chunks";
         //fontRenderer.drawString(sradius, width / 2 - fontRenderer.getStringWidth(sradius) / 2, height / 2 - 8, 0x108000);
 
-        GL11.glEnable(GL11.GL_LIGHTING);
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GlStateManager.enableLighting();
+        //GL11.glEnable(GL11.GL_LIGHTING);
+        GlStateManager.enableDepth();
+        //GL11.glEnable(GL11.GL_DEPTH_TEST);
     }
 
     private void drawCentered(String s, int x, int y, int colour) {
@@ -79,7 +88,7 @@ public class GuiChunkLoader extends GuiScreen
     int button;
 
     @Override
-    protected void mouseClicked(int par1, int par2, int par3) {
+    protected void mouseClicked(int par1, int par2, int par3) throws IOException{
         button = par3;
         if (par3 == 1)
             par3 = 0;

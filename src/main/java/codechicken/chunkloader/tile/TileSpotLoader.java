@@ -1,9 +1,11 @@
-package codechicken.chunkloader;
+package codechicken.chunkloader.tile;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 
+import codechicken.chunkloader.api.ChunkLoaderShape;
+import codechicken.chunkloader.network.ChunkLoaderSPH;
 import codechicken.lib.vec.BlockCoord;
 import net.minecraft.network.Packet;
 import net.minecraft.util.BlockPos;

@@ -1,12 +1,17 @@
 package codechicken.chunkloader.block;
 
-import codechicken.chunkloader.*;
 import codechicken.chunkloader.block.property.PropertyChunkLoaderType;
+import codechicken.chunkloader.manager.ChunkLoaderManager;
+import codechicken.chunkloader.network.ChunkLoaderSPH;
+import codechicken.chunkloader.tile.TileChunkLoader;
+import codechicken.chunkloader.tile.TileChunkLoaderBase;
+import codechicken.chunkloader.tile.TileSpotLoader;
 import codechicken.core.ServerUtils;
 import codechicken.lib.packet.PacketCustom;
 import codechicken.lib.vec.BlockCoord;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
@@ -148,6 +153,21 @@ public class BlockChunkLoader extends BlockContainer {
     @Override
     public int damageDropped(IBlockState state) {
         return getMetaFromState(state);
+    }
+
+    @Override
+    public int getMetaFromState(IBlockState state) {
+        return state.getValue(TYPE).ordinal();
+    }
+
+    @Override
+    public IBlockState getStateFromMeta(int meta) {
+        return getDefaultState().withProperty(TYPE, EnumChunkLoaderType.values()[meta]);
+    }
+
+    @Override
+    protected BlockState createBlockState() {
+        return new BlockState(this, TYPE);
     }
 
     //@Override

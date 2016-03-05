@@ -1,4 +1,4 @@
-package codechicken.chunkloader;
+package codechicken.chunkloader.manager;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import codechicken.chunkloader.network.ChunkLoaderSPH;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.entity.Entity;
@@ -14,12 +15,10 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.ForgeChunkManager.Ticket;
-import codechicken.chunkloader.PlayerChunkViewerManager.ChunkChange;
-import codechicken.chunkloader.PlayerChunkViewerManager.TicketChange;
 import codechicken.core.CommonUtils;
 import codechicken.lib.packet.PacketCustom;
 import codechicken.lib.vec.Vector3;
-import static codechicken.chunkloader.ChunkLoaderSPH.channel;
+import static codechicken.chunkloader.network.ChunkLoaderSPH.channel;
 
 public class PlayerChunkViewerTracker
 {
@@ -91,7 +90,7 @@ public class PlayerChunkViewerTracker
         packet.sendToPlayer(owner);
     }
 
-    public void sendChunkChange(ChunkChange change)
+    public void sendChunkChange(PlayerChunkViewerManager.ChunkChange change)
     {
         PacketCustom packet = new PacketCustom(channel, 4);
         packet.writeInt(change.dimension);
@@ -102,7 +101,7 @@ public class PlayerChunkViewerTracker
         packet.sendToPlayer(owner);
     }
 
-    public void sendTicketChange(TicketChange change)
+    public void sendTicketChange(PlayerChunkViewerManager.TicketChange change)
     {
         int ticketID = manager.ticketIDs.get(change.ticket);
         if(!knownTickets.contains(ticketID))
@@ -121,7 +120,7 @@ public class PlayerChunkViewerTracker
     public void updatePlayer(EntityPlayer player)
     {
         PacketCustom packet = new PacketCustom(channel, 6);
-        packet.writeString(player.getCommandSenderName());
+        packet.writeString(player.getName());
         packet.writeInt(player.dimension);
         Vector3 pos = Vector3.fromEntity(player);
         packet.writeFloat((float) pos.x);

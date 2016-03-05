@@ -1,4 +1,4 @@
-package codechicken.chunkloader;
+package codechicken.chunkloader.manager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -84,7 +84,7 @@ public class PlayerChunkViewerManager
         time++;
         for(String username : logouts)
             for(Iterator<PlayerChunkViewerTracker> iterator = playerViewers.iterator(); iterator.hasNext();)
-                if(iterator.next().owner.getCommandSenderName().equals(username))
+                if(iterator.next().owner.getName().equals(username))
                     iterator.remove();
 
         for(String username : logouts)
@@ -190,7 +190,7 @@ public class PlayerChunkViewerManager
     public boolean isViewerOpen(String username)
     {
         for(PlayerChunkViewerTracker tracker : playerViewers)
-            if(tracker.owner.getCommandSenderName().equals(username))
+            if(tracker.owner.getName().equals(username))
                 return true;
         
         return false;
@@ -204,7 +204,7 @@ public class PlayerChunkViewerManager
     public void closeViewer(String username)
     {
         for(Iterator<PlayerChunkViewerTracker> iterator = playerViewers.iterator(); iterator.hasNext();)
-            if(iterator.next().owner.getCommandSenderName().equals(username))
+            if(iterator.next().owner.getName().equals(username))
                 iterator.remove();
     }
 }

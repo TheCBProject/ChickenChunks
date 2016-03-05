@@ -1,76 +1,100 @@
-package codechicken.chunkloader;
+package codechicken.chunkloader.tile;
 
+import codechicken.chunkloader.ChickenChunks;
+import codechicken.chunkloader.api.IChickenChunkLoader;
 import codechicken.chunkloader.client.TileChunkLoaderRenderer.RenderInfo;
+import codechicken.chunkloader.init.ModBlocks;
+import codechicken.chunkloader.manager.ChunkLoaderManager;
 import codechicken.lib.vec.BlockCoord;
-import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ITickable;
+import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 
-public abstract class TileChunkLoaderBase extends TileEntity implements IChickenChunkLoader
-{
+public abstract class TileChunkLoaderBase extends TileEntity implements ITickable, IChickenChunkLoader {
+
+    public String owner;
+    protected boolean loaded = false;
+    protected boolean powered = false;
+    public RenderInfo renderInfo;
+    public boolean active = false;
+
     public void writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
         tag.setBoolean("powered", powered);
-        if (owner != null)
+        if (owner != null) {
             tag.setString("owner", owner);
+        }
     }
 
     @Override
     public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);
-        if (tag.hasKey("owner"))
+        if (tag.hasKey("owner")) {
             owner = tag.getString("owner");
-        if (tag.hasKey("powered"))
+        }
+        if (tag.hasKey("powered")) {
             powered = tag.getBoolean("powered");
+        }
         loaded = true;
     }
 
     public void validate() {
         super.validate();
-        if (!worldObj.isRemote && loaded && !powered)
+        if (!worldObj.isRemote && loaded && !powered) {
             activate();
+        }
 
-        if (worldObj.isRemote)
+        if (worldObj.isRemote) {
             renderInfo = new RenderInfo();
+        }
     }
 
     public boolean isPowered() {
-        return isPoweringTo(worldObj, xCoord, yCoord + 1, zCoord, 0) ||
-                isPoweringTo(worldObj, xCoord, yCoord - 1, zCoord, 1) ||
-                isPoweringTo(worldObj, xCoord, yCoord, zCoord + 1, 2) ||
-                isPoweringTo(worldObj, xCoord, yCoord, zCoord - 1, 3) ||
-                isPoweringTo(worldObj, xCoord + 1, yCoord, zCoord, 4) ||
-                isPoweringTo(worldObj, xCoord - 1, yCoord, zCoord, 5);
+        for (EnumFacing face : EnumFacing.VALUES) {
+            boolean isPowered = isPoweringTo(worldObj, getPos().offset(face), face);
+            if (isPowered) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    public static boolean isPoweringTo(World world, int x, int y, int z, int side) {
-        return world.getBlock(x, y, z).isProvidingWeakPower(world, x, y, z, side) > 0;
+    public static boolean isPoweringTo(World world, BlockPos pos, EnumFacing side) {
+        IBlockState state = world.getBlockState(pos);
+        return state.getBlock().getWeakPower(world, pos, state, side) > 0;
     }
 
     public void invalidate() {
         super.invalidate();
-        if (!worldObj.isRemote)
+        if (!worldObj.isRemote) {
             deactivate();
+        }
     }
 
     public void destroyBlock() {
-        ChickenChunks.blockChunkLoader.dropBlockAsItem(worldObj, xCoord, yCoord, zCoord, 0, 0);
-        worldObj.setBlockToAir(xCoord, yCoord, zCoord);
+        ModBlocks.blockChunkLoader.dropBlockAsItem(worldObj, getPos(), worldObj.getBlockState(pos), 0);
+        worldObj.setBlockToAir(getPos());
     }
 
     public ChunkCoordIntPair getChunkPosition() {
-        return new ChunkCoordIntPair(xCoord >> 4, zCoord >> 4);
+        return new ChunkCoordIntPair(getPos().getX() >> 4, getPos().getZ() >> 4);
     }
 
     public void onBlockPlacedBy(EntityLivingBase entityliving) {
-        if (entityliving instanceof EntityPlayer)
-            owner = entityliving.getCommandSenderName();
-        if (owner.equals(""))
+        if (entityliving instanceof EntityPlayer) {
+            owner = entityliving.getName();
+        }
+        if (owner.equals("")) {
             owner = null;
+        }
         activate();
     }
 
@@ -99,26 +123,27 @@ public abstract class TileChunkLoaderBase extends TileEntity implements IChicken
         loaded = true;
         active = false;
         ChunkLoaderManager.remChunkLoader(this);
-        worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
+        worldObj.markBlockForUpdate(getPos());
     }
 
     public void activate() {
         loaded = true;
         active = true;
         ChunkLoaderManager.addChunkLoader(this);
-        worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
+        worldObj.markBlockForUpdate(getPos());
     }
 
     @Override
-    public void updateEntity() {
+    public void update() {
         if (!worldObj.isRemote) {
             boolean nowPowered = isPowered();
             if (powered != nowPowered) {
                 powered = nowPowered;
-                if (powered)
+                if (powered) {
                     deactivate();
-                else
+                } else {
                     activate();
+                }
             }
         } else {
             renderInfo.update(this);
@@ -129,11 +154,4 @@ public abstract class TileChunkLoaderBase extends TileEntity implements IChicken
     public AxisAlignedBB getRenderBoundingBox() {
         return INFINITE_EXTENT_AABB;
     }
-
-    public String owner;
-    protected boolean loaded = false;
-    protected boolean powered = false;
-    public RenderInfo renderInfo;
-    public boolean active = false;
-
 }

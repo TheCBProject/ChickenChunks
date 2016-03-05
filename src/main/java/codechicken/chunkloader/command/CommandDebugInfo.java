@@ -1,6 +1,7 @@
-package codechicken.chunkloader;
+package codechicken.chunkloader.command;
 
 import codechicken.core.commands.CoreCommand;
+import net.minecraft.command.ICommandSender;
 
 public class CommandDebugInfo extends CoreCommand
 {
@@ -15,13 +16,13 @@ public class CommandDebugInfo extends CoreCommand
     }
 
     @Override
-    public void handleCommand(String command, String playername, String[] args, WCommandSender listener) {
+    public void handleCommand(String command, String playername, String[] args, ICommandSender listener) {
 
     }
 
     @Override
-    public void printHelp(WCommandSender listener) {
-        listener.chatT("command.ccdebug");
+    public void printHelp(ICommandSender listener) {
+        chatT(listener, "command.ccdebug");
     }
 
     @Override

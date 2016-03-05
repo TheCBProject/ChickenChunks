@@ -1,51 +1,42 @@
-package codechicken.chunkloader;
+package codechicken.chunkloader.manager;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Stack;
-
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.ListMultimap;
-
+import codechicken.chunkloader.ChickenChunks;
+import codechicken.chunkloader.api.IChickenChunkLoader;
 import codechicken.core.CommonUtils;
 import codechicken.core.ServerUtils;
 import codechicken.lib.config.ConfigFile;
 import codechicken.lib.config.ConfigTag;
 import codechicken.lib.vec.BlockCoord;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.ModContainer;
-
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.management.PlayerManager.PlayerInstance;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.ChunkCoordIntPair;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ListMultimap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerManager;
+import net.minecraft.server.management.PlayerManager.PlayerInstance;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.ForgeChunkManager.OrderedLoadingCallback;
 import net.minecraftforge.common.ForgeChunkManager.PlayerOrderedLoadingCallback;
 import net.minecraftforge.common.ForgeChunkManager.Ticket;
 import net.minecraftforge.common.ForgeChunkManager.Type;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.ModContainer;
 import org.apache.logging.log4j.LogManager;
 
-public class ChunkLoaderManager
-{
-    private static class DimChunkCoord
-    {
+import java.io.*;
+import java.util.*;
+import java.util.Map.Entry;
+
+public class ChunkLoaderManager {
+    private static class DimChunkCoord {
         public final int dimension;
         public final int chunkX;
         public final int chunkZ;
@@ -79,44 +70,49 @@ public class ChunkLoaderManager
         }
     }
 
-    private static abstract class TicketManager
-    {
+    private static abstract class TicketManager {
         public HashMap<Integer, Stack<Ticket>> ticketsWithSpace = new HashMap<Integer, Stack<Ticket>>();
         public HashMap<DimChunkCoord, Ticket> heldChunks = new HashMap<DimChunkCoord, Ticket>();
 
         protected void addChunk(DimChunkCoord coord) {
-            if (heldChunks.containsKey(coord))
+            if (heldChunks.containsKey(coord)) {
                 return;
+            }
 
             Stack<Ticket> freeTickets = ticketsWithSpace.get(coord.dimension);
-            if (freeTickets == null)
+            if (freeTickets == null) {
                 ticketsWithSpace.put(coord.dimension, freeTickets = new Stack<Ticket>());
+            }
 
             Ticket ticket;
-            if (freeTickets.isEmpty())
+            if (freeTickets.isEmpty()) {
                 freeTickets.push(ticket = createTicket(coord.dimension));
-            else
+            } else {
                 ticket = freeTickets.peek();
+            }
 
             ForgeChunkManager.forceChunk(ticket, coord.getChunkCoord());
             heldChunks.put(coord, ticket);
-            if (ticket.getChunkList().size() == ticket.getChunkListDepth() && !freeTickets.isEmpty())
+            if (ticket.getChunkList().size() == ticket.getChunkListDepth() && !freeTickets.isEmpty()) {
                 freeTickets.pop();
+            }
         }
 
         protected abstract Ticket createTicket(int dimension);
 
         protected void remChunk(DimChunkCoord coord) {
             Ticket ticket = heldChunks.remove(coord);
-            if (ticket == null)
+            if (ticket == null) {
                 return;
+            }
 
             ForgeChunkManager.unforceChunk(ticket, coord.getChunkCoord());
 
             if (ticket.getChunkList().size() == ticket.getChunkListDepth() - 1) {
                 Stack<Ticket> freeTickets = ticketsWithSpace.get(coord.dimension);
-                if (freeTickets == null)
+                if (freeTickets == null) {
                     ticketsWithSpace.put(coord.dimension, freeTickets = new Stack<Ticket>());
+                }
                 freeTickets.push(ticket);
             }
         }
@@ -126,8 +122,7 @@ public class ChunkLoaderManager
         }
     }
 
-    private static abstract class ChunkLoaderOrganiser extends TicketManager
-    {
+    private static abstract class ChunkLoaderOrganiser extends TicketManager {
         private HashMap<Integer, HashSet<BlockCoord>> dormantLoaders = new HashMap<Integer, HashSet<BlockCoord>>();
         private HashMap<DimChunkCoord, LinkedList<IChickenChunkLoader>> forcedChunksByChunk = new HashMap<DimChunkCoord, LinkedList<IChickenChunkLoader>>();
         private HashMap<IChickenChunkLoader, HashSet<ChunkCoordIntPair>> forcedChunksByLoader = new HashMap<IChickenChunkLoader, HashSet<ChunkCoordIntPair>>();
@@ -137,14 +132,16 @@ public class ChunkLoaderManager
         private boolean dormant = false;
 
         public boolean canForceNewChunks(int dimension, Collection<ChunkCoordIntPair> chunks) {
-            if (dormant)
+            if (dormant) {
                 return true;
+            }
 
             int required = 0;
             for (ChunkCoordIntPair coord : chunks) {
                 LinkedList<IChickenChunkLoader> loaders = forcedChunksByChunk.get(new DimChunkCoord(dimension, coord));
-                if (loaders == null || loaders.isEmpty())
+                if (loaders == null || loaders.isEmpty()) {
                     required++;
+                }
             }
             return canForceNewChunks(required, dimension);
         }
@@ -154,14 +151,16 @@ public class ChunkLoaderManager
         }
 
         public void addChunkLoader(IChickenChunkLoader loader) {
-            if (reviving)
+            if (reviving) {
                 return;
+            }
 
             int dim = CommonUtils.getDimension(loader.getWorld());
             if (dormant) {
                 HashSet<BlockCoord> coords = dormantLoaders.get(dim);
-                if (coords == null)
+                if (coords == null) {
                     dormantLoaders.put(dim, coords = new HashSet<BlockCoord>());
+                }
                 coords.add(loader.getPosition());
             } else {
                 forcedChunksByLoader.put(loader, new HashSet<ChunkCoordIntPair>());
@@ -174,12 +173,14 @@ public class ChunkLoaderManager
             int dim = CommonUtils.getDimension(loader.getWorld());
             if (dormant) {
                 HashSet<BlockCoord> coords = dormantLoaders.get(dim);
-                if(coords != null)
+                if (coords != null) {
                     coords.remove(loader.getPosition());
+                }
             } else {
                 HashSet<ChunkCoordIntPair> chunks = forcedChunksByLoader.remove(loader);
-                if (chunks == null)
+                if (chunks == null) {
                     return;
+                }
                 unforceChunks(loader, dim, chunks, true);
             }
             setDirty();
@@ -189,8 +190,9 @@ public class ChunkLoaderManager
             for (ChunkCoordIntPair coord : chunks) {
                 DimChunkCoord dimCoord = new DimChunkCoord(dim, coord);
                 LinkedList<IChickenChunkLoader> loaders = forcedChunksByChunk.get(dimCoord);
-                if (loaders == null || !loaders.remove(loader))
+                if (loaders == null || !loaders.remove(loader)) {
                     continue;
+                }
 
                 if (loaders.isEmpty()) {
                     forcedChunksByChunk.remove(dimCoord);
@@ -198,8 +200,9 @@ public class ChunkLoaderManager
                 }
             }
 
-            if (!remLoader)
+            if (!remLoader) {
                 forcedChunksByLoader.get(loader).removeAll(chunks);
+            }
             setDirty();
         }
 
@@ -207,15 +210,17 @@ public class ChunkLoaderManager
             for (ChunkCoordIntPair coord : chunks) {
                 DimChunkCoord dimCoord = new DimChunkCoord(dim, coord);
                 LinkedList<IChickenChunkLoader> loaders = forcedChunksByChunk.get(dimCoord);
-                if (loaders == null)
+                if (loaders == null) {
                     forcedChunksByChunk.put(dimCoord, loaders = new LinkedList<IChickenChunkLoader>());
+                }
                 if (loaders.isEmpty()) {
                     timedUnloadQueue.remove(dimCoord);
                     addChunk(dimCoord);
                 }
 
-                if (!loaders.contains(loader))
+                if (!loaders.contains(loader)) {
                     loaders.add(loader);
+                }
             }
 
             forcedChunksByLoader.get(loader).addAll(chunks);
@@ -234,15 +239,19 @@ public class ChunkLoaderManager
             }
             HashSet<ChunkCoordIntPair> oldChunks = new HashSet<ChunkCoordIntPair>(loaderChunks);
             HashSet<ChunkCoordIntPair> newChunks = new HashSet<ChunkCoordIntPair>();
-            for (ChunkCoordIntPair chunk : loader.getChunks())
-                if (!oldChunks.remove(chunk))
+            for (ChunkCoordIntPair chunk : loader.getChunks()) {
+                if (!oldChunks.remove(chunk)) {
                     newChunks.add(chunk);
+                }
+            }
 
             int dim = CommonUtils.getDimension(loader.getWorld());
-            if (!oldChunks.isEmpty())
+            if (!oldChunks.isEmpty()) {
                 unforceChunks(loader, dim, oldChunks, false);
-            if (!newChunks.isEmpty())
+            }
+            if (!newChunks.isEmpty()) {
                 forceChunks(loader, dim, newChunks);
+            }
         }
 
         public void save(DataOutput dataout) throws IOException {
@@ -282,32 +291,37 @@ public class ChunkLoaderManager
             for (int i = 0; i < numLoaders; i++) {
                 int dim = datain.readInt();
                 HashSet<BlockCoord> coords = dormantLoaders.get(dim);
-                if (coords == null)
+                if (coords == null) {
                     dormantLoaders.put(dim, coords = new HashSet<BlockCoord>());
+                }
                 coords.add(new BlockCoord(datain.readInt(), datain.readInt(), datain.readInt()));
             }
         }
 
         public void revive() {
-            if (!dormant)
+            if (!dormant) {
                 return;
+            }
             dormant = false;
             for (int dim : dormantLoaders.keySet()) {
                 World world = getWorld(dim, reloadDimensions);
-                if (world != null)
+                if (world != null) {
                     revive(world);
+                }
             }
         }
 
         public void devive() {
-            if (dormant)
+            if (dormant) {
                 return;
+            }
 
             for (IChickenChunkLoader loader : new ArrayList<IChickenChunkLoader>(forcedChunksByLoader.keySet())) {
                 int dim = CommonUtils.getDimension(loader.getWorld());
                 HashSet<BlockCoord> coords = dormantLoaders.get(dim);
-                if (coords == null)
+                if (coords == null) {
                     dormantLoaders.put(dim, coords = new HashSet<BlockCoord>());
+                }
                 coords.add(loader.getPosition());
                 remChunkLoader(loader);
             }
@@ -317,8 +331,9 @@ public class ChunkLoaderManager
 
         public void revive(World world) {
             HashSet<BlockCoord> coords = dormantLoaders.get(CommonUtils.getDimension(world));
-            if (coords == null)
+            if (coords == null) {
                 return;
+            }
 
             //addChunkLoader will add to the coord set if we are dormant
             ArrayList<BlockCoord> verifyCoords = new ArrayList<BlockCoord>(coords);
@@ -326,7 +341,7 @@ public class ChunkLoaderManager
 
             for (BlockCoord coord : verifyCoords) {
                 reviving = true;
-                TileEntity tile = world.getTileEntity(coord.x, coord.y, coord.z);
+                TileEntity tile = world.getTileEntity(coord.pos());
                 reviving = false;
                 if (tile instanceof IChickenChunkLoader) {
                     ChunkLoaderManager.addChunkLoader((IChickenChunkLoader) tile);
@@ -356,8 +371,7 @@ public class ChunkLoaderManager
         }
     }
 
-    private static class PlayerOrganiser extends ChunkLoaderOrganiser
-    {
+    private static class PlayerOrganiser extends ChunkLoaderOrganiser {
         private static boolean dirty;
 
         public final String username;
@@ -381,8 +395,7 @@ public class ChunkLoaderManager
         }
     }
 
-    private static class ModOrganiser extends ChunkLoaderOrganiser
-    {
+    private static class ModOrganiser extends ChunkLoaderOrganiser {
         public final Object mod;
         public final ModContainer container;
         private boolean dirty;
@@ -408,8 +421,7 @@ public class ChunkLoaderManager
         }
     }
 
-    private static class DummyLoadingCallback implements OrderedLoadingCallback, PlayerOrderedLoadingCallback
-    {
+    private static class DummyLoadingCallback implements OrderedLoadingCallback, PlayerOrderedLoadingCallback {
         @Override
         public void ticketsLoaded(List<Ticket> tickets, World world) {
         }
@@ -425,8 +437,7 @@ public class ChunkLoaderManager
         }
     }
 
-    private static enum ReviveChange
-    {
+    private static enum ReviveChange {
         PlayerRevive,
         PlayerDevive,
         ModRevive,
@@ -435,8 +446,9 @@ public class ChunkLoaderManager
         public LinkedList<Object> list;
 
         public static void load() {
-            for (ReviveChange change : values())
+            for (ReviveChange change : values()) {
                 change.list = new LinkedList<Object>();
+            }
         }
     }
 
@@ -458,8 +470,9 @@ public class ChunkLoaderManager
      */
     public static void registerMod(Object mod) {
         ModContainer container = Loader.instance().getModObjectList().inverse().get(mod);
-        if (container == null)
+        if (container == null) {
             throw new NullPointerException("Mod container not found for: " + mod);
+        }
         mods.put(mod, container);
         ForgeChunkManager.setForcedChunkLoadingCallback(mod, new DummyLoadingCallback());
     }
@@ -469,14 +482,16 @@ public class ChunkLoaderManager
     }
 
     public static World getWorld(int dim, boolean create) {
-        if (create)
+        if (create) {
             return MinecraftServer.getServer().worldServerForDimension(dim);
+        }
         return DimensionManager.getWorld(dim);
     }
 
     public static void load(WorldServer world) {
-        if (loaded)
+        if (loaded) {
             return;
+        }
 
         loaded = true;
 
@@ -487,8 +502,9 @@ public class ChunkLoaderManager
 
         try {
             saveDir = new File(DimensionManager.getCurrentSaveRootDirectory(), "chickenchunks");
-            if (!saveDir.exists())
+            if (!saveDir.exists()) {
                 saveDir.mkdirs();
+            }
             loadPlayerChunks();
             loadModChunks();
             loadLoginTimes();
@@ -499,14 +515,16 @@ public class ChunkLoaderManager
 
     private static void loadLoginTimes() throws IOException {
         File saveFile = new File(saveDir, "loginTimes.dat");
-        if (!saveFile.exists())
+        if (!saveFile.exists()) {
             return;
+        }
 
         DataInputStream datain = new DataInputStream(new FileInputStream(saveFile));
         try {
             int entries = datain.readInt();
-            for (int i = 0; i < entries; i++)
+            for (int i = 0; i < entries; i++) {
                 loginTimes.put(datain.readUTF(), datain.readLong());
+            }
         } catch (IOException e) {
             LogManager.getLogger("ChickenChunks").error("Error reading loginTimes.dat", e);
         }
@@ -517,8 +535,9 @@ public class ChunkLoaderManager
     private static void loadModChunks() throws IOException {
         for (Entry<Object, ModContainer> entry : mods.entrySet()) {
             File saveFile = new File(saveDir, entry.getValue().getModId() + ".dat");
-            if (!saveFile.exists())
+            if (!saveFile.exists()) {
                 return;
+            }
 
             DataInputStream datain = new DataInputStream(new FileInputStream(saveFile));
             ModOrganiser organiser = getModOrganiser(entry.getKey());
@@ -531,8 +550,9 @@ public class ChunkLoaderManager
 
     private static void loadPlayerChunks() throws IOException {
         File saveFile = new File(saveDir, "players.dat");
-        if (!saveFile.exists())
+        if (!saveFile.exists()) {
             return;
+        }
 
         DataInputStream datain = new DataInputStream(new FileInputStream(saveFile));
         int organisers = datain.readInt();
@@ -540,8 +560,9 @@ public class ChunkLoaderManager
             String username = datain.readUTF();
             PlayerOrganiser organiser = getPlayerOrganiser(username);
             organiser.setDormant();
-            if (allowOffline(username) && loggedInRecently(username))
+            if (allowOffline(username) && loggedInRecently(username)) {
                 ReviveChange.PlayerRevive.list.add(organiser);
+            }
 
             organiser.load(datain);
         }
@@ -549,8 +570,9 @@ public class ChunkLoaderManager
     }
 
     private static boolean loggedInRecently(String username) {
-        if (awayTimeout == 0)
+        if (awayTimeout == 0) {
             return true;
+        }
 
         Long lastLogin = loginTimes.get(username);
         return lastLogin != null && (System.currentTimeMillis() - lastLogin) / 60000L < awayTimeout;
@@ -561,14 +583,16 @@ public class ChunkLoaderManager
         ConfigTag config = ChickenChunks.config.getTag("players");
         if (config.containsTag(username)) {
             int ret = config.getTag(username).getIntValue(0);
-            if (ret != 0)
+            if (ret != 0) {
                 return ret;
+            }
         }
 
         if (ServerUtils.isPlayerOP(username)) {
             int ret = config.getTag("OP").getIntValue(0);
-            if (ret != 0)
+            if (ret != 0) {
                 return ret;
+            }
         }
 
         return config.getTag("DEFAULT").getIntValue(5000);
@@ -576,22 +600,26 @@ public class ChunkLoaderManager
 
     public static boolean allowOffline(String username) {
         ConfigTag config = ChickenChunks.config.getTag("allowoffline");
-        if (config.containsTag(username))
+        if (config.containsTag(username)) {
             return config.getTag(username).getBooleanValue(true);
+        }
 
-        if (ServerUtils.isPlayerOP(username))
+        if (ServerUtils.isPlayerOP(username)) {
             return config.getTag("OP").getBooleanValue(true);
+        }
 
         return config.getTag("DEFAULT").getBooleanValue(true);
     }
 
     public static boolean allowChunkViewer(String username) {
         ConfigTag config = ChickenChunks.config.getTag("allowchunkviewer");
-        if (config.containsTag(username))
+        if (config.containsTag(username)) {
             return config.getTag(username).getBooleanValue(true);
+        }
 
-        if (ServerUtils.isPlayerOP(username))
+        if (ServerUtils.isPlayerOP(username)) {
             return config.getTag("OP").getBooleanValue(true);
+        }
 
         return config.getTag("DEFAULT").getBooleanValue(true);
     }
@@ -606,31 +634,23 @@ public class ChunkLoaderManager
         config.getTag("allowchunkviewer").setPosition(2).useBraces().setComment("Set to false to deny a player access to the chunk viewer");
         config.getTag("allowchunkviewer.DEFAULT").getBooleanValue(true);
         config.getTag("allowchunkviewer.OP").getBooleanValue(true);
-        if (!FMLCommonHandler.instance().getModName().contains("mcpc"))
-            cleanupTicks = config.getTag("cleanuptime")
-                    .setComment("The number of ticks to wait between attempting to unload orphaned chunks")
-                    .getIntValue(1200);
-        reloadDimensions = config.getTag("reload-dimensions")
-                .setComment("Set to false to disable the automatic reloading of mystcraft dimensions on server restart")
-                .getBooleanValue(true);
-        opInteract = config.getTag("op-interact")
-                .setComment("Enabling this lets OPs alter other player's chunkloaders. WARNING: If you change a chunkloader, you have no idea what may break/explode by not being chunkloaded.")
-                .getBooleanValue(false);
-        maxChunks = config.getTag("maxchunks")
-                .setComment("The maximum number of chunks per chunkloader")
-                .getIntValue(400);
-        awayTimeout = config.getTag("awayTimeout")
-                .setComment("The number of minutes since last login within which chunks from a player will remain active, 0 for infinite.")
-                .getIntValue(0);
+        if (!FMLCommonHandler.instance().getModName().contains("mcpc")) {
+            cleanupTicks = config.getTag("cleanuptime").setComment("The number of ticks to wait between attempting to unload orphaned chunks").getIntValue(1200);
+        }
+        reloadDimensions = config.getTag("reload-dimensions").setComment("Set to false to disable the automatic reloading of mystcraft dimensions on server restart").getBooleanValue(true);
+        opInteract = config.getTag("op-interact").setComment("Enabling this lets OPs alter other player's chunkloaders. WARNING: If you change a chunkloader, you have no idea what may break/explode by not being chunkloaded.").getBooleanValue(false);
+        maxChunks = config.getTag("maxchunks").setComment("The maximum number of chunks per chunkloader").getIntValue(400);
+        awayTimeout = config.getTag("awayTimeout").setComment("The number of minutes since last login within which chunks from a player will remain active, 0 for infinite.").getIntValue(0);
     }
 
     public static void addChunkLoader(IChickenChunkLoader loader) {
         int dim = CommonUtils.getDimension(loader.getWorld());
         ChunkLoaderOrganiser organiser = getOrganiser(loader);
-        if (organiser.canForceNewChunks(dim, loader.getChunks()))
+        if (organiser.canForceNewChunks(dim, loader.getChunks())) {
             organiser.addChunkLoader(loader);
-        else
+        } else {
             loader.deactivate();
+        }
     }
 
     private static ChunkLoaderOrganiser getOrganiser(IChickenChunkLoader loader) {
@@ -649,16 +669,18 @@ public class ChunkLoaderManager
     public static boolean canLoaderAdd(IChickenChunkLoader loader, Collection<ChunkCoordIntPair> chunks) {
         String owner = loader.getOwner();
         int dim = CommonUtils.getDimension(loader.getWorld());
-        if (owner != null)
+        if (owner != null) {
             return getPlayerOrganiser(owner).canForceNewChunks(dim, chunks);
+        }
 
         return false;
     }
 
     private static PlayerOrganiser getPlayerOrganiser(String username) {
         PlayerOrganiser organiser = playerOrganisers.get(username);
-        if (organiser == null)
+        if (organiser == null) {
             playerOrganisers.put(username, organiser = new PlayerOrganiser(username));
+        }
         return organiser;
     }
 
@@ -666,8 +688,9 @@ public class ChunkLoaderManager
         ModOrganiser organiser = modOrganisers.get(mod);
         if (organiser == null) {
             ModContainer container = mods.get(mod);
-            if (container == null)
+            if (container == null) {
                 throw new NullPointerException("Mod not registered with chickenchunks: " + mod);
+            }
             modOrganisers.put(mod, organiser = new ModOrganiser(mod, container));
         }
         return organiser;
@@ -681,8 +704,9 @@ public class ChunkLoaderManager
         try {
             if (PlayerOrganiser.dirty) {
                 File saveFile = new File(saveDir, "players.dat");
-                if (!saveFile.exists())
+                if (!saveFile.exists()) {
                     saveFile.createNewFile();
+                }
                 DataOutputStream dataout = new DataOutputStream(new FileOutputStream(saveFile));
                 dataout.writeInt(playerOrganisers.size());
                 for (PlayerOrganiser organiser : playerOrganisers.values()) {
@@ -693,12 +717,12 @@ public class ChunkLoaderManager
                 PlayerOrganiser.dirty = false;
             }
 
-
             for (ModOrganiser organiser : modOrganisers.values()) {
                 if (organiser.dirty) {
                     File saveFile = new File(saveDir, organiser.container.getModId() + ".dat");
-                    if (!saveFile.exists())
+                    if (!saveFile.exists()) {
                         saveFile.createNewFile();
+                    }
 
                     DataOutputStream dataout = new DataOutputStream(new FileOutputStream(saveFile));
                     organiser.save(dataout);
@@ -721,9 +745,11 @@ public class ChunkLoaderManager
             int playerChunkX = (int) player.posX >> 4;
             int playerChunkZ = (int) player.posZ >> 4;
 
-            for (int cx = playerChunkX - viewdist; cx <= playerChunkX + viewdist; cx++)
-                for (int cz = playerChunkZ - viewdist; cz <= playerChunkZ + viewdist; cz++)
+            for (int cx = playerChunkX - viewdist; cx <= playerChunkX + viewdist; cx++) {
+                for (int cz = playerChunkZ - viewdist; cz <= playerChunkZ + viewdist; cz++) {
                     loadedChunks.add(new ChunkCoordIntPair(cx, cz));
+                }
+            }
         }
 
         ImmutableSetMultimap<ChunkCoordIntPair, Ticket> persistantChunks = world.getPersistentChunks();
@@ -732,12 +758,13 @@ public class ChunkLoaderManager
         for (Chunk chunk : (List<Chunk>) world.theChunkProviderServer.loadedChunks) {
             ChunkCoordIntPair coord = chunk.getChunkCoordIntPair();
             if (!loadedChunks.contains(coord) && !persistantChunks.containsKey(coord) && world.theChunkProviderServer.chunkExists(coord.chunkXPos, coord.chunkZPos)) {
-                PlayerInstance instance = manager.getOrCreateChunkWatcher(coord.chunkXPos, coord.chunkZPos, false);
+                PlayerInstance instance = manager.getPlayerInstance(coord.chunkXPos, coord.chunkZPos, false);
                 if (instance == null) {
-                    world.theChunkProviderServer.unloadChunksIfNotNearSpawn(coord.chunkXPos, coord.chunkZPos);
+                    world.theChunkProviderServer.dropChunk(coord.chunkXPos, coord.chunkZPos);
                 } else {
-                    while (instance.playersWatchingChunk.size() > 0)
+                    while (instance.playersWatchingChunk.size() > 0) {
                         instance.removePlayer((EntityPlayerMP) instance.playersWatchingChunk.get(0));
+                    }
                 }
             }
         }
@@ -748,11 +775,13 @@ public class ChunkLoaderManager
     }
 
     public static void tickEnd(WorldServer world) {
-        if (world.getWorldTime() % 1200 == 0)
+        if (world.getWorldTime() % 1200 == 0) {
             updateLoginTimes();
+        }
 
-        if (cleanupTicks > 0 && world.getWorldTime() % cleanupTicks == 0)
+        if (cleanupTicks > 0 && world.getWorldTime() % cleanupTicks == 0) {
             cleanChunks(world);
+        }
 
         tickDownUnloads();
         revivePlayerLoaders();
@@ -760,13 +789,15 @@ public class ChunkLoaderManager
 
     private static void updateLoginTimes() {
         long time = System.currentTimeMillis();
-        for (EntityPlayer player : ServerUtils.getPlayers())
-            loginTimes.put(player.getCommandSenderName(), time);
+        for (EntityPlayer player : ServerUtils.getPlayers()) {
+            loginTimes.put(player.getName(), time);
+        }
 
         try {
             File saveFile = new File(saveDir, "loginTimes.dat");
-            if (!saveFile.exists())
+            if (!saveFile.exists()) {
                 saveFile.createNewFile();
+            }
 
             DataOutputStream dataout = new DataOutputStream(new FileOutputStream(saveFile));
             dataout.writeInt(loginTimes.size());
@@ -779,35 +810,44 @@ public class ChunkLoaderManager
             throw new RuntimeException(e);
         }
 
-        for (PlayerOrganiser organiser : playerOrganisers.values())
-            if (!organiser.isDormant() && !loggedInRecently(organiser.username))
+        for (PlayerOrganiser organiser : playerOrganisers.values()) {
+            if (!organiser.isDormant() && !loggedInRecently(organiser.username)) {
                 ReviveChange.PlayerDevive.list.add(organiser);
+            }
+        }
     }
 
     private static void tickDownUnloads() {
-        for (Entry<String, PlayerOrganiser> entry : playerOrganisers.entrySet())
+        for (Entry<String, PlayerOrganiser> entry : playerOrganisers.entrySet()) {
             entry.getValue().tickDownUnloads();
+        }
 
-        for (Entry<Object, ModOrganiser> entry : modOrganisers.entrySet())
+        for (Entry<Object, ModOrganiser> entry : modOrganisers.entrySet()) {
             entry.getValue().tickDownUnloads();
+        }
     }
 
     private static void revivePlayerLoaders() {
-        for (Object organiser : ReviveChange.PlayerRevive.list)
+        for (Object organiser : ReviveChange.PlayerRevive.list) {
             ((PlayerOrganiser) organiser).revive();
+        }
         ReviveChange.PlayerRevive.list.clear();
 
-        for (Object organiser : ReviveChange.ModRevive.list)
+        for (Object organiser : ReviveChange.ModRevive.list) {
             ((ModOrganiser) organiser).revive();
+        }
         ReviveChange.ModRevive.list.clear();
 
-        for (Object world : ReviveChange.DimensionRevive.list)
-            for (PlayerOrganiser organiser : playerOrganisers.values())
+        for (Object world : ReviveChange.DimensionRevive.list) {
+            for (PlayerOrganiser organiser : playerOrganisers.values()) {
                 organiser.revive((World) world);
+            }
+        }
         ReviveChange.DimensionRevive.list.clear();
 
-        for (Object organiser : ReviveChange.PlayerDevive.list)
+        for (Object organiser : ReviveChange.PlayerDevive.list) {
             ((PlayerOrganiser) organiser).devive();
+        }
         ReviveChange.PlayerDevive.list.clear();
     }
 
@@ -817,8 +857,9 @@ public class ChunkLoaderManager
     }
 
     public static void playerLogout(String username) {
-        if (!allowOffline(username))
+        if (!allowOffline(username)) {
             ReviveChange.PlayerDevive.list.add(getPlayerOrganiser(username));
+        }
     }
 
     public static int maxChunksPerLoader() {
@@ -831,9 +872,11 @@ public class ChunkLoaderManager
 
     public static void unloadWorld(World world) {
         int dim = CommonUtils.getDimension(world);
-        for (TicketManager mgr : playerOrganisers.values())
+        for (TicketManager mgr : playerOrganisers.values()) {
             mgr.unloadDimension(dim);
-        for (TicketManager mgr : modOrganisers.values())
+        }
+        for (TicketManager mgr : modOrganisers.values()) {
             mgr.unloadDimension(dim);
+        }
     }
 }

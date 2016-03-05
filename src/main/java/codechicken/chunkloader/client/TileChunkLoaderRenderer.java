@@ -1,8 +1,8 @@
 package codechicken.chunkloader.client;
 
-import codechicken.chunkloader.TileChunkLoader;
-import codechicken.chunkloader.TileChunkLoaderBase;
-import codechicken.chunkloader.TileSpotLoader;
+import codechicken.chunkloader.tile.TileChunkLoader;
+import codechicken.chunkloader.tile.TileChunkLoaderBase;
+import codechicken.chunkloader.tile.TileSpotLoader;
 import codechicken.core.ClientUtils;
 import codechicken.lib.render.CCModelLibrary;
 import codechicken.lib.render.CCRenderState;
@@ -13,16 +13,17 @@ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.ChunkCoordIntPair;
-import org.lwjgl.opengl.GL11;
 
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.Collection;
 
+import static net.minecraft.client.renderer.GlStateManager.*;
+
 public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunkLoaderBase> {
     public static class RenderInfo {
-        int activationCounter;
-        boolean showLasers;
+        public int activationCounter;
+        public boolean showLasers;
 
         public void update(TileChunkLoaderBase chunkLoader) {
             if (activationCounter < 20 && chunkLoader.active) {
@@ -67,24 +68,31 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
         }
 
         if (renderInfo.showLasers) {
-            GL11.glDisable(GL11.GL_TEXTURE_2D);
-            GL11.glDisable(GL11.GL_LIGHTING);
-            GL11.glDisable(GL11.GL_FOG);
+            disableTexture2D();
+            //GL11.glDisable(GL11.GL_TEXTURE_2D);
+            disableLighting();
+            //GL11.glDisable(GL11.GL_LIGHTING);
+            disableFog();
+            //GL11.glDisable(GL11.GL_FOG);
             drawRays(d, d1, d2, rot, updown, tile.getPos().getX(), tile.getPos().getY(), tile.getPos().getZ(), tile.getChunks());
-            GL11.glEnable(GL11.GL_TEXTURE_2D);
-            GL11.glEnable(GL11.GL_LIGHTING);
-            GL11.glEnable(GL11.GL_FOG);
+            enableTexture2D();
+            //GL11.glEnable(GL11.GL_TEXTURE_2D);
+            enableLighting();
+            //GL11.glEnable(GL11.GL_LIGHTING);
+            enableFog();
+            //GL11.glEnable(GL11.GL_FOG);
         }
         rot = ClientUtils.getRenderTime() * active / 3F;
 
         Matrix4 pearlMat = CCModelLibrary.getRenderMatrix(new Vector3(d + 0.5, d1 + height + (updown + 0.3) * active, d2 + 0.5), new Rotation(rot, new Vector3(0, 1, 0)), size);
-
-        GL11.glDisable(GL11.GL_LIGHTING);
+        disableLighting();
+        //GL11.glDisable(GL11.GL_LIGHTING);
         CCRenderState.changeTexture("chickenchunks:textures/hedronmap.png");
         CCRenderState.startDrawing(4, DefaultVertexFormats.POSITION_TEX);
         CCModelLibrary.icosahedron4.render(pearlMat);
         CCRenderState.draw();
-        GL11.glEnable(GL11.GL_LIGHTING);
+        enableLighting();
+        //GL11.glEnable(GL11.GL_LIGHTING);
     }
 
     public Point2D.Double findIntersection(Line2D line1, Line2D line2) {
@@ -126,9 +134,12 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
         int cx = (x >> 4) << 4;
         int cz = (z >> 4) << 4;
 
-        GL11.glPushMatrix();
-        GL11.glTranslated(d + cx - x + 8, d1 + updown + 2, d2 + cz - z + 8);
-        GL11.glRotatef((float) rotationAngle, 0, 1, 0);
+        pushMatrix();
+        //GL11.glPushMatrix();
+        translate(d + cx - x + 8, d1 + updown + 2, d2 + cz - z + 8);
+        //GL11.glTranslated(d + cx - x + 8, d1 + updown + 2, d2 + cz - z + 8);
+        rotate((float) rotationAngle, 0, 1, 0);
+        //GL11.glRotatef((float) rotationAngle, 0, 1, 0);
 
         double[] distances = new double[4];
 
@@ -167,33 +178,46 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
                 }
             }
         }
-
-        GL11.glColor4d(0.9, 0, 0, 1);
+        color(0.9F, 0F, 0F, 1F);
+        //GL11.glColor4d(0.9, 0, 0, 1);
         for (int ray = 0; ray < 4; ray++) {
             distances[ray] = Math.sqrt(distances[ray]);
-            GL11.glRotatef(90, 0, 1, 0);
+            rotate(90, 0, 1, 0);
+            //GL11.glRotatef(90, 0, 1, 0);
             RenderAABB.renderAABB(new AxisAlignedBB(0, -0.05, -0.05, distances[ray], 0.05, 0.05));
         }
-        GL11.glPopMatrix();
+        popMatrix();
+        //GL11.glPopMatrix();
 
-        GL11.glPushMatrix();
-        GL11.glTranslated(d + cx - x + 8, d1 - y, d2 + cz - z + 8);
+        pushMatrix();
+        //GL11.glPushMatrix();
+        translate(d + cx - x + 8, d1 - y, d2 + cz - z + 8);
+        //GL11.glTranslated(d + cx - x + 8, d1 - y, d2 + cz - z + 8);
         for (int ray = 0; ray < 4; ray++) {
-            GL11.glPushMatrix();
-            GL11.glTranslated(absRays[ray].x * distances[ray], 0, absRays[ray].y * distances[ray]);
+            pushMatrix();
+            //GL11.glPushMatrix();
+            translate(absRays[ray].x * distances[ray], 0, absRays[ray].y * distances[ray]);
+            //GL11.glTranslated(absRays[ray].x * distances[ray], 0, absRays[ray].y * distances[ray]);
             RenderAABB.renderAABB(new AxisAlignedBB(-0.05, 0, -0.05, 0.05, 256, 0.05));
-            GL11.glPopMatrix();
+            popMatrix();
+            //GL11.glPopMatrix();
         }
-        GL11.glPopMatrix();
+        popMatrix();
+        //GL11.glPopMatrix();
 
         double toCenter = Math.sqrt((cx + 7.5 - x) * (cx + 7.5 - x) + 0.8 * 0.8 + (cz + 7.5 - z) * (cz + 7.5 - z));
-
-        GL11.glPushMatrix();
-        GL11.glColor4d(0, 0.9, 0, 1);
-        GL11.glTranslated(d + 0.5, d1 + 1.2 + updown, d2 + 0.5);
-        GL11.glRotatef((float) (Math.atan2((cx + 7.5 - x), (cz + 7.5 - z)) * 180 / 3.1415) + 90, 0, 1, 0);
-        GL11.glRotatef((float) (-Math.asin(0.8 / toCenter) * 180 / 3.1415), 0, 0, 1);
+        pushMatrix();
+        //GL11.glPushMatrix();
+        color(0, 0.9F, 0, 1);
+        //GL11.glColor4d(0, 0.9, 0, 1);
+        translate(d + 0.5, d1 + 1.2 + updown, d2 + 0.5);
+        //GL11.glTranslated(d + 0.5, d1 + 1.2 + updown, d2 + 0.5);
+        rotate((float) (Math.atan2((cx + 7.5 - x), (cz + 7.5 - z)) * 180 / 3.1415) + 90, 0, 1, 0);
+        //GL11.glRotatef((float) (Math.atan2((cx + 7.5 - x), (cz + 7.5 - z)) * 180 / 3.1415) + 90, 0, 1, 0);
+        rotate((float) (-Math.asin(0.8 / toCenter) * 180 / 3.1415), 0, 0, 1);
+        //GL11.glRotatef((float) (-Math.asin(0.8 / toCenter) * 180 / 3.1415), 0, 0, 1);
         RenderAABB.renderAABB(new AxisAlignedBB(-toCenter, -0.03, -0.03, 0, 0.03, 0.03));
-        GL11.glPopMatrix();
+        popMatrix();
+        //GL11.glPopMatrix();
     }
 }

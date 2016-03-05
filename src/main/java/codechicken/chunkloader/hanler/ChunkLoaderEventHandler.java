@@ -1,15 +1,17 @@
-package codechicken.chunkloader;
+package codechicken.chunkloader.hanler;
 
-import codechicken.chunkloader.PlayerChunkViewerManager.DimensionChange;
-import codechicken.chunkloader.PlayerChunkViewerManager.TicketChange;
+import codechicken.chunkloader.manager.ChunkLoaderManager;
+import codechicken.chunkloader.manager.PlayerChunkViewerManager;
+import codechicken.chunkloader.manager.PlayerChunkViewerManager.DimensionChange;
+import codechicken.chunkloader.manager.PlayerChunkViewerManager.TicketChange;
 import codechicken.core.ServerUtils;
 
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
-import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
-import cpw.mods.fml.common.gameevent.TickEvent.Phase;
-import cpw.mods.fml.common.gameevent.TickEvent.ServerTickEvent;
-import cpw.mods.fml.common.gameevent.TickEvent.WorldTickEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.ForgeChunkManager.ForceChunkEvent;
 import net.minecraftforge.common.ForgeChunkManager.UnforceChunkEvent;
@@ -36,13 +38,13 @@ public class ChunkLoaderEventHandler
 
     @SubscribeEvent
     public void playerLogin(PlayerLoggedInEvent event) {
-        ChunkLoaderManager.playerLogin(event.player.getCommandSenderName());
+        ChunkLoaderManager.playerLogin(event.player.getName());
     }
 
     @SubscribeEvent
     public void playerLogout(PlayerLoggedOutEvent event) {
-        PlayerChunkViewerManager.instance().logouts.add(event.player.getCommandSenderName());
-        ChunkLoaderManager.playerLogout(event.player.getCommandSenderName());
+        PlayerChunkViewerManager.instance().logouts.add(event.player.getName());
+        ChunkLoaderManager.playerLogout(event.player.getName());
     }
 
     @SubscribeEvent

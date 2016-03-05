@@ -1,4 +1,4 @@
-package codechicken.chunkloader;
+package codechicken.chunkloader.api;
 
 import java.util.HashSet;
 

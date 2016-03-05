@@ -1,8 +1,12 @@
-package codechicken.chunkloader;
+package codechicken.chunkloader.network;
 
+import codechicken.chunkloader.api.ChunkLoaderShape;
+import codechicken.chunkloader.manager.PlayerChunkViewerManager;
+import codechicken.chunkloader.tile.TileChunkLoader;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.INetHandlerPlayServer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import codechicken.lib.packet.PacketCustom;
 import codechicken.lib.packet.PacketCustom.IServerPacketHandler;
@@ -16,7 +20,7 @@ public class ChunkLoaderSPH implements IServerPacketHandler
         switch(packet.getType())
         {
             case 1:
-                PlayerChunkViewerManager.instance().closeViewer(sender.getCommandSenderName());
+                PlayerChunkViewerManager.instance().closeViewer(sender.getName());
                 break;
             case 2:
                 handleChunkLoaderChangePacket(sender.worldObj, packet);
@@ -27,7 +31,7 @@ public class ChunkLoaderSPH implements IServerPacketHandler
 
     private void handleChunkLoaderChangePacket(World world, PacketCustom packet)
     {
-        TileEntity tile = world.getTileEntity(packet.readInt(), packet.readInt(), packet.readInt());
+        TileEntity tile = world.getTileEntity(new BlockPos(packet.readInt(), packet.readInt(), packet.readInt()));
         if(tile instanceof TileChunkLoader)
         {        
             TileChunkLoader ctile = (TileChunkLoader)tile;
