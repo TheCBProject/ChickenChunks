@@ -1,0 +1,9 @@
+{
+  "parent": "block/enchanting_table_base",
+  "textures": {
+    "particle": "chickenchunks:blocks/full/side",
+    "bottom": "chickenchunks:blocks/full/bottom",
+    "top" : "chickenchunks:blocks/full/top",
+    "side" : "chickenchunks:blocks/full/side"
+  }
+}

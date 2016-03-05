@@ -170,6 +170,11 @@ public class BlockChunkLoader extends BlockContainer {
         return new BlockState(this, TYPE);
     }
 
+    @Override
+    public int getRenderType() {
+        return 3;
+    }
+
     //@Override
     //@SideOnly(Side.CLIENT)
     //public int getRenderType() {

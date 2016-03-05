@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "type=full": {"model" : "chickenchunks:loader_full"},
+    "type=one" : {}
+  }
+}
