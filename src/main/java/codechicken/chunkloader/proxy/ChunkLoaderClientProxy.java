@@ -1,11 +1,16 @@
-package codechicken.chunkloader;
+package codechicken.chunkloader.proxy;
 
+import codechicken.chunkloader.ChunkLoaderCPH;
+import codechicken.chunkloader.GuiChunkLoader;
+import codechicken.chunkloader.TileChunkLoader;
+import codechicken.chunkloader.TileSpotLoader;
+import codechicken.chunkloader.client.TileChunkLoaderRenderer;
+import codechicken.chunkloader.proxy.ChunkLoaderProxy;
 import codechicken.core.ClientUtils;
 import net.minecraft.client.Minecraft;
 import codechicken.core.CCUpdateChecker;
 import codechicken.lib.packet.PacketCustom;
-import cpw.mods.fml.client.registry.ClientRegistry;
-import cpw.mods.fml.client.registry.RenderingRegistry;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 
 import static codechicken.chunkloader.ChickenChunks.*;
 
@@ -24,7 +29,7 @@ public class ChunkLoaderClientProxy  extends ChunkLoaderProxy
         
         ClientRegistry.bindTileEntitySpecialRenderer(TileChunkLoader.class, new TileChunkLoaderRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(TileSpotLoader.class, new TileChunkLoaderRenderer());
-        RenderingRegistry.registerBlockHandler(new ChunkLoaderSBRH());
+        //RenderingRegistry.registerBlockHandler(new ChunkLoaderSBRH());
     }
     
     @Override

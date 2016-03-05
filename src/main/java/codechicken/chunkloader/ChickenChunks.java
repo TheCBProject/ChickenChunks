@@ -2,15 +2,15 @@ package codechicken.chunkloader;
 
 import java.io.File;
 
+import codechicken.chunkloader.block.BlockChunkLoader;
+import codechicken.chunkloader.proxy.ChunkLoaderProxy;
 import codechicken.core.launch.CodeChickenCorePlugin;
 import codechicken.lib.config.ConfigFile;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.Mod.EventHandler;
-import cpw.mods.fml.common.SidedProxy;
-import cpw.mods.fml.common.Mod.Instance;
-import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
 @Mod(modid = "ChickenChunks", dependencies = "required-after:CodeChickenCore@[" + CodeChickenCorePlugin.version + ",)", acceptedMinecraftVersions = CodeChickenCorePlugin.mcVersion)
 public class ChickenChunks
@@ -22,21 +22,21 @@ public class ChickenChunks
 
     public static BlockChunkLoader blockChunkLoader;
 
-    @Instance(value = "ChickenChunks")
+    @Mod.Instance(value = "ChickenChunks")
     public static ChickenChunks instance;
 
-    @EventHandler
+    @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         config = new ConfigFile(new File(event.getModConfigurationDirectory(), "ChickenChunks.cfg"))
                 .setComment("ChunkLoader Configuration File\nDeleting any element will restore it to it's default value\nBlock ID's will be automatically generated the first time it's run");
     }
 
-    @EventHandler
+    @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         proxy.init();
     }
 
-    @EventHandler
+    @Mod.EventHandler
     public void serverStarting(FMLServerStartingEvent event) {
         proxy.registerCommands(event);
     }

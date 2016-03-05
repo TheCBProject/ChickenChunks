@@ -1,6 +1,6 @@
 package codechicken.chunkloader;
 
-import codechicken.chunkloader.TileChunkLoaderRenderer.RenderInfo;
+import codechicken.chunkloader.client.TileChunkLoaderRenderer.RenderInfo;
 import codechicken.lib.vec.BlockCoord;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.entity.EntityLivingBase;

@@ -4,7 +4,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 
+import codechicken.lib.vec.BlockCoord;
 import net.minecraft.network.Packet;
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -13,7 +15,7 @@ import codechicken.lib.packet.PacketCustom;
 public class TileSpotLoader extends TileChunkLoaderBase
 {
     public static void handleDescriptionPacket(PacketCustom packet, World world) {
-        TileEntity tile = world.getTileEntity(packet.readInt(), packet.readInt(), packet.readInt());
+        TileEntity tile = world.getTileEntity(new BlockPos(packet.readInt(), packet.readInt(), packet.readInt()));
         if (tile instanceof TileSpotLoader) {
             TileSpotLoader ctile = (TileSpotLoader) tile;
             ctile.active = packet.readBoolean();
@@ -24,7 +26,7 @@ public class TileSpotLoader extends TileChunkLoaderBase
 
     public Packet getDescriptionPacket() {
         PacketCustom packet = new PacketCustom(ChunkLoaderSPH.channel, 11);
-        packet.writeCoord(xCoord, yCoord, zCoord);
+        packet.writeCoord(new BlockCoord(getPos()));
         packet.writeBoolean(active);
         packet.writeBoolean(owner != null);
         if (owner != null)

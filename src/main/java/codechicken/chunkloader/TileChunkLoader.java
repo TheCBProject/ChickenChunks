@@ -3,7 +3,9 @@ package codechicken.chunkloader;
 import java.util.Collection;
 import java.util.HashSet;
 
+import codechicken.lib.vec.BlockCoord;
 import net.minecraft.network.Packet;
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -14,7 +16,7 @@ public class TileChunkLoader extends TileChunkLoaderBase
 {    
     public static void handleDescriptionPacket(PacketCustom packet, World world)
     {
-        TileEntity tile = world.getTileEntity(packet.readInt(), packet.readInt(), packet.readInt());
+        TileEntity tile = world.getTileEntity(new BlockPos(packet.readInt(), packet.readInt(), packet.readInt()));
         if(tile instanceof TileChunkLoader)
         {        
             TileChunkLoader ctile = (TileChunkLoader)tile;         
@@ -33,7 +35,7 @@ public class TileChunkLoader extends TileChunkLoaderBase
             shape = newShape;
             return true;
         }
-        Collection<ChunkCoordIntPair> chunks = getContainedChunks(newShape, xCoord, zCoord, newRadius);
+        Collection<ChunkCoordIntPair> chunks = getContainedChunks(newShape, getPos().getX(), getPos().getZ(), newRadius);
         if(chunks.size() > ChunkLoaderManager.maxChunksPerLoader())
         {
             return false;
@@ -42,7 +44,7 @@ public class TileChunkLoader extends TileChunkLoaderBase
         {
             radius = newRadius;
             shape = newShape;
-            worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
+            worldObj.markBlockForUpdate(getPos());
             return true;
         }
         else if(ChunkLoaderManager.canLoaderAdd(this, chunks))
@@ -50,7 +52,7 @@ public class TileChunkLoader extends TileChunkLoaderBase
             radius = newRadius;
             shape = newShape;
             ChunkLoaderManager.updateLoader(this);
-            worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
+            worldObj.markBlockForUpdate(getPos());
             return true;
         }
         return false;
@@ -59,7 +61,7 @@ public class TileChunkLoader extends TileChunkLoaderBase
     public Packet getDescriptionPacket()
     {
         PacketCustom packet = new PacketCustom(ChunkLoaderSPH.channel, 10);
-        packet.writeCoord(xCoord, yCoord, zCoord);
+        packet.writeCoord(new BlockCoord(getPos()));
         packet.writeByte(shape.ordinal());
         packet.writeByte(radius);
         packet.writeBoolean(active);
@@ -87,7 +89,7 @@ public class TileChunkLoader extends TileChunkLoaderBase
     @Override
     public HashSet<ChunkCoordIntPair> getChunks()
     {
-        return getContainedChunks(shape, xCoord, zCoord, radius);
+        return getContainedChunks(shape, getPos().getX(), getPos().getZ(), radius);
     }
     
     public static HashSet<ChunkCoordIntPair> getContainedChunks(ChunkLoaderShape shape, int xCoord, int zCoord, int radius)
