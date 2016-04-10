@@ -437,7 +437,7 @@ public class ChunkLoaderManager {
         }
     }
 
-    private static enum ReviveChange {
+    private enum ReviveChange {
         PlayerRevive,
         PlayerDevive,
         ModRevive,
@@ -483,7 +483,7 @@ public class ChunkLoaderManager {
 
     public static World getWorld(int dim, boolean create) {
         if (create) {
-            return MinecraftServer.getServer().worldServerForDimension(dim);
+            return FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(dim);
         }
         return DimensionManager.getWorld(dim);
     }
@@ -738,7 +738,7 @@ public class ChunkLoaderManager {
     @SuppressWarnings("unchecked")
     public static void cleanChunks(WorldServer world) {
         int dim = CommonUtils.getDimension(world);
-        int viewdist = ServerUtils.mc().getConfigurationManager().getViewDistance();
+        int viewdist = ServerUtils.mc().getPlayerList().getViewDistance();
 
         HashSet<ChunkCoordIntPair> loadedChunks = new HashSet<ChunkCoordIntPair>();
         for (EntityPlayer player : ServerUtils.getPlayersInDimension(dim)) {
@@ -753,23 +753,23 @@ public class ChunkLoaderManager {
         }
 
         ImmutableSetMultimap<ChunkCoordIntPair, Ticket> persistantChunks = world.getPersistentChunks();
-        PlayerManager manager = world.getPlayerManager();
+        PlayerManager manager = world.getPlayerChunkMap();
 
-        for (Chunk chunk : (List<Chunk>) world.theChunkProviderServer.loadedChunks) {
+        for (Chunk chunk : world.getChunkProvider().loadedChunks) {
             ChunkCoordIntPair coord = chunk.getChunkCoordIntPair();
-            if (!loadedChunks.contains(coord) && !persistantChunks.containsKey(coord) && world.theChunkProviderServer.chunkExists(coord.chunkXPos, coord.chunkZPos)) {
-                PlayerInstance instance = manager.getPlayerInstance(coord.chunkXPos, coord.chunkZPos, false);
+            if (!loadedChunks.contains(coord) && !persistantChunks.containsKey(coord) && world.getChunkProvider().chunkExists(coord.chunkXPos, coord.chunkZPos)) {
+                PlayerInstance instance = manager.getEntry(coord.chunkXPos, coord.chunkZPos);
                 if (instance == null) {
-                    world.theChunkProviderServer.dropChunk(coord.chunkXPos, coord.chunkZPos);
+                    world.getChunkProvider().dropChunk(coord.chunkXPos, coord.chunkZPos);
                 } else {
-                    while (instance.playersWatchingChunk.size() > 0) {
-                        instance.removePlayer((EntityPlayerMP) instance.playersWatchingChunk.get(0));
+                    while (instance.players.size() > 0) {
+                        instance.removePlayer(instance.players.get(0));
                     }
                 }
             }
         }
 
-        if (ServerUtils.getPlayersInDimension(dim).isEmpty() && world.getPersistentChunks().isEmpty() && !DimensionManager.shouldLoadSpawn(dim)) {
+        if (ServerUtils.getPlayersInDimension(dim).isEmpty() && world.getPersistentChunks().isEmpty() /*&& !DimensionManager.shouldLoadSpawn(dim)TODO*/) {
             DimensionManager.unloadWorld(dim);
         }
     }

@@ -10,20 +10,22 @@ import codechicken.core.ServerUtils;
 import codechicken.lib.packet.PacketCustom;
 import codechicken.lib.vec.BlockCoord;
 import net.minecraft.block.BlockContainer;
+import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
@@ -31,8 +33,6 @@ import java.util.List;
 
 public class BlockChunkLoader extends BlockContainer {
 
-    //@SideOnly(Side.CLIENT)
-    //IIcon[][] icons;
     public static final PropertyChunkLoaderType TYPE = PropertyChunkLoaderType.create("type");
 
     public BlockChunkLoader() {
@@ -40,28 +40,22 @@ public class BlockChunkLoader extends BlockContainer {
         setHardness(20F);
         setDefaultState(getDefaultState().withProperty(TYPE, EnumChunkLoaderType.FULL));
         setResistance(100F);
-        setStepSound(soundTypeStone);
+        setSoundType(SoundType.STONE);
     }
 
     @Override
-    public boolean isNormalCube(IBlockAccess world, BlockPos pos) {
+    public boolean isNormalCube(IBlockState state, IBlockAccess world, BlockPos pos) {
         return false;
     }
 
     @Override
-    public void setBlockBoundsBasedOnState(IBlockAccess world, BlockPos pos) {
-        setBlockBoundsForItemRender(world.getBlockState(pos).getValue(TYPE));
+    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
+        return getBoundingBoxForType(state.getValue(TYPE));
     }
 
     @Override
-    public void addCollisionBoxesToList(World world, BlockPos pos, IBlockState state, AxisAlignedBB mask, List<AxisAlignedBB> list, Entity collidingEntity) {
-        setBlockBoundsForItemRender(state.getValue(TYPE));
-        super.addCollisionBoxesToList(world, pos, state, mask, list, collidingEntity);
-    }
-
-    @Override
-    public boolean isSideSolid(IBlockAccess world, BlockPos pos, EnumFacing side) {
-        if (world.getBlockState(pos).getValue(TYPE).equals(EnumChunkLoaderType.ONE)) {
+    public boolean isSideSolid(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
+        if (world.getBlockState(pos).getValue(TYPE).equals(EnumChunkLoaderType.SPOT)) {
             return false;
         }
 
@@ -69,30 +63,25 @@ public class BlockChunkLoader extends BlockContainer {
     }
 
     @Override
-    public boolean canConnectRedstone(IBlockAccess world, BlockPos pos, EnumFacing side) {
+    public boolean canConnectRedstone(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
         return true;
     }
 
-    public void setBlockBoundsForItemRender(EnumChunkLoaderType type) {
+    public AxisAlignedBB getBoundingBoxForType(EnumChunkLoaderType type) {
         switch (type) {
         case FULL:
-            setBlockBounds(0, 0, 0, 1, 0.75F, 1);
-            break;
-        case ONE:
-            setBlockBounds(0.25F, 0, 0.25F, 0.75F, 0.4375F, 0.75F);
-            break;
+            return new AxisAlignedBB(0, 0, 0, 1, 0.75F, 1);
+        case SPOT:
+            return new AxisAlignedBB(0.25F, 0, 0.25F, 0.75F, 0.4375F, 0.75F);
+        default:
+            return FULL_BLOCK_AABB;
         }
     }
 
-    //@Override
-    //public IIcon getIcon(int side, int meta) {
-    //    return icons[meta][side > 2 ? 2 : side];
-    //}
-
     @Override
-    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumFacing side, float hitX, float hitY, float hitZ) {
+    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ) {
         EnumChunkLoaderType type = state.getValue(TYPE);
-        if (type.equals(EnumChunkLoaderType.ONE) || player.isSneaking()) {
+        if (type.equals(EnumChunkLoaderType.SPOT) || player.isSneaking()) {
             return false;
         }
 
@@ -104,7 +93,7 @@ public class BlockChunkLoader extends BlockContainer {
                 packet.writeCoord(new BlockCoord(pos));
                 packet.sendToPlayer(player);
             } else {
-                player.addChatMessage(new ChatComponentTranslation("chickenchunks.accessdenied"));
+                player.addChatMessage(new TextComponentTranslation("chickenchunks.accessdenied"));
             }
         }
         return true;
@@ -115,9 +104,8 @@ public class BlockChunkLoader extends BlockContainer {
         if (world.isRemote) {
             return;
         }
-
-        TileChunkLoaderBase ctile = (TileChunkLoaderBase) world.getTileEntity(pos);
-        ctile.onBlockPlacedBy(placer);
+        TileChunkLoaderBase loader = (TileChunkLoaderBase) world.getTileEntity(pos);
+        loader.onBlockPlacedBy(placer);
     }
 
     @Override
@@ -131,21 +119,13 @@ public class BlockChunkLoader extends BlockContainer {
         }
     }
 
-    //@Override
-    //public void registerBlockIcons(IIconRegister par1IconRegister) {
-    //    icons = new IIcon[2][3];
-    //    for (int m = 0; m < icons.length; m++)
-    //        for (int i = 0; i < icons[m].length; i++)
-    //            icons[m][i] = par1IconRegister.registerIcon("chickenchunks:block_" + m + "_" + i);
-    //}
-
     @Override
-    public boolean isOpaqueCube() {
+    public boolean isOpaqueCube(IBlockState state) {
         return false;
     }
 
     @Override
-    public void getSubBlocks(Item par1, CreativeTabs par2CreativeTabs, List list) {
+    public void getSubBlocks(Item par1, CreativeTabs par2CreativeTabs, List<ItemStack> list) {
         list.add(new ItemStack(this, 1, 0));
         list.add(new ItemStack(this, 1, 1));
     }
@@ -166,18 +146,12 @@ public class BlockChunkLoader extends BlockContainer {
     }
 
     @Override
-    protected BlockState createBlockState() {
-        return new BlockState(this, TYPE);
+    protected BlockStateContainer createBlockState() {
+        return new BlockStateContainer(this, TYPE);
     }
 
     @Override
-    public int getRenderType() {
-        return 3;
+    public EnumBlockRenderType getRenderType(IBlockState state) {
+        return EnumBlockRenderType.MODEL;
     }
-
-    //@Override
-    //@SideOnly(Side.CLIENT)
-    //public int getRenderType() {
-    //    return ChunkLoaderSBRH.renderID;
-    //}
 }

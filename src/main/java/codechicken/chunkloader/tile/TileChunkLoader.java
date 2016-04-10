@@ -7,8 +7,9 @@ import codechicken.chunkloader.manager.ChunkLoaderManager;
 import codechicken.chunkloader.api.ChunkLoaderShape;
 import codechicken.chunkloader.network.ChunkLoaderSPH;
 import codechicken.lib.vec.BlockCoord;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.network.Packet;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -47,7 +48,8 @@ public class TileChunkLoader extends TileChunkLoaderBase
         {
             radius = newRadius;
             shape = newShape;
-            worldObj.markBlockForUpdate(getPos());
+            IBlockState state = worldObj.getBlockState(getPos());
+            worldObj.notifyBlockUpdate(getPos(), state, state, 3);
             return true;
         }
         else if(ChunkLoaderManager.canLoaderAdd(this, chunks))
@@ -55,7 +57,8 @@ public class TileChunkLoader extends TileChunkLoaderBase
             radius = newRadius;
             shape = newShape;
             ChunkLoaderManager.updateLoader(this);
-            worldObj.markBlockForUpdate(getPos());
+            IBlockState state = worldObj.getBlockState(getPos());
+            worldObj.notifyBlockUpdate(getPos(), state, state, 3);
             return true;
         }
         return false;

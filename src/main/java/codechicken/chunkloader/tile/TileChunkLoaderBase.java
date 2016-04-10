@@ -11,10 +11,10 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 
@@ -69,7 +69,7 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
 
     public static boolean isPoweringTo(World world, BlockPos pos, EnumFacing side) {
         IBlockState state = world.getBlockState(pos);
-        return state.getBlock().getWeakPower(world, pos, state, side) > 0;
+        return state.getBlock().getWeakPower(state, world, pos, side) > 0;
     }
 
     public void invalidate() {
@@ -123,14 +123,16 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
         loaded = true;
         active = false;
         ChunkLoaderManager.remChunkLoader(this);
-        worldObj.markBlockForUpdate(getPos());
+        //IBlockState state = worldObj.getBlockState(getPos());
+        //worldObj.notifyBlockUpdate(getPos(), state, state, 3);
     }
 
     public void activate() {
         loaded = true;
         active = true;
         ChunkLoaderManager.addChunkLoader(this);
-        worldObj.markBlockForUpdate(getPos());
+        //IBlockState state = worldObj.getBlockState(getPos());
+        //worldObj.notifyBlockUpdate(getPos(), state, state, 3);
     }
 
     @Override

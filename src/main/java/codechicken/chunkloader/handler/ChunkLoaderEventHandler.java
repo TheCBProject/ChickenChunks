@@ -1,4 +1,4 @@
-package codechicken.chunkloader.hanler;
+package codechicken.chunkloader.handler;
 
 import codechicken.chunkloader.manager.ChunkLoaderManager;
 import codechicken.chunkloader.manager.PlayerChunkViewerManager;
@@ -49,24 +49,24 @@ public class ChunkLoaderEventHandler
 
     @SubscribeEvent
     public void onChunkDataLoad(ChunkDataEvent.Load event) {
-        ChunkLoaderManager.load((WorldServer) event.world);
+        ChunkLoaderManager.load((WorldServer) event.getWorld());
     }
 
     @SubscribeEvent
     public void onWorldLoad(Load event) {
-        if (!event.world.isRemote) {
-            ChunkLoaderManager.load((WorldServer) event.world);
-            ChunkLoaderManager.loadWorld((WorldServer) event.world);
-            PlayerChunkViewerManager.instance().dimChanges.add(new DimensionChange((WorldServer) event.world, true));
+        if (!event.getWorld().isRemote) {
+            ChunkLoaderManager.load((WorldServer) event.getWorld());
+            ChunkLoaderManager.loadWorld((WorldServer) event.getWorld());
+            PlayerChunkViewerManager.instance().dimChanges.add(new DimensionChange((WorldServer) event.getWorld(), true));
         }
     }
 
     @SubscribeEvent
     public void onWorldUnload(Unload event) {
-        if (!event.world.isRemote) {
+        if (!event.getWorld().isRemote) {
             if (ServerUtils.mc().isServerRunning()) {
-                ChunkLoaderManager.unloadWorld(event.world);
-                PlayerChunkViewerManager.instance().dimChanges.add(new DimensionChange((WorldServer) event.world, false));
+                ChunkLoaderManager.unloadWorld(event.getWorld());
+                PlayerChunkViewerManager.instance().dimChanges.add(new DimensionChange((WorldServer) event.getWorld(), false));
             } else {
                 PlayerChunkViewerManager.serverShutdown();
                 ChunkLoaderManager.serverShutdown();
@@ -76,16 +76,16 @@ public class ChunkLoaderEventHandler
 
     @SubscribeEvent
     public void onWorldSave(Save event) {
-        ChunkLoaderManager.save((WorldServer) event.world);
+        ChunkLoaderManager.save((WorldServer) event.getWorld());
     }
 
     @SubscribeEvent
     public void onChunkForce(ForceChunkEvent event) {
-        PlayerChunkViewerManager.instance().ticketChanges.add(new TicketChange(event.ticket, event.location, true));
+        PlayerChunkViewerManager.instance().ticketChanges.add(new TicketChange(event.getTicket(), event.getLocation(), true));
     }
 
     @SubscribeEvent
     public void onChunkUnForce(UnforceChunkEvent event) {
-        PlayerChunkViewerManager.instance().ticketChanges.add(new TicketChange(event.ticket, event.location, false));
+        PlayerChunkViewerManager.instance().ticketChanges.add(new TicketChange(event.getTicket(), event.getLocation(), false));
     }
 }

@@ -11,7 +11,7 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
 import java.io.File;
 
-@Mod(modid = "ChickenChunks", dependencies = "required-after:CodeChickenCore@[" + CodeChickenCorePlugin.version + ",)", acceptedMinecraftVersions = CodeChickenCorePlugin.mcVersion)
+@Mod(modid = "ChickenChunks", name = "ChickenChunks", dependencies = "required-after:CodeChickenCore@[" + CodeChickenCorePlugin.version + ",)", acceptedMinecraftVersions = CodeChickenCorePlugin.mcVersion)
 public class ChickenChunks {
     @SidedProxy(clientSide = "codechicken.chunkloader.proxy.ChunkLoaderClientProxy", serverSide = "codechicken.chunkloader.proxy.ChunkLoaderProxy")
     public static ChunkLoaderProxy proxy;

@@ -2,7 +2,7 @@ package codechicken.chunkloader.api;
 
 import java.util.HashSet;
 
-import net.minecraft.util.StatCollector;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.ChunkCoordIntPair;
 
 public enum ChunkLoaderShape
@@ -14,7 +14,7 @@ public enum ChunkLoaderShape
 
     String name;
 
-    private ChunkLoaderShape(String s) {
+    ChunkLoaderShape(String s) {
         name = s;
     }
 
@@ -103,6 +103,6 @@ public enum ChunkLoaderShape
     }
 
     public String getName() {
-        return StatCollector.translateToLocal("chickenchunks.shape." + name);
+        return I18n.translateToLocal("chickenchunks.shape." + name);
     }
 }

@@ -1,6 +1,16 @@
 {
+  "forge_marker": 1,
+  "defaults": {
+    "transform": "forge:default-block"
+  },
   "variants": {
-    "type=full": {"model" : "chickenchunks:loader_full"},
-    "type=one" : {}
+    "type": {
+      "full": {
+        "model": "chickenchunks:loader_full"
+      },
+      "spot": {
+        "model": "chickenchunks:loader_spot"
+      }
+    }
   }
 }

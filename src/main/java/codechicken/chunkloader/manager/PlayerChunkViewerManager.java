@@ -152,7 +152,7 @@ public class PlayerChunkViewerManager
         for(WorldServer world : DimensionManager.getWorlds())
         {
             HashSet<ChunkCoordIntPair> allChunks = new HashSet<ChunkCoordIntPair>();
-            ArrayList<Chunk> loadedChunkCopy = new ArrayList<Chunk>(world.theChunkProviderServer.loadedChunks);
+            ArrayList<Chunk> loadedChunkCopy = new ArrayList<Chunk>(world.getChunkProvider().loadedChunks);
             for(Chunk chunk : loadedChunkCopy)
                 allChunks.add(chunk.getChunkCoordIntPair());
             
@@ -172,7 +172,7 @@ public class PlayerChunkViewerManager
             wasLoadedChunks = new HashSet<ChunkCoordIntPair>();
         
         HashSet<ChunkCoordIntPair> allChunks = new HashSet<ChunkCoordIntPair>();
-        ArrayList<Chunk> loadedChunkCopy = new ArrayList<Chunk>(world.theChunkProviderServer.loadedChunks);
+        ArrayList<Chunk> loadedChunkCopy = new ArrayList<Chunk>(world.getChunkProvider().loadedChunks);
         for(Chunk chunk : loadedChunkCopy)
         {
             ChunkCoordIntPair coord = chunk.getChunkCoordIntPair();

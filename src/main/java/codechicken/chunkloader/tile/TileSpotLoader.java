@@ -8,7 +8,7 @@ import codechicken.chunkloader.api.ChunkLoaderShape;
 import codechicken.chunkloader.network.ChunkLoaderSPH;
 import codechicken.lib.vec.BlockCoord;
 import net.minecraft.network.Packet;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;

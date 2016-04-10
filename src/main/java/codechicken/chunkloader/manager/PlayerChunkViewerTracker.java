@@ -66,7 +66,7 @@ public class PlayerChunkViewerTracker
         int dim = CommonUtils.getDimension(world);
         packet.writeInt(dim);
                 
-        List<Chunk> allchunks = world.theChunkProviderServer.loadedChunks;        
+        List<Chunk> allchunks = world.getChunkProvider().loadedChunks;
         packet.writeInt(allchunks.size());
         for(Chunk chunk : allchunks)
         {

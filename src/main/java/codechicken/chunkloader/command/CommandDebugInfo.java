@@ -11,7 +11,7 @@ public class CommandDebugInfo extends CoreCommand
     }
 
     @Override
-    public boolean OPOnly() {
+    public boolean isOpOnly() {
         return false;
     }
 

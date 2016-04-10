@@ -7,7 +7,7 @@ import net.minecraft.util.IStringSerializable;
  */
 public enum EnumChunkLoaderType implements IStringSerializable{
     FULL,
-    ONE;
+    SPOT;
 
     @Override
     public String getName() {

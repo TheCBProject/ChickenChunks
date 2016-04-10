@@ -14,6 +14,11 @@ public class CommandChunkLoaders extends PlayerCommand {
     }
 
     @Override
+    public boolean isOpOnly() {
+        return false;
+    }
+
+    @Override
     public String getCommandUsage(ICommandSender var1) {
         return "chunkloaders";
     }
@@ -34,11 +39,6 @@ public class CommandChunkLoaders extends PlayerCommand {
     @Override
     public void printHelp(ICommandSender listener) {
         chatT(listener, "command.chunkloaders");
-    }
-
-    @Override
-    public boolean OPOnly() {
-        return false;
     }
 
     @Override
