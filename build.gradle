@@ -38,7 +38,7 @@ configFile.withReader {
 dependencies {
     compile "codechicken:CodeChickenLib:${config.mc_version}-${config.ccl_version}:deobf"
     compile "codechicken:CodeChickenCore:${config.mc_version}-${config.ccc_version}:deobf"
-    compile "codechicken:NotEnoughItems:1.9-2.0.1.+:deobf"
+    //compile "codechicken:NotEnoughItems:1.9-2.0.1.+:deobf"
 }
 
 version =  "${project.config.mod_version}." + System.getenv("BUILD_NUMBER") ?: "1"
@@ -105,20 +105,20 @@ uploadArchives {
                     name project.archivesBaseName
                     packaging 'jar'
                     description 'ChickenChunks'
-                    url 'https://github.com/covers1624/ChickenChunks'
+                    url 'https://github.com/TheCBProject/ChickenChunks'
                     scm {
-                        url 'https://github.com/covers1624/ChickenChunks'
-                        connection 'scm:git:git@github.com:covers1624/ChickenChunks.git'
-                        developerConnection 'scm:git:git@github.com:covers1624/ChickenChunks.git'
+                        url 'https://github.com/TheCBProject/ChickenChunks'
+                        connection 'scm:git:git@github.com:TheCBProject/ChickenChunks.git'
+                        developerConnection 'scm:git:git@github.com:TheCBProject/ChickenChunks.git'
                     }
                     issueManagement {
                         system 'github'
-                        url 'https://github.com/covers1624/ChickenChunks/issues'
+                        url 'https://github.com/TheCBProject/ChickenChunks/issues'
                     }
                     licenses {
                         license {
                             name 'License'
-                            url 'https://raw.githubusercontent.com/covers1624/ChickenChunks/master/LICENSE.txt'
+                            url 'https://raw.githubusercontent.com/TheCBProject/ChickenChunks/master/LICENSE.txt'
                             distribution 'repo'
                         }
                     }

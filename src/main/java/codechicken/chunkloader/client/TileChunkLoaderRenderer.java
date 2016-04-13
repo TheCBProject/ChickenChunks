@@ -5,12 +5,12 @@ import codechicken.chunkloader.tile.TileChunkLoaderBase;
 import codechicken.chunkloader.tile.TileSpotLoader;
 import codechicken.core.ClientUtils;
 import codechicken.lib.render.CCModelLibrary;
+import codechicken.lib.render.CCModelRenderer;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.vec.Matrix4;
 import codechicken.lib.vec.Rotation;
 import codechicken.lib.vec.Vector3;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.ChunkCoordIntPair;
 
@@ -35,10 +35,9 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
     }
 
     @Override
-    public void renderTileEntityAt(TileChunkLoaderBase tile, double d, double d1, double d2, float partialTicks, int destroyStage) {
+    public void renderTileEntityAt(TileChunkLoaderBase tile, double x, double y, double z, float partialTicks, int destroyStage) {
         CCRenderState.reset();
-        CCRenderState.setBrightness(tile.getWorld(), tile.getPos());
-
+        //CCRenderState.setBrightness(tile.getWorld(), tile.getPos());TODO
         double rot = ClientUtils.getRenderTime() * 2;
         double height;
         double size;
@@ -71,20 +70,20 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
             disableTexture2D();
             disableLighting();
             disableFog();
-            drawRays(d, d1, d2, rot, updown, tile.getPos().getX(), tile.getPos().getY(), tile.getPos().getZ(), tile.getChunks());
+            drawRays(x, y, z, rot, updown, tile.getPos().getX(), tile.getPos().getY(), tile.getPos().getZ(), tile.getChunks());
             enableTexture2D();
             enableLighting();
             enableFog();
         }
         rot = ClientUtils.getRenderTime() * active / 3F;
 
-        Matrix4 pearlMat = CCModelLibrary.getRenderMatrix(new Vector3(d + 0.5, d1 + height + (updown + 0.3) * active, d2 + 0.5), new Rotation(rot, new Vector3(0, 1, 0)), size);
+        Matrix4 pearlMat = CCModelLibrary.getRenderMatrix(new Vector3(x + 0.5, y + height + (updown + 0.3) * active, z + 0.5), new Rotation(rot, new Vector3(0, 1, 0)), size);
+        pushMatrix();
         disableLighting();
         CCRenderState.changeTexture("chickenchunks:textures/hedronmap.png");
-        CCRenderState.startDrawing(4, DefaultVertexFormats.POSITION_TEX);
-        CCModelLibrary.icosahedron4.render(pearlMat);
-        CCRenderState.draw();
+        CCModelRenderer.renderModel(CCModelLibrary.icosahedron4, pearlMat);
         enableLighting();
+        popMatrix();
     }
 
     public Point2D.Double findIntersection(Line2D line1, Line2D line2) {
