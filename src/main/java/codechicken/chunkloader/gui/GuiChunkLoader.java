@@ -2,19 +2,16 @@ package codechicken.chunkloader.gui;
 
 import codechicken.chunkloader.network.ChunkLoaderCPH;
 import codechicken.chunkloader.tile.TileChunkLoader;
+import codechicken.lib.render.CCRenderState;
 import codechicken.lib.util.LangProxy;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-
 import net.minecraft.client.renderer.GlStateManager;
 import org.lwjgl.opengl.GL11;
 
-import codechicken.lib.render.CCRenderState;
-
 import java.io.IOException;
 
-public class GuiChunkLoader extends GuiScreen
-{
+public class GuiChunkLoader extends GuiScreen {
     private static LangProxy lang = new LangProxy("chickenchunks.gui");
 
     public GuiButton laserButton;
@@ -64,8 +61,9 @@ public class GuiChunkLoader extends GuiScreen
         GlStateManager.disableDepth();
 
         drawCentered(lang.translate("name"), width / 2 - 40, height / 2 - 74, 0x303030);
-        if (tile.owner != null)
+        if (tile.owner != null) {
             drawCentered(tile.owner, width / 2 + 44, height / 2 - 72, 0x801080);
+        }
         drawCentered(lang.translate("radius"), width / 2 - 40, height / 2 - 57, 0x404040);
         drawCentered("" + tile.radius, width / 2 - 40, height / 2 - 39, 0xFFFFFF);
 
@@ -88,22 +86,27 @@ public class GuiChunkLoader extends GuiScreen
     int button;
 
     @Override
-    protected void mouseClicked(int par1, int par2, int par3) throws IOException{
+    protected void mouseClicked(int par1, int par2, int par3) throws IOException {
         button = par3;
-        if (par3 == 1)
+        if (par3 == 1) {
             par3 = 0;
+        }
         super.mouseClicked(par1, par2, par3);
     }
 
     protected void actionPerformed(GuiButton guibutton) {
-        if (guibutton.id == 1)
+        if (guibutton.id == 1) {
             ChunkLoaderCPH.sendShapeChange(tile, tile.shape, tile.radius + 1);
-        if (guibutton.id == 2 && tile.radius > 1)
+        }
+        if (guibutton.id == 2 && tile.radius > 1) {
             ChunkLoaderCPH.sendShapeChange(tile, tile.shape, tile.radius - 1);
-        if (guibutton.id == 3)
+        }
+        if (guibutton.id == 3) {
             tile.renderInfo.showLasers = !tile.renderInfo.showLasers;
-        if (guibutton.id == 4)
+        }
+        if (guibutton.id == 4) {
             ChunkLoaderCPH.sendShapeChange(tile, button == 1 ? tile.shape.prev() : tile.shape.next(), tile.radius);
+        }
     }
 
     private void drawContainerBackground() {

@@ -3,8 +3,7 @@ package codechicken.chunkloader.command;
 import codechicken.core.commands.CoreCommand;
 import net.minecraft.command.ICommandSender;
 
-public class CommandDebugInfo extends CoreCommand
-{
+public class CommandDebugInfo extends CoreCommand {
     @Override
     public String getCommandName() {
         return "ccdebug";

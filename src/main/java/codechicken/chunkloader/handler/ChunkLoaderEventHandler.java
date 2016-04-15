@@ -5,13 +5,6 @@ import codechicken.chunkloader.manager.PlayerChunkViewerManager;
 import codechicken.chunkloader.manager.PlayerChunkViewerManager.DimensionChange;
 import codechicken.chunkloader.manager.PlayerChunkViewerManager.TicketChange;
 import codechicken.core.ServerUtils;
-
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.ForgeChunkManager.ForceChunkEvent;
 import net.minecraftforge.common.ForgeChunkManager.UnforceChunkEvent;
@@ -19,13 +12,19 @@ import net.minecraftforge.event.world.ChunkDataEvent;
 import net.minecraftforge.event.world.WorldEvent.Load;
 import net.minecraftforge.event.world.WorldEvent.Save;
 import net.minecraftforge.event.world.WorldEvent.Unload;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 
-public class ChunkLoaderEventHandler
-{
+public class ChunkLoaderEventHandler {
     @SubscribeEvent
     public void serverTick(ServerTickEvent event) {
-        if (event.phase == Phase.END)
+        if (event.phase == Phase.END) {
             PlayerChunkViewerManager.instance().update();
+        }
     }
 
     @SubscribeEvent

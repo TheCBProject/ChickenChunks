@@ -8,10 +8,16 @@ import java.util.Collection;
 
 public interface IChickenChunkLoader {
     String getOwner();
+
     Object getMod();
+
     World getWorld();
+
     BlockCoord getPosition();
+
     void deactivate();
+
     void activate();
+
     Collection<ChunkCoordIntPair> getChunks();
 }

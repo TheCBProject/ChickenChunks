@@ -13,11 +13,12 @@ import net.minecraft.command.CommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
-import static codechicken.chunkloader.ChickenChunks.*;
+import static codechicken.chunkloader.ChickenChunks.config;
+import static codechicken.chunkloader.ChickenChunks.instance;
 
 public class ChunkLoaderProxy {
 
-    public void preInit(){
+    public void preInit() {
         ModBlocks.init();
     }
 
