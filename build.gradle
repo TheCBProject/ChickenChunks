@@ -15,7 +15,7 @@ buildscript {
 repositories {
 	maven {
 		name = "Covers1624 Repo"
-		url = "http://adel.podgeweb.com:1616/maven"
+		url = "http://chickenbones.net/maven"
 	}
 }
 
