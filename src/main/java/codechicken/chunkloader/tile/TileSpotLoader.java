@@ -10,7 +10,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -36,11 +35,6 @@ public class TileSpotLoader extends TileChunkLoaderBase {
             packet.writeString(owner);
         }
         return packet.toPacket();
-    }
-
-    @Override
-    public World getWorld() {
-        return worldObj;
     }
 
     @Override

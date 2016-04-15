@@ -95,11 +95,6 @@ public class TileChunkLoader extends TileChunkLoaderBase {
     }
 
     @Override
-    public World getWorld() {
-        return worldObj;
-    }
-
-    @Override
     public void activate() {
         if (radius == 0) {
             //create a small one and try and increment it to 2   

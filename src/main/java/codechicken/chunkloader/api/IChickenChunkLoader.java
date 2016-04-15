@@ -1,6 +1,7 @@
 package codechicken.chunkloader.api;
 
 import codechicken.lib.vec.BlockCoord;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 
@@ -11,7 +12,7 @@ public interface IChickenChunkLoader {
 
     Object getMod();
 
-    World getWorld();
+    World getLoaderWorld();
 
     BlockCoord getPosition();
 

@@ -21,7 +21,7 @@ import net.minecraft.world.World;
 import java.util.Collection;
 import java.util.Collections;
 
-public class TileChunkLoaderBase extends TileEntity implements ITickable, IChickenChunkLoader {
+public abstract class TileChunkLoaderBase extends TileEntity implements ITickable, IChickenChunkLoader {
 
     public String owner;
     protected boolean loaded = false;
@@ -112,7 +112,7 @@ public class TileChunkLoaderBase extends TileEntity implements ITickable, IChick
     }
 
     @Override
-    public World getWorld() {
+    public World getLoaderWorld() {
         return worldObj;
     }
 
@@ -136,11 +136,6 @@ public class TileChunkLoaderBase extends TileEntity implements ITickable, IChick
         ChunkLoaderManager.addChunkLoader(this);
         //IBlockState state = worldObj.getBlockState(getPos());
         //worldObj.notifyBlockUpdate(getPos(), state, state, 3);
-    }
-
-    @Override
-    public Collection<ChunkCoordIntPair> getChunks() {
-        return Collections.EMPTY_LIST;
     }
 
     @Override
