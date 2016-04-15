@@ -15,6 +15,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -28,6 +29,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.FMLLog;
 
 import java.util.List;
 
@@ -49,8 +52,19 @@ public class BlockChunkLoader extends BlockContainer {
     }
 
     @Override
+    public boolean isFullCube(IBlockState state) {
+        return false;
+    }
+
+    @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-        return getBoundingBoxForType(state.getValue(TYPE));
+        AxisAlignedBB currBox = getBoundingBoxForType(state.getValue(TYPE));
+        return currBox != null ? currBox : super.getBoundingBox(state, source, pos);
+    }
+
+    @Override
+    public void addCollisionBoxToList(IBlockState state, World worldIn, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, Entity entityIn) {
+        addCollisionBoxToList(pos, entityBox, collidingBoxes, getBoundingBox(state, worldIn, pos));
     }
 
     @Override
@@ -74,7 +88,7 @@ public class BlockChunkLoader extends BlockContainer {
         case SPOT:
             return new AxisAlignedBB(0.25F, 0, 0.25F, 0.75F, 0.4375F, 0.75F);
         default:
-            return FULL_BLOCK_AABB;
+            return null;
         }
     }
 

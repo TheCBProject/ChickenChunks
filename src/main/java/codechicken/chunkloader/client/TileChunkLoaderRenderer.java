@@ -5,12 +5,14 @@ import codechicken.chunkloader.tile.TileChunkLoaderBase;
 import codechicken.chunkloader.tile.TileSpotLoader;
 import codechicken.core.ClientUtils;
 import codechicken.lib.render.CCModelLibrary;
-import codechicken.lib.render.CCModelRenderer;
 import codechicken.lib.render.CCRenderState;
+import codechicken.lib.render.RenderUtils;
 import codechicken.lib.vec.Matrix4;
 import codechicken.lib.vec.Rotation;
 import codechicken.lib.vec.Vector3;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.ChunkCoordIntPair;
 
@@ -37,7 +39,7 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
     @Override
     public void renderTileEntityAt(TileChunkLoaderBase tile, double x, double y, double z, float partialTicks, int destroyStage) {
         CCRenderState.reset();
-        //CCRenderState.setBrightness(tile.getWorld(), tile.getPos());TODO
+        CCRenderState.setBrightness(tile.getWorld(), tile.getPos());
         double rot = ClientUtils.getRenderTime() * 2;
         double height;
         double size;
@@ -77,13 +79,14 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
         }
         rot = ClientUtils.getRenderTime() * active / 3F;
 
-        Matrix4 pearlMat = CCModelLibrary.getRenderMatrix(new Vector3(x + 0.5, y + height + (updown + 0.3) * active, z + 0.5), new Rotation(rot, new Vector3(0, 1, 0)), size);
-        pushMatrix();
+        Matrix4 pearlMat = RenderUtils.getMatrix(new Vector3(x + 0.5, y + height + (updown + 0.3) * active, z + 0.5), new Rotation(rot, new Vector3(0, 1, 0)), size);
         disableLighting();
         CCRenderState.changeTexture("chickenchunks:textures/hedronmap.png");
-        CCModelRenderer.renderModel(CCModelLibrary.icosahedron4, pearlMat);
+        CCRenderState.startDrawing(4, DefaultVertexFormats.POSITION_TEX_NORMAL);
+        CCRenderState.bind(Tessellator.getInstance().getBuffer());
+        CCModelLibrary.icosahedron4.render(pearlMat);
+        CCRenderState.draw();
         enableLighting();
-        popMatrix();
     }
 
     public Point2D.Double findIntersection(Line2D line1, Line2D line2) {

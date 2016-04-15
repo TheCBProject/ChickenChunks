@@ -38,7 +38,6 @@ configFile.withReader {
 dependencies {
     compile "codechicken:CodeChickenLib:${config.mc_version}-${config.ccl_version}:deobf"
     compile "codechicken:CodeChickenCore:${config.mc_version}-${config.ccc_version}:deobf"
-    //compile "codechicken:NotEnoughItems:1.9-2.0.1.+:deobf"
 }
 
 version =  "${project.config.mod_version}." + System.getenv("BUILD_NUMBER") ?: "1"
@@ -96,7 +95,7 @@ artifacts {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "file:///var/www/maven")
+            repository(url: "file://${local_maven}")
             pom {
                 groupId = project.group
                 version = project.version
