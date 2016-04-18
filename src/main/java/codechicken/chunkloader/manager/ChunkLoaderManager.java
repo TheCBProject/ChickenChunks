@@ -767,7 +767,7 @@ public class ChunkLoaderManager {
             }
         }
 
-        if (ServerUtils.getPlayersInDimension(dim).isEmpty() && world.getPersistentChunks().isEmpty() /*&& !DimensionManager.shouldLoadSpawn(dim)TODO*/) {
+        if (ServerUtils.getPlayersInDimension(dim).isEmpty() && world.getPersistentChunks().isEmpty() && !DimensionManager.getProviderType(dim).shouldLoadSpawn()) {
             DimensionManager.unloadWorld(dim);
         }
     }
