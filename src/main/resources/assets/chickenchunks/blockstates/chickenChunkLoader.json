@@ -10,6 +10,14 @@
       },
       "spot": {
         "model": "chickenchunks:loader_spot"
+      },
+      "full_down": {
+        "model": "chickenchunks:loader_full",
+        "x": 180
+      },
+      "spot_down": {
+        "model": "chickenchunks:loader_spot",
+        "x": 180
       }
     }
   }

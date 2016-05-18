@@ -1,5 +1,6 @@
 package codechicken.chunkloader.client;
 
+import codechicken.chunkloader.block.BlockChunkLoader;
 import codechicken.chunkloader.tile.TileChunkLoader;
 import codechicken.chunkloader.tile.TileChunkLoaderBase;
 import codechicken.chunkloader.tile.TileSpotLoader;
@@ -79,7 +80,11 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
         }
         rot = ClientUtils.getRenderTime() * active / 3F;
 
-        Matrix4 pearlMat = RenderUtils.getMatrix(new Vector3(x + 0.5, y + height + (updown + 0.3) * active, z + 0.5), new Rotation(rot, new Vector3(0, 1, 0)), size);
+        double yHeight = y + height + (updown + 0.3) * active;
+        if (tile.getWorld().getBlockState(tile.getPos()).getValue(BlockChunkLoader.TYPE).isDown()) {
+            yHeight = y - (height / 2) - (updown - 0.3) * active;
+        }
+        Matrix4 pearlMat = RenderUtils.getMatrix(new Vector3(x + 0.5, yHeight, z + 0.5), new Rotation(rot, new Vector3(0, 1, 0)), size);
         disableLighting();
         CCRenderState.changeTexture("chickenchunks:textures/hedronmap.png");
         CCRenderState.startDrawing(4, DefaultVertexFormats.POSITION_TEX_NORMAL);

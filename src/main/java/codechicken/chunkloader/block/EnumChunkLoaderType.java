@@ -7,10 +7,16 @@ import net.minecraft.util.IStringSerializable;
  */
 public enum EnumChunkLoaderType implements IStringSerializable {
     FULL,
-    SPOT;
-
+    SPOT,
+    FULL_DOWN,
+    SPOT_DOWN;
+    
     @Override
     public String getName() {
         return this.name().toLowerCase();
+    }
+    
+    public boolean isDown() {
+        return this == FULL_DOWN || this == SPOT_DOWN;
     }
 }
