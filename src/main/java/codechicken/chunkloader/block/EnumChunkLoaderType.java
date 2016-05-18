@@ -10,12 +10,12 @@ public enum EnumChunkLoaderType implements IStringSerializable {
     SPOT,
     FULL_DOWN,
     SPOT_DOWN;
-    
+
     @Override
     public String getName() {
         return this.name().toLowerCase();
     }
-    
+
     public boolean isDown() {
         return this == FULL_DOWN || this == SPOT_DOWN;
     }

@@ -18,9 +18,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 
-import java.util.Collection;
-import java.util.Collections;
-
 public abstract class TileChunkLoaderBase extends TileEntity implements ITickable, IChickenChunkLoader {
 
     public String owner;

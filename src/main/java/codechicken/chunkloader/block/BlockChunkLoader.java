@@ -81,16 +81,16 @@ public class BlockChunkLoader extends BlockContainer {
 
     public AxisAlignedBB getBoundingBoxForType(EnumChunkLoaderType type) {
         switch (type) {
-            case FULL:
-                return new AxisAlignedBB(0, 0, 0, 1, 0.75F, 1);
-            case SPOT:
-                return new AxisAlignedBB(0.25F, 0, 0.25F, 0.75F, 0.4375F, 0.75F);
-            case FULL_DOWN:
-                return new AxisAlignedBB(0, 0.25F, 0, 1, 1, 1);
-            case SPOT_DOWN:
-                return new AxisAlignedBB(0.25F, 0.5625F, 0.25F, 0.75F, 1, 0.75F);
-            default:
-                return null;
+        case FULL:
+            return new AxisAlignedBB(0, 0, 0, 1, 0.75F, 1);
+        case SPOT:
+            return new AxisAlignedBB(0.25F, 0, 0.25F, 0.75F, 0.4375F, 0.75F);
+        case FULL_DOWN:
+            return new AxisAlignedBB(0, 0.25F, 0, 1, 1, 1);
+        case SPOT_DOWN:
+            return new AxisAlignedBB(0.25F, 0.5625F, 0.25F, 0.75F, 1, 0.75F);
+        default:
+            return null;
         }
     }
 
@@ -115,10 +115,11 @@ public class BlockChunkLoader extends BlockContainer {
         return true;
     }
 
-    @Override public IBlockState onBlockPlaced(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
+    @Override
+    public IBlockState onBlockPlaced(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
         return this.getDefaultState().withProperty(TYPE, EnumChunkLoaderType.values()[facing == EnumFacing.DOWN ? meta + 2 : meta]);
     }
-    
+
     @Override
     public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
         if (world.isRemote) {
@@ -130,7 +131,9 @@ public class BlockChunkLoader extends BlockContainer {
 
     @Override
     public TileEntity createNewTileEntity(World world, int meta) {
-    	if (meta > 1) meta -= 2;
+        if (meta > 1) {
+            meta -= 2;
+        }
         if (meta == 0) {
             return new TileChunkLoader();
         } else if (meta == 1) {

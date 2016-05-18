@@ -10,7 +10,7 @@ import net.minecraft.util.math.AxisAlignedBB;
  */
 public class RenderAABB {
 
-    public static void renderAABB(AxisAlignedBB box) {
+    public static void renderAABB(AxisAlignedBB box) {//TODO, Make this call CCRenderState methods to allow for more than just DefaultVertexFormats.POSITION
         VertexBuffer worldRenderer = CCRenderState.startDrawing(7, DefaultVertexFormats.POSITION);
         worldRenderer.pos(box.minX, box.maxY, box.minZ).endVertex();
         worldRenderer.pos(box.maxX, box.maxY, box.minZ).endVertex();

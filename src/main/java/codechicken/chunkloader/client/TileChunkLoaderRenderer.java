@@ -45,6 +45,7 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
         double height;
         double size;
         double updown = (ClientUtils.getRenderTime() % 50) / 25F;
+        boolean isUpsideDown = tile.getWorld().getBlockState(tile.getPos()).getValue(BlockChunkLoader.TYPE).isDown();
 
         updown = (float) Math.sin(updown * 3.141593);
         updown *= 0.2;
@@ -73,7 +74,11 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
             disableTexture2D();
             disableLighting();
             disableFog();
-            drawRays(x, y, z, rot, updown, tile.getPos().getX(), tile.getPos().getY(), tile.getPos().getZ(), tile.getChunks());
+            double upDown = updown;
+            if (isUpsideDown) {
+                upDown = -updown - 1.3;
+            }
+            drawRays(x, y, z, rot, upDown, tile.getPos().getX(), tile.getPos().getY(), tile.getPos().getZ(), tile.getChunks());
             enableTexture2D();
             enableLighting();
             enableFog();
@@ -81,7 +86,7 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
         rot = ClientUtils.getRenderTime() * active / 3F;
 
         double yHeight = y + height + (updown + 0.3) * active;
-        if (tile.getWorld().getBlockState(tile.getPos()).getValue(BlockChunkLoader.TYPE).isDown()) {
+        if (isUpsideDown) {
             yHeight = y - (height / 2) - (updown - 0.3) * active;
         }
         Matrix4 pearlMat = RenderUtils.getMatrix(new Vector3(x + 0.5, yHeight, z + 0.5), new Rotation(rot, new Vector3(0, 1, 0)), size);
