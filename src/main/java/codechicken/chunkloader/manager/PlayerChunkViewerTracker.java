@@ -6,7 +6,7 @@ import codechicken.lib.packet.PacketCustom;
 import codechicken.lib.vec.Vector3;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.DimensionManager;
@@ -38,7 +38,7 @@ public class PlayerChunkViewerTracker {
         }
     }
 
-    public void writeTicketToPacket(PacketCustom packet, Ticket ticket, Collection<ChunkCoordIntPair> chunkSet) {
+    public void writeTicketToPacket(PacketCustom packet, Ticket ticket, Collection<ChunkPos> chunkSet) {
         packet.writeInt(manager.ticketIDs.get(ticket));
         packet.writeString(ticket.getModId());
         String player = ticket.getPlayerName();
@@ -52,7 +52,7 @@ public class PlayerChunkViewerTracker {
             packet.writeInt(entity.getEntityId());
         }
         packet.writeShort(chunkSet.size());
-        for (ChunkCoordIntPair chunk : chunkSet) {
+        for (ChunkPos chunk : chunkSet) {
             packet.writeInt(chunk.chunkXPos);
             packet.writeInt(chunk.chunkZPos);
         }
@@ -66,16 +66,16 @@ public class PlayerChunkViewerTracker {
         int dim = CommonUtils.getDimension(world);
         packet.writeInt(dim);
 
-        List<Chunk> allchunks = world.getChunkProvider().loadedChunks;
+        Collection<Chunk> allchunks = world.getChunkProvider().getLoadedChunks();
         packet.writeInt(allchunks.size());
         for (Chunk chunk : allchunks) {
             packet.writeInt(chunk.xPosition);
             packet.writeInt(chunk.zPosition);
         }
 
-        Map<Ticket, Collection<ChunkCoordIntPair>> tickets = ForgeChunkManager.getPersistentChunksFor(world).inverse().asMap();
+        Map<Ticket, Collection<ChunkPos>> tickets = ForgeChunkManager.getPersistentChunksFor(world).inverse().asMap();
         packet.writeInt(tickets.size());
-        for (Entry<Ticket, Collection<ChunkCoordIntPair>> entry : tickets.entrySet()) {
+        for (Entry<Ticket, Collection<ChunkPos>> entry : tickets.entrySet()) {
             writeTicketToPacket(packet, entry.getKey(), entry.getValue());
         }
 

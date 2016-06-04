@@ -3,7 +3,7 @@ package codechicken.chunkloader.manager;
 import codechicken.core.CommonUtils;
 import codechicken.core.ServerUtils;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.DimensionManager;
@@ -14,11 +14,11 @@ import java.util.*;
 public class PlayerChunkViewerManager {
     public static class TicketChange {
         public final Ticket ticket;
-        public final ChunkCoordIntPair chunk;
+        public final ChunkPos chunk;
         public final boolean force;
         public final int dimension;
 
-        public TicketChange(Ticket ticket, ChunkCoordIntPair chunk, boolean force) {
+        public TicketChange(Ticket ticket, ChunkPos chunk, boolean force) {
             this.ticket = ticket;
             this.dimension = CommonUtils.getDimension(ticket.world);
             this.chunk = chunk;
@@ -27,11 +27,11 @@ public class PlayerChunkViewerManager {
     }
 
     public static class ChunkChange {
-        public final ChunkCoordIntPair chunk;
+        public final ChunkPos chunk;
         public final boolean add;
         public final int dimension;
 
-        public ChunkChange(int dimension, ChunkCoordIntPair chunk, boolean add) {
+        public ChunkChange(int dimension, ChunkPos chunk, boolean add) {
             this.dimension = dimension;
             this.chunk = chunk;
             this.add = add;
@@ -53,7 +53,7 @@ public class PlayerChunkViewerManager {
     private int ticketID = 0;
     private int time = 0;
     //for tracking chunk changes
-    private HashMap<Integer, HashSet<ChunkCoordIntPair>> lastLoadedChunkMap = new HashMap<Integer, HashSet<ChunkCoordIntPair>>();
+    private HashMap<Integer, HashSet<ChunkPos>> lastLoadedChunkMap = new HashMap<Integer, HashSet<ChunkPos>>();
     //changes to be processed
     public LinkedList<ChunkChange> chunkChanges = new LinkedList<ChunkChange>();
     public LinkedList<TicketChange> ticketChanges = new LinkedList<TicketChange>();
@@ -152,8 +152,8 @@ public class PlayerChunkViewerManager {
     @SuppressWarnings("unchecked")
     private void updateChunkChangeMap() {
         for (WorldServer world : DimensionManager.getWorlds()) {
-            HashSet<ChunkCoordIntPair> allChunks = new HashSet<ChunkCoordIntPair>();
-            ArrayList<Chunk> loadedChunkCopy = new ArrayList<Chunk>(world.getChunkProvider().loadedChunks);
+            HashSet<ChunkPos> allChunks = new HashSet<ChunkPos>();
+            ArrayList<Chunk> loadedChunkCopy = new ArrayList<Chunk>(world.getChunkProvider().getLoadedChunks());
             for (Chunk chunk : loadedChunkCopy) {
                 allChunks.add(chunk.getChunkCoordIntPair());
             }
@@ -169,22 +169,22 @@ public class PlayerChunkViewerManager {
         }
 
         int dimension = CommonUtils.getDimension(world);
-        HashSet<ChunkCoordIntPair> wasLoadedChunks = lastLoadedChunkMap.get(dimension);
+        HashSet<ChunkPos> wasLoadedChunks = lastLoadedChunkMap.get(dimension);
         if (wasLoadedChunks == null) {
-            wasLoadedChunks = new HashSet<ChunkCoordIntPair>();
+            wasLoadedChunks = new HashSet<ChunkPos>();
         }
 
-        HashSet<ChunkCoordIntPair> allChunks = new HashSet<ChunkCoordIntPair>();
-        ArrayList<Chunk> loadedChunkCopy = new ArrayList<Chunk>(world.getChunkProvider().loadedChunks);
+        HashSet<ChunkPos> allChunks = new HashSet<ChunkPos>();
+        ArrayList<Chunk> loadedChunkCopy = new ArrayList<Chunk>(world.getChunkProvider().getLoadedChunks());
         for (Chunk chunk : loadedChunkCopy) {
-            ChunkCoordIntPair coord = chunk.getChunkCoordIntPair();
+            ChunkPos coord = chunk.getChunkCoordIntPair();
             allChunks.add(coord);
             if (!wasLoadedChunks.remove(coord)) {
                 chunkChanges.add(new ChunkChange(dimension, coord, true));
             }
         }
 
-        for (ChunkCoordIntPair coord : wasLoadedChunks) {
+        for (ChunkPos coord : wasLoadedChunks) {
             chunkChanges.add(new ChunkChange(dimension, coord, false));
         }
 

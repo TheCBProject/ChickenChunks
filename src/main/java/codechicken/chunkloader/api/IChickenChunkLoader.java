@@ -1,7 +1,7 @@
 package codechicken.chunkloader.api;
 
 import codechicken.lib.vec.BlockCoord;
-import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 
 import java.util.Collection;
@@ -19,5 +19,5 @@ public interface IChickenChunkLoader {
 
     void activate();
 
-    Collection<ChunkCoordIntPair> getChunks();
+    Collection<ChunkPos> getChunks();
 }

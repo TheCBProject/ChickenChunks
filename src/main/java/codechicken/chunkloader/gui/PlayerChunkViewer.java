@@ -8,7 +8,7 @@ import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
-import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.util.math.ChunkPos;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,7 +23,7 @@ public class PlayerChunkViewer extends JFrame {
         String player;
         net.minecraftforge.common.ForgeChunkManager.Type type;
         Entity entity;
-        Set<ChunkCoordIntPair> chunkSet;
+        Set<ChunkPos> chunkSet;
 
         public TicketInfo(PacketCustom packet, WorldClient world) {
             ID = packet.readInt();
@@ -36,9 +36,9 @@ public class PlayerChunkViewer extends JFrame {
                 entity = world.getEntityByID(packet.readInt());
             }
             int chunks = packet.readUShort();
-            chunkSet = new HashSet<ChunkCoordIntPair>(chunks);
+            chunkSet = new HashSet<ChunkPos>(chunks);
             for (int i = 0; i < chunks; i++) {
-                chunkSet.add(new ChunkCoordIntPair(packet.readInt(), packet.readInt()));
+                chunkSet.add(new ChunkPos(packet.readInt(), packet.readInt()));
             }
         }
     }
@@ -55,7 +55,7 @@ public class PlayerChunkViewer extends JFrame {
 
     public static class DimensionChunkInfo {
         public final int dimension;
-        public HashSet<ChunkCoordIntPair> allchunks = new HashSet<ChunkCoordIntPair>();
+        public HashSet<ChunkPos> allchunks = new HashSet<ChunkPos>();
         public HashMap<Integer, TicketInfo> tickets = new HashMap<Integer, TicketInfo>();
 
         public DimensionChunkInfo(int dim) {
@@ -131,11 +131,11 @@ public class PlayerChunkViewer extends JFrame {
             }
             info += "<br>Type: " + ticket.type.name();
             if (ticket.entity != null) {
-                info += "<br>Entity: " + EntityList.classToStringMapping.get(ticket.entity) + "#" + ticket.entity.getEntityId() + " (" + String.format("%.2f", ticket.entity.posX) + ", " + String.format("%.2f", ticket.entity.posY) + ", " + String.format("%.2f", ticket.entity.posZ) + ")";
+                info += "<br>Entity: " + EntityList.CLASS_TO_NAME.get(ticket.entity) + "#" + ticket.entity.getEntityId() + " (" + String.format("%.2f", ticket.entity.posX) + ", " + String.format("%.2f", ticket.entity.posY) + ", " + String.format("%.2f", ticket.entity.posZ) + ")";
             }
             info += "</span><p style=\"text-align:center; font-family:Tahoma; font-size:10px\">ForcedChunks</p>";
             String chunks = "<span style=\"font-family:Tahoma; font-size:10px\">";
-            for (ChunkCoordIntPair coord : ticket.chunkSet) {
+            for (ChunkPos coord : ticket.chunkSet) {
                 chunks += coord.chunkXPos + ", " + coord.chunkZPos + "<br>";
             }
             chunks += "</span>";
@@ -199,7 +199,7 @@ public class PlayerChunkViewer extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if (Minecraft.getMinecraft().getNetHandler() != null) {
+                if (Minecraft.getMinecraft().getConnection() != null) {
                     ChunkLoaderCPH.sendGuiClosing();
                 }
             }
@@ -435,24 +435,24 @@ public class PlayerChunkViewer extends JFrame {
                 }
 
                 g.setColor(new Color(1F, 0, 0));
-                for (ChunkCoordIntPair coord : dimInfo.allchunks) {
+                for (ChunkPos coord : dimInfo.allchunks) {
                     Point pos = getChunkRenderPosition(coord.chunkXPos, coord.chunkZPos);
                     g.fillRect(pos.x, pos.y, 4, 4);
                 }
 
-                HashSet<ChunkCoordIntPair> forcedChunks = new HashSet<ChunkCoordIntPair>();
+                HashSet<ChunkPos> forcedChunks = new HashSet<ChunkPos>();
                 int numTickets = 0;
                 for (TicketInfo ticket : dimInfo.tickets.values()) {
                     if (!ticket.chunkSet.isEmpty()) {
                         numTickets++;
                     }
-                    for (ChunkCoordIntPair coord : ticket.chunkSet) {
+                    for (ChunkPos coord : ticket.chunkSet) {
                         forcedChunks.add(coord);
                     }
                 }
 
                 g.setColor(new Color(0, 1F, 0));
-                for (ChunkCoordIntPair coord : forcedChunks) {
+                for (ChunkPos coord : forcedChunks) {
                     Point pos = getChunkRenderPosition(coord.chunkXPos, coord.chunkZPos);
                     g.fillRect(pos.x + 1, pos.y + 1, 2, 2);
                 }
@@ -554,7 +554,7 @@ public class PlayerChunkViewer extends JFrame {
         public LinkedList<TicketInfo> getTicketsUnderMouse(DimensionChunkInfo dimInfo, Point mouse) {
             LinkedList<TicketInfo> mouseOverTickets = new LinkedList<TicketInfo>();
             for (TicketInfo ticket : dimInfo.tickets.values()) {
-                for (ChunkCoordIntPair coord : ticket.chunkSet) {
+                for (ChunkPos coord : ticket.chunkSet) {
                     Point pos = getChunkRenderPosition(coord.chunkXPos, coord.chunkZPos);
                     if (new Rectangle(pos.x, pos.y, 4, 4).contains(mouse)) {
                         mouseOverTickets.add(ticket);
@@ -626,7 +626,7 @@ public class PlayerChunkViewer extends JFrame {
 
             int numChunks = packet.readInt();
             for (int i = 0; i < numChunks; i++) {
-                dimInfo.allchunks.add(new ChunkCoordIntPair(packet.readInt(), packet.readInt()));
+                dimInfo.allchunks.add(new ChunkPos(packet.readInt(), packet.readInt()));
             }
 
             int numTickets = packet.readInt();
@@ -643,7 +643,7 @@ public class PlayerChunkViewer extends JFrame {
         dimensionChunks.remove(dim);
     }
 
-    public void handleChunkChange(int dimension, ChunkCoordIntPair coord, boolean add) {
+    public void handleChunkChange(int dimension, ChunkPos coord, boolean add) {
         synchronized (dimensionChunks) {
             if (add) {
                 dimensionChunks.get(dimension).allchunks.add(coord);
@@ -653,7 +653,7 @@ public class PlayerChunkViewer extends JFrame {
         }
     }
 
-    public void handleTicketChange(int dimension, int ticketID, ChunkCoordIntPair coord, boolean force) {
+    public void handleTicketChange(int dimension, int ticketID, ChunkPos coord, boolean force) {
         synchronized (dimensionChunks) {
             DimensionChunkInfo dimInfo = dimensionChunks.get(dimension);
             TicketInfo ticket = dimInfo.tickets.get(ticketID);

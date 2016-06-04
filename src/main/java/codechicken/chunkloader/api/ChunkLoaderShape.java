@@ -1,7 +1,7 @@
 package codechicken.chunkloader.api;
 
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.translation.I18n;
-import net.minecraft.world.ChunkCoordIntPair;
 
 import java.util.HashSet;
 
@@ -17,25 +17,25 @@ public enum ChunkLoaderShape {
         name = s;
     }
 
-    public HashSet<ChunkCoordIntPair> getChunks(int radius, ChunkCoordIntPair center) {
-        HashSet<ChunkCoordIntPair> chunkset = new HashSet<ChunkCoordIntPair>();
+    public HashSet<ChunkPos> getChunks(int radius, ChunkPos center) {
+        HashSet<ChunkPos> chunkset = new HashSet<ChunkPos>();
         radius -= 1;
         switch (this) {
         case Square:
             for (int x = center.chunkXPos - radius; x <= center.chunkXPos + radius; x++) {
                 for (int z = center.chunkZPos - radius; z <= center.chunkZPos + radius; z++) {
-                    chunkset.add(new ChunkCoordIntPair(x, z));
+                    chunkset.add(new ChunkPos(x, z));
                 }
             }
             break;
         case LineX:
             for (int x = center.chunkXPos - radius; x <= center.chunkXPos + radius; x++) {
-                chunkset.add(new ChunkCoordIntPair(x, center.chunkZPos));
+                chunkset.add(new ChunkPos(x, center.chunkZPos));
             }
             break;
         case LineZ:
             for (int z = center.chunkZPos - radius; z <= center.chunkZPos + radius; z++) {
-                chunkset.add(new ChunkCoordIntPair(center.chunkXPos, z));
+                chunkset.add(new ChunkPos(center.chunkXPos, z));
             }
             break;
         case Circle:
@@ -45,7 +45,7 @@ public enum ChunkLoaderShape {
                     int relz = z - center.chunkZPos;
                     double dist = Math.sqrt(relx * relx + relz * relz);
                     if (dist <= radius) {
-                        chunkset.add(new ChunkCoordIntPair(x, z));
+                        chunkset.add(new ChunkPos(x, z));
                     }
                 }
             }
@@ -71,24 +71,24 @@ public enum ChunkLoaderShape {
         return values()[index];
     }
 
-    public HashSet<ChunkCoordIntPair> getLoadedChunks(int chunkx, int chunkz, int radius) {
-        HashSet<ChunkCoordIntPair> chunkSet = new HashSet<ChunkCoordIntPair>();
+    public HashSet<ChunkPos> getLoadedChunks(int chunkx, int chunkz, int radius) {
+        HashSet<ChunkPos> chunkSet = new HashSet<ChunkPos>();
         switch (this) {
         case Square:
             for (int cx = chunkx - radius; cx <= chunkx + radius; cx++) {
                 for (int cz = chunkz - radius; cz <= chunkz + radius; cz++) {
-                    chunkSet.add(new ChunkCoordIntPair(cx, cz));
+                    chunkSet.add(new ChunkPos(cx, cz));
                 }
             }
             break;
         case LineX:
             for (int cx = chunkx - radius; cx <= chunkx + radius; cx++) {
-                chunkSet.add(new ChunkCoordIntPair(cx, chunkz));
+                chunkSet.add(new ChunkPos(cx, chunkz));
             }
             break;
         case LineZ:
             for (int cz = chunkz - radius; cz <= chunkz + radius; cz++) {
-                chunkSet.add(new ChunkCoordIntPair(chunkx, cz));
+                chunkSet.add(new ChunkPos(chunkx, cz));
             }
             break;
         case Circle:
@@ -96,7 +96,7 @@ public enum ChunkLoaderShape {
                 for (int cz = chunkz - radius; cz <= chunkz + radius; cz++) {
                     double distSquared = (cx - chunkx) * (cx - chunkx) + (cz - chunkz) * (cz - chunkz);
                     if (distSquared <= radius * radius) {
-                        chunkSet.add(new ChunkCoordIntPair(cx, cz));
+                        chunkSet.add(new ChunkPos(cx, cz));
                     }
                 }
             }

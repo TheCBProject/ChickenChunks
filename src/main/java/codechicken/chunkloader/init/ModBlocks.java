@@ -19,7 +19,7 @@ public class ModBlocks {
 
     public static void init() {
         blockChunkLoader = new BlockChunkLoader();
-        blockChunkLoader.setUnlocalizedName("chickenChunkLoader").setCreativeTab(CreativeTabs.tabMisc);
+        blockChunkLoader.setUnlocalizedName("chickenChunkLoader").setCreativeTab(CreativeTabs.MISC);
         GameRegistry.register(blockChunkLoader.setRegistryName("chickenChunkLoader"));
         GameRegistry.register(new ItemChunkLoader(blockChunkLoader).setRegistryName("chickenChunkLoader"));
         GameRegistry.registerTileEntity(TileChunkLoader.class, "ChickenChunkLoader");

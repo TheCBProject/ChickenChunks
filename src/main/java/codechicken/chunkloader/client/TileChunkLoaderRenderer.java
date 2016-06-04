@@ -8,6 +8,7 @@ import codechicken.core.ClientUtils;
 import codechicken.lib.render.CCModelLibrary;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.RenderUtils;
+import codechicken.lib.render.TextureUtils;
 import codechicken.lib.vec.Matrix4;
 import codechicken.lib.vec.Rotation;
 import codechicken.lib.vec.Vector3;
@@ -15,7 +16,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.util.math.ChunkPos;
 
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
@@ -70,31 +71,27 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
             active -= partialTicks / 20D;
         }
 
+        if (isUpsideDown) {
+            updown = -updown - 1.3;
+        }
+
         if (renderInfo.showLasers) {
             disableTexture2D();
             disableLighting();
             disableFog();
-            double upDown = updown;
-            if (isUpsideDown) {
-                upDown = -updown - 1.3;
-            }
-            drawRays(x, y, z, rot, upDown, tile.getPos().getX(), tile.getPos().getY(), tile.getPos().getZ(), tile.getChunks());
+            drawRays(x, y, z, rot, updown, tile.getPos().getX(), tile.getPos().getY(), tile.getPos().getZ(), tile.getChunks());
             enableTexture2D();
             enableLighting();
             enableFog();
         }
         rot = ClientUtils.getRenderTime() * active / 3F;
 
-        double yHeight = y + height + (updown + 0.3) * active;
-        if (isUpsideDown) {
-            yHeight = y - (height / 2) - (updown - 0.3) * active;
-        }
-        Matrix4 pearlMat = RenderUtils.getMatrix(new Vector3(x + 0.5, yHeight, z + 0.5), new Rotation(rot, new Vector3(0, 1, 0)), size);
+        Matrix4 pearlMat = RenderUtils.getMatrix(new Vector3(x + 0.5, y + height + (updown + 0.3) * active, z + 0.5), new Rotation(rot, new Vector3(0, 1, 0)), size);
         disableLighting();
-        CCRenderState.changeTexture("chickenchunks:textures/hedronmap.png");
-        CCRenderState.startDrawing(4, DefaultVertexFormats.POSITION_TEX_NORMAL);
+        TextureUtils.changeTexture("chickenchunks:textures/hedronmap.png");
+        CCRenderState.startDrawing(7, DefaultVertexFormats.BLOCK);
         CCRenderState.bind(Tessellator.getInstance().getBuffer());
-        CCModelLibrary.icosahedron4.render(pearlMat);
+        CCModelLibrary.icosahedron7.render(pearlMat);
         CCRenderState.draw();
         enableLighting();
     }
@@ -134,7 +131,7 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
                 point.getY() <= Math.max(line.getY1(), line.getY2());
     }
 
-    public void drawRays(double d, double d1, double d2, double rotationAngle, double updown, int x, int y, int z, Collection<ChunkCoordIntPair> chunkSet) {
+    public void drawRays(double d, double d1, double d2, double rotationAngle, double updown, int x, int y, int z, Collection<ChunkPos> chunkSet) {
         int cx = (x >> 4) << 4;
         int cz = (z >> 4) << 4;
 
@@ -157,7 +154,7 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
 
         Line2D.Double[] rays = new Line2D.Double[] { new Line2D.Double(center.x, center.y, center.x + 1600 * absRays[0].x, center.y + 1600 * absRays[0].y), new Line2D.Double(center.x, center.y, center.x + 1600 * absRays[1].x, center.y + 1600 * absRays[1].y), new Line2D.Double(center.x, center.y, center.x + 1600 * absRays[2].x, center.y + 1600 * absRays[2].y), new Line2D.Double(center.x, center.y, center.x + 1600 * absRays[3].x, center.y + 1600 * absRays[3].y) };
 
-        for (ChunkCoordIntPair pair : chunkSet) {
+        for (ChunkPos pair : chunkSet) {
             int chunkBlockX = pair.chunkXPos << 4;
             int chunkBlockZ = pair.chunkZPos << 4;
             for (int side = 0; side < 4; side++) {

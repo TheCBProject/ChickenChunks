@@ -5,20 +5,25 @@ import codechicken.chunkloader.api.IChickenChunkLoader;
 import codechicken.chunkloader.client.TileChunkLoaderRenderer.RenderInfo;
 import codechicken.chunkloader.init.ModBlocks;
 import codechicken.chunkloader.manager.ChunkLoaderManager;
+import codechicken.lib.packet.INBTPacketTile;
 import codechicken.lib.vec.BlockCoord;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 
-public abstract class TileChunkLoaderBase extends TileEntity implements ITickable, IChickenChunkLoader {
+import javax.annotation.Nullable;
+
+public abstract class TileChunkLoaderBase extends TileEntity implements ITickable, IChickenChunkLoader, INBTPacketTile {
 
     public String owner;
     protected boolean loaded = false;
@@ -26,12 +31,13 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
     public RenderInfo renderInfo;
     public boolean active = false;
 
-    public void writeToNBT(NBTTagCompound tag) {
+    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
         tag.setBoolean("powered", powered);
         if (owner != null) {
             tag.setString("owner", owner);
         }
+        return tag;
     }
 
     @Override
@@ -84,8 +90,8 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
         worldObj.setBlockToAir(getPos());
     }
 
-    public ChunkCoordIntPair getChunkPosition() {
-        return new ChunkCoordIntPair(getPos().getX() >> 4, getPos().getZ() >> 4);
+    public ChunkPos getChunkPosition() {
+        return new ChunkPos(getPos().getX() >> 4, getPos().getZ() >> 4);
     }
 
     public void onBlockPlacedBy(EntityLivingBase entityliving) {
@@ -155,5 +161,34 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
     @Override
     public AxisAlignedBB getRenderBoundingBox() {
         return INFINITE_EXTENT_AABB;
+    }
+
+    @Nullable
+    @Override
+    public SPacketUpdateTileEntity getUpdatePacket() {
+        NBTTagCompound tagCompound = new NBTTagCompound();
+        writePacketData(tagCompound);
+        return new SPacketUpdateTileEntity(getPos(), 0, tagCompound);
+    }
+
+    @Override
+    public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt) {
+        readPacketData(pkt.getNbtCompound());
+    }
+
+    @Override
+    public void writePacketData(NBTTagCompound tagCompound) {
+        tagCompound.setBoolean("active", active);
+        if (owner != null) {
+            tagCompound.setString("owner", owner);
+        }
+    }
+
+    @Override
+    public void readPacketData(NBTTagCompound tagCompound) {
+        active = tagCompound.getBoolean("active");
+        if (tagCompound.hasKey("owner")) {
+            owner = tagCompound.getString("owner");
+        }
     }
 }

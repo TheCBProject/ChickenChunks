@@ -11,10 +11,10 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.server.management.PlayerManager;
-import net.minecraft.server.management.PlayerManager.PlayerInstance;
+import net.minecraft.server.management.PlayerChunkMap;
+import net.minecraft.server.management.PlayerChunkMapEntry;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
@@ -39,7 +39,7 @@ public class ChunkLoaderManager {
         public final int chunkX;
         public final int chunkZ;
 
-        public DimChunkCoord(int dim, ChunkCoordIntPair coord) {
+        public DimChunkCoord(int dim, ChunkPos coord) {
             this(dim, coord.chunkXPos, coord.chunkZPos);
         }
 
@@ -63,8 +63,8 @@ public class ChunkLoaderManager {
             return false;
         }
 
-        public ChunkCoordIntPair getChunkCoord() {
-            return new ChunkCoordIntPair(chunkX, chunkZ);
+        public ChunkPos getChunkCoord() {
+            return new ChunkPos(chunkX, chunkZ);
         }
     }
 
@@ -123,19 +123,19 @@ public class ChunkLoaderManager {
     private static abstract class ChunkLoaderOrganiser extends TicketManager {
         private HashMap<Integer, HashSet<BlockCoord>> dormantLoaders = new HashMap<Integer, HashSet<BlockCoord>>();
         private HashMap<DimChunkCoord, LinkedList<IChickenChunkLoader>> forcedChunksByChunk = new HashMap<DimChunkCoord, LinkedList<IChickenChunkLoader>>();
-        private HashMap<IChickenChunkLoader, HashSet<ChunkCoordIntPair>> forcedChunksByLoader = new HashMap<IChickenChunkLoader, HashSet<ChunkCoordIntPair>>();
+        private HashMap<IChickenChunkLoader, HashSet<ChunkPos>> forcedChunksByLoader = new HashMap<IChickenChunkLoader, HashSet<ChunkPos>>();
         private HashMap<DimChunkCoord, Integer> timedUnloadQueue = new HashMap<DimChunkCoord, Integer>();
 
         private boolean reviving;
         private boolean dormant = false;
 
-        public boolean canForceNewChunks(int dimension, Collection<ChunkCoordIntPair> chunks) {
+        public boolean canForceNewChunks(int dimension, Collection<ChunkPos> chunks) {
             if (dormant) {
                 return true;
             }
 
             int required = 0;
-            for (ChunkCoordIntPair coord : chunks) {
+            for (ChunkPos coord : chunks) {
                 LinkedList<IChickenChunkLoader> loaders = forcedChunksByChunk.get(new DimChunkCoord(dimension, coord));
                 if (loaders == null || loaders.isEmpty()) {
                     required++;
@@ -161,7 +161,7 @@ public class ChunkLoaderManager {
                 }
                 coords.add(loader.getPosition());
             } else {
-                forcedChunksByLoader.put(loader, new HashSet<ChunkCoordIntPair>());
+                forcedChunksByLoader.put(loader, new HashSet<ChunkPos>());
                 forceChunks(loader, dim, loader.getChunks());
             }
             setDirty();
@@ -175,7 +175,7 @@ public class ChunkLoaderManager {
                     coords.remove(loader.getPosition());
                 }
             } else {
-                HashSet<ChunkCoordIntPair> chunks = forcedChunksByLoader.remove(loader);
+                HashSet<ChunkPos> chunks = forcedChunksByLoader.remove(loader);
                 if (chunks == null) {
                     return;
                 }
@@ -184,8 +184,8 @@ public class ChunkLoaderManager {
             setDirty();
         }
 
-        private void unforceChunks(IChickenChunkLoader loader, int dim, Collection<ChunkCoordIntPair> chunks, boolean remLoader) {
-            for (ChunkCoordIntPair coord : chunks) {
+        private void unforceChunks(IChickenChunkLoader loader, int dim, Collection<ChunkPos> chunks, boolean remLoader) {
+            for (ChunkPos coord : chunks) {
                 DimChunkCoord dimCoord = new DimChunkCoord(dim, coord);
                 LinkedList<IChickenChunkLoader> loaders = forcedChunksByChunk.get(dimCoord);
                 if (loaders == null || !loaders.remove(loader)) {
@@ -204,8 +204,8 @@ public class ChunkLoaderManager {
             setDirty();
         }
 
-        private void forceChunks(IChickenChunkLoader loader, int dim, Collection<ChunkCoordIntPair> chunks) {
-            for (ChunkCoordIntPair coord : chunks) {
+        private void forceChunks(IChickenChunkLoader loader, int dim, Collection<ChunkPos> chunks) {
+            for (ChunkPos coord : chunks) {
                 DimChunkCoord dimCoord = new DimChunkCoord(dim, coord);
                 LinkedList<IChickenChunkLoader> loaders = forcedChunksByChunk.get(dimCoord);
                 if (loaders == null) {
@@ -230,14 +230,14 @@ public class ChunkLoaderManager {
         public abstract void setDirty();
 
         public void updateChunkLoader(IChickenChunkLoader loader) {
-            HashSet<ChunkCoordIntPair> loaderChunks = forcedChunksByLoader.get(loader);
+            HashSet<ChunkPos> loaderChunks = forcedChunksByLoader.get(loader);
             if (loaderChunks == null) {
                 addChunkLoader(loader);
                 return;
             }
-            HashSet<ChunkCoordIntPair> oldChunks = new HashSet<ChunkCoordIntPair>(loaderChunks);
-            HashSet<ChunkCoordIntPair> newChunks = new HashSet<ChunkCoordIntPair>();
-            for (ChunkCoordIntPair chunk : loader.getChunks()) {
+            HashSet<ChunkPos> oldChunks = new HashSet<ChunkPos>(loaderChunks);
+            HashSet<ChunkPos> newChunks = new HashSet<ChunkPos>();
+            for (ChunkPos chunk : loader.getChunks()) {
                 if (!oldChunks.remove(chunk)) {
                     newChunks.add(chunk);
                 }
@@ -664,7 +664,7 @@ public class ChunkLoaderManager {
         getOrganiser(loader).updateChunkLoader(loader);
     }
 
-    public static boolean canLoaderAdd(IChickenChunkLoader loader, Collection<ChunkCoordIntPair> chunks) {
+    public static boolean canLoaderAdd(IChickenChunkLoader loader, Collection<ChunkPos> chunks) {
         String owner = loader.getOwner();
         int dim = CommonUtils.getDimension(loader.getLoaderWorld());
         if (owner != null) {
@@ -738,27 +738,27 @@ public class ChunkLoaderManager {
         int dim = CommonUtils.getDimension(world);
         int viewdist = ServerUtils.mc().getPlayerList().getViewDistance();
 
-        HashSet<ChunkCoordIntPair> loadedChunks = new HashSet<ChunkCoordIntPair>();
+        HashSet<ChunkPos> loadedChunks = new HashSet<ChunkPos>();
         for (EntityPlayer player : ServerUtils.getPlayersInDimension(dim)) {
             int playerChunkX = (int) player.posX >> 4;
             int playerChunkZ = (int) player.posZ >> 4;
 
             for (int cx = playerChunkX - viewdist; cx <= playerChunkX + viewdist; cx++) {
                 for (int cz = playerChunkZ - viewdist; cz <= playerChunkZ + viewdist; cz++) {
-                    loadedChunks.add(new ChunkCoordIntPair(cx, cz));
+                    loadedChunks.add(new ChunkPos(cx, cz));
                 }
             }
         }
 
-        ImmutableSetMultimap<ChunkCoordIntPair, Ticket> persistantChunks = world.getPersistentChunks();
-        PlayerManager manager = world.getPlayerChunkMap();
+        ImmutableSetMultimap<ChunkPos, Ticket> persistantChunks = world.getPersistentChunks();
+        PlayerChunkMap manager = world.getPlayerChunkMap();
 
-        for (Chunk chunk : world.getChunkProvider().loadedChunks) {
-            ChunkCoordIntPair coord = chunk.getChunkCoordIntPair();
+        for (Chunk chunk : world.getChunkProvider().getLoadedChunks()) {
+            ChunkPos coord = chunk.getChunkCoordIntPair();
             if (!loadedChunks.contains(coord) && !persistantChunks.containsKey(coord) && world.getChunkProvider().chunkExists(coord.chunkXPos, coord.chunkZPos)) {
-                PlayerInstance instance = manager.getEntry(coord.chunkXPos, coord.chunkZPos);
+                PlayerChunkMapEntry instance = manager.getEntry(coord.chunkXPos, coord.chunkZPos);
                 if (instance == null) {
-                    world.getChunkProvider().dropChunk(coord.chunkXPos, coord.chunkZPos);
+                    world.getChunkProvider().unload(chunk);
                 } else {
                     while (instance.players.size() > 0) {
                         instance.removePlayer(instance.players.get(0));

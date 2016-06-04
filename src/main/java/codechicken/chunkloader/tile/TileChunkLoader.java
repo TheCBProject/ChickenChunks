@@ -2,32 +2,19 @@ package codechicken.chunkloader.tile;
 
 import codechicken.chunkloader.api.ChunkLoaderShape;
 import codechicken.chunkloader.manager.ChunkLoaderManager;
-import codechicken.chunkloader.network.ChunkLoaderSPH;
-import codechicken.lib.packet.PacketCustom;
-import codechicken.lib.vec.BlockCoord;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.Packet;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.ChunkCoordIntPair;
-import net.minecraft.world.World;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
+import net.minecraft.util.math.ChunkPos;
 
 import java.util.Collection;
 import java.util.HashSet;
 
 public class TileChunkLoader extends TileChunkLoaderBase {
-    public static void handleDescriptionPacket(PacketCustom packet, World world) {
-        TileEntity tile = world.getTileEntity(new BlockPos(packet.readInt(), packet.readInt(), packet.readInt()));
-        if (tile instanceof TileChunkLoader) {
-            TileChunkLoader ctile = (TileChunkLoader) tile;
-            ctile.setShapeAndRadius(ChunkLoaderShape.values()[packet.readUByte()], packet.readUByte());
-            ctile.active = packet.readBoolean();
-            if (packet.readBoolean()) {
-                ctile.owner = packet.readString();
-            }
-        }
-    }
+
+    public int radius;
+    public ChunkLoaderShape shape = ChunkLoaderShape.Square;
 
     public boolean setShapeAndRadius(ChunkLoaderShape newShape, int newRadius) {
         if (worldObj.isRemote) {
@@ -35,7 +22,7 @@ public class TileChunkLoader extends TileChunkLoaderBase {
             shape = newShape;
             return true;
         }
-        Collection<ChunkCoordIntPair> chunks = getContainedChunks(newShape, getPos().getX(), getPos().getZ(), newRadius);
+        Collection<ChunkPos> chunks = getContainedChunks(newShape, getPos().getX(), getPos().getZ(), newRadius);
         if (chunks.size() > ChunkLoaderManager.maxChunksPerLoader()) {
             return false;
         } else if (powered) {
@@ -55,23 +42,29 @@ public class TileChunkLoader extends TileChunkLoaderBase {
         return false;
     }
 
-    public Packet getDescriptionPacket() {
-        PacketCustom packet = new PacketCustom(ChunkLoaderSPH.channel, 10);
-        packet.writeCoord(new BlockCoord(getPos()));
-        packet.writeByte(shape.ordinal());
-        packet.writeByte(radius);
-        packet.writeBoolean(active);
-        packet.writeBoolean(owner != null);
-        if (owner != null) {
-            packet.writeString(owner);
-        }
-        return packet.toPacket();
+    @Override
+    public void writePacketData(NBTTagCompound tagCompound) {
+        super.writePacketData(tagCompound);
+        tagCompound.setByte("shape", (byte) shape.ordinal());
+        tagCompound.setByte("radius", (byte) radius);//TODO Maybe not cast to byte?
     }
 
-    public void writeToNBT(NBTTagCompound tag) {
+    @Override
+    public void readPacketData(NBTTagCompound tagCompound) {
+        super.readPacketData(tagCompound);
+        setShapeAndRadius(ChunkLoaderShape.values()[tagCompound.getByte("shape")], tagCompound.getByte("radius"));
+    }
+
+    @Override
+    public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt) {
+        super.onDataPacket(net, pkt);
+    }
+
+    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
         tag.setByte("radius", (byte) radius);
         tag.setByte("shape", (byte) shape.ordinal());
+        return tag;
     }
 
     @Override
@@ -82,11 +75,11 @@ public class TileChunkLoader extends TileChunkLoaderBase {
     }
 
     @Override
-    public HashSet<ChunkCoordIntPair> getChunks() {
+    public HashSet<ChunkPos> getChunks() {
         return getContainedChunks(shape, getPos().getX(), getPos().getZ(), radius);
     }
 
-    public static HashSet<ChunkCoordIntPair> getContainedChunks(ChunkLoaderShape shape, int xCoord, int zCoord, int radius) {
+    public static HashSet<ChunkPos> getContainedChunks(ChunkLoaderShape shape, int xCoord, int zCoord, int radius) {
         return shape.getLoadedChunks(xCoord >> 4, zCoord >> 4, radius - 1);
     }
 
@@ -105,7 +98,4 @@ public class TileChunkLoader extends TileChunkLoaderBase {
 
         super.activate();
     }
-
-    public int radius;
-    public ChunkLoaderShape shape = ChunkLoaderShape.Square;
 }

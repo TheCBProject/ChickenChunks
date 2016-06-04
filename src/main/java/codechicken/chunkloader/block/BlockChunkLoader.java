@@ -37,7 +37,7 @@ public class BlockChunkLoader extends BlockContainer {
     public static final PropertyChunkLoaderType TYPE = PropertyChunkLoaderType.create("type");
 
     public BlockChunkLoader() {
-        super(Material.rock);
+        super(Material.ROCK);
         setHardness(20F);
         setDefaultState(getDefaultState().withProperty(TYPE, EnumChunkLoaderType.FULL));
         setResistance(100F);
