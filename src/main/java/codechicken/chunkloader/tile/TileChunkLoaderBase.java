@@ -5,7 +5,11 @@ import codechicken.chunkloader.api.IChickenChunkLoader;
 import codechicken.chunkloader.client.TileChunkLoaderRenderer.RenderInfo;
 import codechicken.chunkloader.init.ModBlocks;
 import codechicken.chunkloader.manager.ChunkLoaderManager;
-import codechicken.lib.packet.INBTPacketTile;
+import codechicken.chunkloader.network.ChunkLoaderSPH;
+import codechicken.lib.data.MCDataInput;
+import codechicken.lib.data.MCDataOutput;
+import codechicken.lib.packet.ICustomPacketTile;
+import codechicken.lib.packet.PacketCustom;
 import codechicken.lib.vec.BlockCoord;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
@@ -23,7 +27,7 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 
-public abstract class TileChunkLoaderBase extends TileEntity implements ITickable, IChickenChunkLoader, INBTPacketTile {
+public abstract class TileChunkLoaderBase extends TileEntity implements ITickable, IChickenChunkLoader, ICustomPacketTile {
 
     public String owner;
     protected boolean loaded = false;
@@ -166,29 +170,42 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
     @Nullable
     @Override
     public SPacketUpdateTileEntity getUpdatePacket() {
-        NBTTagCompound tagCompound = new NBTTagCompound();
-        writePacketData(tagCompound);
-        return new SPacketUpdateTileEntity(getPos(), 0, tagCompound);
+        PacketCustom packet = new PacketCustom(ChunkLoaderSPH.channel, 10);
+        writeToPacket(packet);
+        return new SPacketUpdateTileEntity(getPos(), 0, packet.toNBTTag());
+    }
+
+    @Override
+    public NBTTagCompound getUpdateTag() {
+        PacketCustom packet = new PacketCustom(ChunkLoaderSPH.channel, 10);
+        writeToPacket(packet);
+        return packet.toNBTTag(super.getUpdateTag());
     }
 
     @Override
     public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt) {
-        readPacketData(pkt.getNbtCompound());
+        readFromPacket(PacketCustom.fromTilePacket(pkt));
     }
 
     @Override
-    public void writePacketData(NBTTagCompound tagCompound) {
-        tagCompound.setBoolean("active", active);
+    public void handleUpdateTag(NBTTagCompound tag) {
+        readFromPacket(PacketCustom.fromNBTTag(tag));
+    }
+
+    @Override
+    public void writeToPacket(MCDataOutput packet) {
+        packet.writeBoolean(active);
+        packet.writeBoolean(owner != null);
         if (owner != null) {
-            tagCompound.setString("owner", owner);
+            packet.writeString(owner);
         }
     }
 
     @Override
-    public void readPacketData(NBTTagCompound tagCompound) {
-        active = tagCompound.getBoolean("active");
-        if (tagCompound.hasKey("owner")) {
-            owner = tagCompound.getString("owner");
+    public void readFromPacket(MCDataInput packet) {
+        active = packet.readBoolean();
+        if (packet.readBoolean()) {
+            owner = packet.readString();
         }
     }
 }

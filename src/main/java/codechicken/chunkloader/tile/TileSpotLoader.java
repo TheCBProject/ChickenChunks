@@ -10,8 +10,5 @@ public class TileSpotLoader extends TileChunkLoaderBase {
     public Collection<ChunkPos> getChunks() {
         return Collections.singletonList(getChunkPosition());
     }
-
-    //public static HashSet<ChunkPos> getContainedChunks(ChunkLoaderShape shape, int xCoord, int zCoord, int radius) {
-    //    return shape.getLoadedChunks(xCoord >> 4, zCoord >> 4, radius - 1);
-    //}
+    
 }

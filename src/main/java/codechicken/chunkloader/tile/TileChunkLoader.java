@@ -2,6 +2,8 @@ package codechicken.chunkloader.tile;
 
 import codechicken.chunkloader.api.ChunkLoaderShape;
 import codechicken.chunkloader.manager.ChunkLoaderManager;
+import codechicken.lib.data.MCDataInput;
+import codechicken.lib.data.MCDataOutput;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
@@ -43,22 +45,18 @@ public class TileChunkLoader extends TileChunkLoaderBase {
     }
 
     @Override
-    public void writePacketData(NBTTagCompound tagCompound) {
-        super.writePacketData(tagCompound);
-        tagCompound.setByte("shape", (byte) shape.ordinal());
-        tagCompound.setByte("radius", (byte) radius);//TODO Maybe not cast to byte?
+    public void writeToPacket(MCDataOutput packet) {
+        super.writeToPacket(packet);
+        packet.writeByte(shape.ordinal());
+        packet.writeByte(radius);
     }
 
     @Override
-    public void readPacketData(NBTTagCompound tagCompound) {
-        super.readPacketData(tagCompound);
-        setShapeAndRadius(ChunkLoaderShape.values()[tagCompound.getByte("shape")], tagCompound.getByte("radius"));
+    public void readFromPacket(MCDataInput packet) {
+        super.readFromPacket(packet);
+        setShapeAndRadius(ChunkLoaderShape.values()[packet.readUByte()], packet.readUByte());
     }
 
-    @Override
-    public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt) {
-        super.onDataPacket(net, pkt);
-    }
 
     public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
