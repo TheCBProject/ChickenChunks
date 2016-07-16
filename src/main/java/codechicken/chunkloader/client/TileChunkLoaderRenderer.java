@@ -88,11 +88,13 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
 
         Matrix4 pearlMat = RenderUtils.getMatrix(new Vector3(x + 0.5, y + height + (updown + 0.3) * active, z + 0.5), new Rotation(rot, new Vector3(0, 1, 0)), size);
         disableLighting();
+        pushMatrix();
+        pearlMat.glApply();
         TextureUtils.changeTexture("chickenchunks:textures/hedronmap.png");
         CCRenderState.startDrawing(7, DefaultVertexFormats.BLOCK);
-        CCRenderState.bind(Tessellator.getInstance().getBuffer());
-        CCModelLibrary.icosahedron7.render(pearlMat);
+        CCModelLibrary.icosahedron7.render();
         CCRenderState.draw();
+        popMatrix();
         enableLighting();
     }
 
