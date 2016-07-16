@@ -1,6 +1,5 @@
 package codechicken.chunkloader.client;
 
-import codechicken.chunkloader.block.BlockChunkLoader;
 import codechicken.chunkloader.tile.TileChunkLoader;
 import codechicken.chunkloader.tile.TileChunkLoaderBase;
 import codechicken.chunkloader.tile.TileSpotLoader;
@@ -12,7 +11,6 @@ import codechicken.lib.render.TextureUtils;
 import codechicken.lib.vec.Matrix4;
 import codechicken.lib.vec.Rotation;
 import codechicken.lib.vec.Vector3;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -46,7 +44,6 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
         double height;
         double size;
         double updown = (ClientUtils.getRenderTime() % 50) / 25F;
-        boolean isUpsideDown = tile.getWorld().getBlockState(tile.getPos()).getValue(BlockChunkLoader.TYPE).isDown();
 
         updown = (float) Math.sin(updown * 3.141593);
         updown *= 0.2;
@@ -69,10 +66,6 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
             active += partialTicks / 20D;
         } else if (!tile.active && renderInfo.activationCounter > 0) {
             active -= partialTicks / 20D;
-        }
-
-        if (isUpsideDown) {
-            updown = -updown - 1.3;
         }
 
         if (renderInfo.showLasers) {
