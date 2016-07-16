@@ -4,10 +4,7 @@ import codechicken.chunkloader.tile.TileChunkLoader;
 import codechicken.chunkloader.tile.TileChunkLoaderBase;
 import codechicken.chunkloader.tile.TileSpotLoader;
 import codechicken.core.ClientUtils;
-import codechicken.lib.render.CCModelLibrary;
-import codechicken.lib.render.CCRenderState;
-import codechicken.lib.render.RenderUtils;
-import codechicken.lib.render.TextureUtils;
+import codechicken.lib.render.*;
 import codechicken.lib.vec.Matrix4;
 import codechicken.lib.vec.Rotation;
 import codechicken.lib.vec.Vector3;
@@ -35,6 +32,7 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
             }
         }
     }
+
 
     @Override
     public void renderTileEntityAt(TileChunkLoaderBase tile, double x, double y, double z, float partialTicks, int destroyStage) {
@@ -82,10 +80,9 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
         Matrix4 pearlMat = RenderUtils.getMatrix(new Vector3(x + 0.5, y + height + (updown + 0.3) * active, z + 0.5), new Rotation(rot, new Vector3(0, 1, 0)), size);
         disableLighting();
         pushMatrix();
-        pearlMat.glApply();
         TextureUtils.changeTexture("chickenchunks:textures/hedronmap.png");
-        CCRenderState.startDrawing(7, DefaultVertexFormats.BLOCK);
-        CCModelLibrary.icosahedron7.render();
+        CCRenderState.startDrawing(7, DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
+        CCModelLibrary.icosahedron7.render(pearlMat);
         CCRenderState.draw();
         popMatrix();
         enableLighting();

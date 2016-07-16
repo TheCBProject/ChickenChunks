@@ -2,7 +2,7 @@ package codechicken.chunkloader.gui;
 
 import codechicken.chunkloader.network.ChunkLoaderCPH;
 import codechicken.chunkloader.tile.TileChunkLoader;
-import codechicken.lib.render.CCRenderState;
+import codechicken.lib.render.TextureUtils;
 import codechicken.lib.util.LangProxy;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -111,7 +111,7 @@ public class GuiChunkLoader extends GuiScreen {
 
     private void drawContainerBackground() {
         GL11.glColor4f(1, 1, 1, 1);
-        CCRenderState.changeTexture("chickenchunks:textures/gui/guiSmall.png");
+        TextureUtils.changeTexture("chickenchunks:textures/gui/guiSmall.png");
         int posx = width / 2 - 88;
         int posy = height / 2 - 83;
         drawTexturedModalRect(posx, posy, 0, 0, 176, 166);
