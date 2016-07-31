@@ -95,37 +95,39 @@ artifacts {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "file://${local_maven}")
-            pom {
-                groupId = project.group
-                version = project.version
-                artifactId = project.archivesBaseName
-                project {
-                    name project.archivesBaseName
-                    packaging 'jar'
-                    description 'ChickenChunks'
-                    url 'https://github.com/TheCBProject/ChickenChunks'
-                    scm {
+            if (project.hasProperty("local_maven")) {
+                repository(url: "file://${local_maven}")
+                pom {
+                    groupId = project.group
+                    version = project.version
+                    artifactId = project.archivesBaseName
+                    project {
+                        name project.archivesBaseName
+                        packaging 'jar'
+                        description 'ChickenChunks'
                         url 'https://github.com/TheCBProject/ChickenChunks'
-                        connection 'scm:git:git@github.com:TheCBProject/ChickenChunks.git'
-                        developerConnection 'scm:git:git@github.com:TheCBProject/ChickenChunks.git'
-                    }
-                    issueManagement {
-                        system 'github'
-                        url 'https://github.com/TheCBProject/ChickenChunks/issues'
-                    }
-                    licenses {
-                        license {
-                            name 'License'
-                            url 'https://raw.githubusercontent.com/TheCBProject/ChickenChunks/master/LICENSE.txt'
-                            distribution 'repo'
+                        scm {
+                            url 'https://github.com/TheCBProject/ChickenChunks'
+                            connection 'scm:git:git@github.com:TheCBProject/ChickenChunks.git'
+                            developerConnection 'scm:git:git@github.com:TheCBProject/ChickenChunks.git'
                         }
-                    }
-                    developers {
-						developer {
-                            id 'chicken-bones'
-                            name 'chicken-bones'
-                            roles { role 'developer' }
+                        issueManagement {
+                            system 'github'
+                            url 'https://github.com/TheCBProject/ChickenChunks/issues'
+                        }
+                        licenses {
+                            license {
+                                name 'License'
+                                url 'https://raw.githubusercontent.com/TheCBProject/ChickenChunks/master/LICENSE.txt'
+                                distribution 'repo'
+                            }
+                        }
+                        developers {
+                            developer {
+                                id 'chicken-bones'
+                                name 'chicken-bones'
+                                roles { role 'developer' }
+                            }
                         }
                     }
                 }
