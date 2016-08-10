@@ -9,7 +9,6 @@ import codechicken.chunkloader.manager.ChunkLoaderManager;
 import codechicken.chunkloader.network.ChunkLoaderSPH;
 import codechicken.chunkloader.tile.TileChunkLoader;
 import codechicken.lib.packet.PacketCustom;
-import net.minecraft.command.CommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
@@ -27,14 +26,12 @@ public class ChunkLoaderProxy {
         ChunkLoaderManager.initConfig(config);
         ModRecipes.init();
         MinecraftForge.EVENT_BUS.register(new ChunkLoaderEventHandler());
-        //FMLCommonHandler.instance().bus().register(new ChunkLoaderEventHandler());
         ChunkLoaderManager.registerMod(instance);
     }
 
     public void registerCommands(FMLServerStartingEvent event) {
-        CommandHandler commandManager = (CommandHandler) event.getServer().getCommandManager();
-        commandManager.registerCommand(new CommandChunkLoaders());
-        commandManager.registerCommand(new CommandDebugInfo());
+        event.registerServerCommand(new CommandChunkLoaders());
+        event.registerServerCommand(new CommandDebugInfo());
     }
 
     public void openGui(TileChunkLoader tile) {

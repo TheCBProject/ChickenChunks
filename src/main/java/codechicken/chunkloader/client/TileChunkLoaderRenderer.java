@@ -3,8 +3,11 @@ package codechicken.chunkloader.client;
 import codechicken.chunkloader.tile.TileChunkLoader;
 import codechicken.chunkloader.tile.TileChunkLoaderBase;
 import codechicken.chunkloader.tile.TileSpotLoader;
-import codechicken.core.ClientUtils;
-import codechicken.lib.render.*;
+import codechicken.lib.render.CCModelLibrary;
+import codechicken.lib.render.CCRenderState;
+import codechicken.lib.render.RenderUtils;
+import codechicken.lib.render.TextureUtils;
+import codechicken.lib.util.ClientUtils;
 import codechicken.lib.vec.Matrix4;
 import codechicken.lib.vec.Rotation;
 import codechicken.lib.vec.Vector3;
@@ -32,7 +35,6 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
             }
         }
     }
-
 
     @Override
     public void renderTileEntityAt(TileChunkLoaderBase tile, double x, double y, double z, float partialTicks, int destroyStage) {

@@ -2,10 +2,10 @@ package codechicken.chunkloader.manager;
 
 import codechicken.chunkloader.ChickenChunks;
 import codechicken.chunkloader.api.IChickenChunkLoader;
-import codechicken.core.CommonUtils;
 import codechicken.core.ServerUtils;
 import codechicken.lib.config.ConfigFile;
 import codechicken.lib.config.ConfigTag;
+import codechicken.lib.util.CommonUtils;
 import codechicken.lib.vec.BlockCoord;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedListMultimap;

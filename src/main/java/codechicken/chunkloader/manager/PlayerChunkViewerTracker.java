@@ -1,8 +1,8 @@
 package codechicken.chunkloader.manager;
 
 import codechicken.chunkloader.network.ChunkLoaderSPH;
-import codechicken.core.CommonUtils;
 import codechicken.lib.packet.PacketCustom;
+import codechicken.lib.util.CommonUtils;
 import codechicken.lib.vec.Vector3;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,7 +15,6 @@ import net.minecraftforge.common.ForgeChunkManager.Ticket;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -62,7 +61,7 @@ public class PlayerChunkViewerTracker {
 
     @SuppressWarnings("unchecked")
     public void loadDimension(WorldServer world) {
-        PacketCustom packet = new PacketCustom(channel, 2).compress();
+        PacketCustom packet = new PacketCustom(channel, 2);
         int dim = CommonUtils.getDimension(world);
         packet.writeInt(dim);
 

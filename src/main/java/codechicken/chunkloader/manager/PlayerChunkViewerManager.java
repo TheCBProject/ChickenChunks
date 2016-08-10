@@ -1,7 +1,7 @@
 package codechicken.chunkloader.manager;
 
-import codechicken.core.CommonUtils;
 import codechicken.core.ServerUtils;
+import codechicken.lib.util.CommonUtils;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.WorldServer;

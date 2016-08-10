@@ -7,7 +7,6 @@ import codechicken.chunkloader.network.ChunkLoaderCPH;
 import codechicken.chunkloader.tile.TileChunkLoader;
 import codechicken.chunkloader.tile.TileSpotLoader;
 import codechicken.core.CCUpdateChecker;
-import codechicken.core.ClientUtils;
 import codechicken.core.ModDescriptionEnhancer;
 import codechicken.lib.packet.PacketCustom;
 import net.minecraft.client.Minecraft;
