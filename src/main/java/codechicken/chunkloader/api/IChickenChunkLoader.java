@@ -1,6 +1,6 @@
 package codechicken.chunkloader.api;
 
-import codechicken.lib.vec.BlockCoord;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 
@@ -13,7 +13,7 @@ public interface IChickenChunkLoader {
 
     World getLoaderWorld();
 
-    BlockCoord getPosition();
+    BlockPos getPosition();
 
     void deactivate();
 

@@ -8,7 +8,6 @@ import codechicken.chunkloader.tile.TileChunkLoaderBase;
 import codechicken.chunkloader.tile.TileSpotLoader;
 import codechicken.core.ServerUtils;
 import codechicken.lib.packet.PacketCustom;
-import codechicken.lib.vec.BlockCoord;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -99,7 +98,7 @@ public class BlockChunkLoader extends BlockContainer {
             if (tile.owner == null || tile.owner.equals(player.getName()) ||
                     ChunkLoaderManager.opInteract() && ServerUtils.isPlayerOP(player.getName())) {
                 PacketCustom packet = new PacketCustom(ChunkLoaderSPH.channel, 12);
-                packet.writeCoord(new BlockCoord(pos));
+                packet.writePos(pos);
                 packet.sendToPlayer(player);
             } else {
                 player.addChatMessage(new TextComponentTranslation("chickenchunks.accessdenied"));

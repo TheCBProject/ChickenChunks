@@ -6,7 +6,6 @@ import codechicken.core.ServerUtils;
 import codechicken.lib.config.ConfigFile;
 import codechicken.lib.config.ConfigTag;
 import codechicken.lib.util.CommonUtils;
-import codechicken.lib.vec.BlockCoord;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -14,6 +13,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.server.management.PlayerChunkMapEntry;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -121,7 +121,7 @@ public class ChunkLoaderManager {
     }
 
     private static abstract class ChunkLoaderOrganiser extends TicketManager {
-        private HashMap<Integer, HashSet<BlockCoord>> dormantLoaders = new HashMap<Integer, HashSet<BlockCoord>>();
+        private HashMap<Integer, HashSet<BlockPos>> dormantLoaders = new HashMap<Integer, HashSet<BlockPos>>();
         private HashMap<DimChunkCoord, LinkedList<IChickenChunkLoader>> forcedChunksByChunk = new HashMap<DimChunkCoord, LinkedList<IChickenChunkLoader>>();
         private HashMap<IChickenChunkLoader, HashSet<ChunkPos>> forcedChunksByLoader = new HashMap<IChickenChunkLoader, HashSet<ChunkPos>>();
         private HashMap<DimChunkCoord, Integer> timedUnloadQueue = new HashMap<DimChunkCoord, Integer>();
@@ -155,9 +155,9 @@ public class ChunkLoaderManager {
 
             int dim = CommonUtils.getDimension(loader.getLoaderWorld());
             if (dormant) {
-                HashSet<BlockCoord> coords = dormantLoaders.get(dim);
+                HashSet<BlockPos> coords = dormantLoaders.get(dim);
                 if (coords == null) {
-                    dormantLoaders.put(dim, coords = new HashSet<BlockCoord>());
+                    dormantLoaders.put(dim, coords = new HashSet<BlockPos>());
                 }
                 coords.add(loader.getPosition());
             } else {
@@ -170,7 +170,7 @@ public class ChunkLoaderManager {
         public void remChunkLoader(IChickenChunkLoader loader) {
             int dim = CommonUtils.getDimension(loader.getLoaderWorld());
             if (dormant) {
-                HashSet<BlockCoord> coords = dormantLoaders.get(dim);
+                HashSet<BlockPos> coords = dormantLoaders.get(dim);
                 if (coords != null) {
                     coords.remove(loader.getPosition());
                 }
@@ -254,23 +254,23 @@ public class ChunkLoaderManager {
 
         public void save(DataOutput dataout) throws IOException {
             dataout.writeInt(dormantLoaders.size());
-            for (Entry<Integer, HashSet<BlockCoord>> entry : dormantLoaders.entrySet()) {
+            for (Entry<Integer, HashSet<BlockPos>> entry : dormantLoaders.entrySet()) {
                 dataout.writeInt(entry.getKey());
-                HashSet<BlockCoord> coords = entry.getValue();
+                HashSet<BlockPos> coords = entry.getValue();
                 dataout.writeInt(coords.size());
-                for (BlockCoord coord : coords) {
-                    dataout.writeInt(coord.x);
-                    dataout.writeInt(coord.y);
-                    dataout.writeInt(coord.z);
+                for (BlockPos coord : coords) {
+                    dataout.writeInt(coord.getX());
+                    dataout.writeInt(coord.getY());
+                    dataout.writeInt(coord.getZ());
                 }
             }
             dataout.writeInt(forcedChunksByLoader.size());
             for (IChickenChunkLoader loader : forcedChunksByLoader.keySet()) {
-                BlockCoord coord = loader.getPosition();
+                BlockPos coord = loader.getPosition();
                 dataout.writeInt(CommonUtils.getDimension(loader.getLoaderWorld()));
-                dataout.writeInt(coord.x);
-                dataout.writeInt(coord.y);
-                dataout.writeInt(coord.z);
+                dataout.writeInt(coord.getX());
+                dataout.writeInt(coord.getY());
+                dataout.writeInt(coord.getZ());
             }
         }
 
@@ -278,21 +278,21 @@ public class ChunkLoaderManager {
             int dimensions = datain.readInt();
             for (int i = 0; i < dimensions; i++) {
                 int dim = datain.readInt();
-                HashSet<BlockCoord> coords = new HashSet<BlockCoord>();
+                HashSet<BlockPos> coords = new HashSet<BlockPos>();
                 dormantLoaders.put(dim, coords);
                 int numCoords = datain.readInt();
                 for (int j = 0; j < numCoords; j++) {
-                    coords.add(new BlockCoord(datain.readInt(), datain.readInt(), datain.readInt()));
+                    coords.add(new BlockPos(datain.readInt(), datain.readInt(), datain.readInt()));
                 }
             }
             int numLoaders = datain.readInt();
             for (int i = 0; i < numLoaders; i++) {
                 int dim = datain.readInt();
-                HashSet<BlockCoord> coords = dormantLoaders.get(dim);
+                HashSet<BlockPos> coords = dormantLoaders.get(dim);
                 if (coords == null) {
-                    dormantLoaders.put(dim, coords = new HashSet<BlockCoord>());
+                    dormantLoaders.put(dim, coords = new HashSet<BlockPos>());
                 }
-                coords.add(new BlockCoord(datain.readInt(), datain.readInt(), datain.readInt()));
+                coords.add(new BlockPos(datain.readInt(), datain.readInt(), datain.readInt()));
             }
         }
 
@@ -316,9 +316,9 @@ public class ChunkLoaderManager {
 
             for (IChickenChunkLoader loader : new ArrayList<IChickenChunkLoader>(forcedChunksByLoader.keySet())) {
                 int dim = CommonUtils.getDimension(loader.getLoaderWorld());
-                HashSet<BlockCoord> coords = dormantLoaders.get(dim);
+                HashSet<BlockPos> coords = dormantLoaders.get(dim);
                 if (coords == null) {
-                    dormantLoaders.put(dim, coords = new HashSet<BlockCoord>());
+                    dormantLoaders.put(dim, coords = new HashSet<BlockPos>());
                 }
                 coords.add(loader.getPosition());
                 remChunkLoader(loader);
@@ -328,18 +328,18 @@ public class ChunkLoaderManager {
         }
 
         public void revive(World world) {
-            HashSet<BlockCoord> coords = dormantLoaders.get(CommonUtils.getDimension(world));
+            HashSet<BlockPos> coords = dormantLoaders.get(CommonUtils.getDimension(world));
             if (coords == null) {
                 return;
             }
 
             //addChunkLoader will add to the coord set if we are dormant
-            ArrayList<BlockCoord> verifyCoords = new ArrayList<BlockCoord>(coords);
+            ArrayList<BlockPos> verifyCoords = new ArrayList<BlockPos>(coords);
             coords.clear();
 
-            for (BlockCoord coord : verifyCoords) {
+            for (BlockPos coord : verifyCoords) {
                 reviving = true;
-                TileEntity tile = world.getTileEntity(coord.pos());
+                TileEntity tile = world.getTileEntity(coord);
                 reviving = false;
                 if (tile instanceof IChickenChunkLoader) {
                     ChunkLoaderManager.addChunkLoader((IChickenChunkLoader) tile);

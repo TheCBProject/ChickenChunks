@@ -10,7 +10,6 @@ import codechicken.lib.data.MCDataInput;
 import codechicken.lib.data.MCDataOutput;
 import codechicken.lib.packet.ICustomPacketTile;
 import codechicken.lib.packet.PacketCustom;
-import codechicken.lib.vec.BlockCoord;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -124,8 +123,8 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
     }
 
     @Override
-    public BlockCoord getPosition() {
-        return new BlockCoord(this);
+    public BlockPos getPosition() {
+        return getPos();
     }
 
     @Override

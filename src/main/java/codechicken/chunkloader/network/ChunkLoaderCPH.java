@@ -7,7 +7,6 @@ import codechicken.chunkloader.tile.TileChunkLoader;
 import codechicken.lib.packet.PacketCustom;
 import codechicken.lib.packet.PacketCustom.IClientPacketHandler;
 import codechicken.lib.util.CommonUtils;
-import codechicken.lib.vec.BlockCoord;
 import codechicken.lib.vec.Vector3;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.play.INetHandlerPlayClient;
@@ -51,8 +50,7 @@ public class ChunkLoaderCPH implements IClientPacketHandler {
         //    TileSpotLoader.handleDescriptionPacket(packet, mc.theWorld);
         //    break;
         case 12:
-            BlockCoord pos = packet.readCoord();
-            TileEntity tile = mc.theWorld.getTileEntity(pos.pos());
+            TileEntity tile = mc.theWorld.getTileEntity(packet.readPos());
             if (tile instanceof TileChunkLoader) {
                 mc.displayGuiScreen(new GuiChunkLoader((TileChunkLoader) tile));
             }
@@ -68,7 +66,7 @@ public class ChunkLoaderCPH implements IClientPacketHandler {
 
     public static void sendShapeChange(TileChunkLoader tile, ChunkLoaderShape shape, int radius) {
         PacketCustom packet = new PacketCustom(channel, 2);
-        packet.writeCoord(new BlockCoord(tile.getPos()));
+        packet.writePos(tile.getPos());
         packet.writeByte(shape.ordinal());
         packet.writeByte(radius);
         packet.sendToServer();
