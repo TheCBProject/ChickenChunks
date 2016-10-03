@@ -61,7 +61,7 @@ public class PlayerChunkViewerTracker {
 
     @SuppressWarnings("unchecked")
     public void loadDimension(WorldServer world) {
-        PacketCustom packet = new PacketCustom(channel, 2);
+        PacketCustom packet = new PacketCustom(channel, 2).compress();
         int dim = CommonUtils.getDimension(world);
         packet.writeInt(dim);
 
