@@ -11,7 +11,8 @@ import net.minecraft.util.math.AxisAlignedBB;
 public class RenderAABB {
 
     public static void renderAABB(AxisAlignedBB box) {//TODO, Move to CCL
-        VertexBuffer worldRenderer = CCRenderState.startDrawing(7, DefaultVertexFormats.POSITION);
+        CCRenderState ccrs = CCRenderState.instance();
+        VertexBuffer worldRenderer = ccrs.startDrawing(7, DefaultVertexFormats.POSITION);
         worldRenderer.pos(box.minX, box.maxY, box.minZ).endVertex();
         worldRenderer.pos(box.maxX, box.maxY, box.minZ).endVertex();
         worldRenderer.pos(box.maxX, box.minY, box.minZ).endVertex();
@@ -36,7 +37,7 @@ public class RenderAABB {
         worldRenderer.pos(box.maxX, box.maxY, box.minZ).endVertex();
         worldRenderer.pos(box.maxX, box.maxY, box.maxZ).endVertex();
         worldRenderer.pos(box.maxX, box.minY, box.maxZ).endVertex();
-        CCRenderState.draw();
+        ccrs.draw();
     }
 
 }
