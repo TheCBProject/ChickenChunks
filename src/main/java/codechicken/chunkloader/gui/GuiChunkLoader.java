@@ -55,9 +55,7 @@ public class GuiChunkLoader extends GuiScreen {
 
         super.drawScreen(i, j, f);//buttons
 
-        //GL11.glDisable(GL11.GL_LIGHTING);
         GlStateManager.disableLighting();
-        //GL11.glDisable(GL11.GL_DEPTH_TEST);
         GlStateManager.disableDepth();
 
         drawCentered(lang.translate("name"), width / 2 - 40, height / 2 - 74, 0x303030);
@@ -74,9 +72,7 @@ public class GuiChunkLoader extends GuiScreen {
         //fontRenderer.drawString(sradius, width / 2 - fontRenderer.getStringWidth(sradius) / 2, height / 2 - 8, 0x108000);
 
         GlStateManager.enableLighting();
-        //GL11.glEnable(GL11.GL_LIGHTING);
         GlStateManager.enableDepth();
-        //GL11.glEnable(GL11.GL_DEPTH_TEST);
     }
 
     private void drawCentered(String s, int x, int y, int colour) {

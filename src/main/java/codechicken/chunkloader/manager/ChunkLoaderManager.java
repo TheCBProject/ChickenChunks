@@ -2,7 +2,6 @@ package codechicken.chunkloader.manager;
 
 import codechicken.chunkloader.ChickenChunks;
 import codechicken.chunkloader.api.IChickenChunkLoader;
-import codechicken.core.ServerUtils;
 import codechicken.lib.config.ConfigFile;
 import codechicken.lib.config.ConfigTag;
 import codechicken.lib.util.CommonUtils;
@@ -586,7 +585,7 @@ public class ChunkLoaderManager {
             }
         }
 
-        if (ServerUtils.isPlayerOP(username)) {
+        if (codechicken.lib.util.ServerUtils.isPlayerOP(username)) {
             int ret = config.getTag("OP").getIntValue(0);
             if (ret != 0) {
                 return ret;
@@ -602,7 +601,7 @@ public class ChunkLoaderManager {
             return config.getTag(username).getBooleanValue(true);
         }
 
-        if (ServerUtils.isPlayerOP(username)) {
+        if (codechicken.lib.util.ServerUtils.isPlayerOP(username)) {
             return config.getTag("OP").getBooleanValue(true);
         }
 
@@ -615,7 +614,7 @@ public class ChunkLoaderManager {
             return config.getTag(username).getBooleanValue(true);
         }
 
-        if (ServerUtils.isPlayerOP(username)) {
+        if (codechicken.lib.util.ServerUtils.isPlayerOP(username)) {
             return config.getTag("OP").getBooleanValue(true);
         }
 
@@ -736,10 +735,10 @@ public class ChunkLoaderManager {
     @SuppressWarnings("unchecked")
     public static void cleanChunks(WorldServer world) {
         int dim = CommonUtils.getDimension(world);
-        int viewdist = ServerUtils.mc().getPlayerList().getViewDistance();
+        int viewdist = codechicken.lib.util.ServerUtils.mc().getPlayerList().getViewDistance();
 
         HashSet<ChunkPos> loadedChunks = new HashSet<ChunkPos>();
-        for (EntityPlayer player : ServerUtils.getPlayersInDimension(dim)) {
+        for (EntityPlayer player : codechicken.lib.util.ServerUtils.getPlayersInDimension(dim)) {
             int playerChunkX = (int) player.posX >> 4;
             int playerChunkZ = (int) player.posZ >> 4;
 
@@ -767,7 +766,7 @@ public class ChunkLoaderManager {
             }
         }
 
-        if (ServerUtils.getPlayersInDimension(dim).isEmpty() && world.getPersistentChunks().isEmpty() && !DimensionManager.getProviderType(dim).shouldLoadSpawn()) {
+        if (codechicken.lib.util.ServerUtils.getPlayersInDimension(dim).isEmpty() && world.getPersistentChunks().isEmpty() && !DimensionManager.getProviderType(dim).shouldLoadSpawn()) {
             DimensionManager.unloadWorld(dim);
         }
     }
@@ -787,7 +786,7 @@ public class ChunkLoaderManager {
 
     private static void updateLoginTimes() {
         long time = System.currentTimeMillis();
-        for (EntityPlayer player : ServerUtils.getPlayers()) {
+        for (EntityPlayer player : codechicken.lib.util.ServerUtils.getPlayers()) {
             loginTimes.put(player.getName(), time);
         }
 

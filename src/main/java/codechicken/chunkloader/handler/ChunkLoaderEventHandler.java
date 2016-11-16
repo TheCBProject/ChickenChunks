@@ -4,7 +4,7 @@ import codechicken.chunkloader.manager.ChunkLoaderManager;
 import codechicken.chunkloader.manager.PlayerChunkViewerManager;
 import codechicken.chunkloader.manager.PlayerChunkViewerManager.DimensionChange;
 import codechicken.chunkloader.manager.PlayerChunkViewerManager.TicketChange;
-import codechicken.core.ServerUtils;
+import codechicken.lib.util.ServerUtils;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.ForgeChunkManager.ForceChunkEvent;
 import net.minecraftforge.common.ForgeChunkManager.UnforceChunkEvent;
