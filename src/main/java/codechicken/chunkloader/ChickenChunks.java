@@ -12,7 +12,7 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
 import java.io.File;
 
-@Mod(modid = "ChickenChunks", name = "ChickenChunks", dependencies = "required-after:CodeChickenCore@[" + CodeChickenCorePlugin.version + ",)", acceptedMinecraftVersions = CodeChickenLib.mcVersion)
+@Mod(modid = "ChickenChunks", name = "ChickenChunks", dependencies = "required-after:CodeChickenCore@[" + CodeChickenCorePlugin.version + ",)", acceptedMinecraftVersions = CodeChickenLib.mcVersion, certificateFingerprint = "f1850c39b2516232a2108a7bd84d1cb5df93b261")
 public class ChickenChunks {
     @SidedProxy(clientSide = "codechicken.chunkloader.proxy.ChunkLoaderClientProxy", serverSide = "codechicken.chunkloader.proxy.ChunkLoaderProxy")
     public static ChunkLoaderProxy proxy;
@@ -24,6 +24,7 @@ public class ChickenChunks {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        FingerprintChecker.runFingerprintChecks();
         config = new ConfigFile(new File(event.getModConfigurationDirectory(), "ChickenChunks.cfg")).setComment("ChunkLoader Configuration File\nDeleting any element will restore it to it's default value");
         proxy.preInit();
     }
