@@ -57,18 +57,18 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
 
     public void validate() {
         super.validate();
-        if (!worldObj.isRemote && loaded && !powered) {
+        if (!world.isRemote && loaded && !powered) {
             activate();
         }
 
-        if (worldObj.isRemote) {
+        if (world.isRemote) {
             renderInfo = new RenderInfo();
         }
     }
 
     public boolean isPowered() {
         for (EnumFacing face : EnumFacing.VALUES) {
-            boolean isPowered = isPoweringTo(worldObj, getPos().offset(face), face);
+            boolean isPowered = isPoweringTo(world, getPos().offset(face), face);
             if (isPowered) {
                 return true;
             }
@@ -83,14 +83,14 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
 
     public void invalidate() {
         super.invalidate();
-        if (!worldObj.isRemote) {
+        if (!world.isRemote) {
             deactivate();
         }
     }
 
     public void destroyBlock() {
-        ModBlocks.blockChunkLoader.dropBlockAsItem(worldObj, getPos(), worldObj.getBlockState(pos), 0);
-        worldObj.setBlockToAir(getPos());
+        ModBlocks.blockChunkLoader.dropBlockAsItem(world, getPos(), world.getBlockState(pos), 0);
+        world.setBlockToAir(getPos());
     }
 
     public ChunkPos getChunkPosition() {
@@ -119,7 +119,7 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
 
     @Override
     public World getLoaderWorld() {
-        return worldObj;
+        return world;
     }
 
     @Override
@@ -146,7 +146,7 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
 
     @Override
     public void update() {
-        if (!worldObj.isRemote) {
+        if (!world.isRemote) {
             boolean nowPowered = isPowered();
             if (powered != nowPowered) {
                 powered = nowPowered;

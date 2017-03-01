@@ -18,7 +18,7 @@ public class PropertyChunkLoaderType extends PropertyEnum<EnumChunkLoaderType> {
     }
 
     public static PropertyChunkLoaderType create(String name) {
-        return new PropertyChunkLoaderType(name, Collections2.filter(Lists.newArrayList(EnumChunkLoaderType.values()), Predicates.<EnumChunkLoaderType>alwaysTrue()));
+        return new PropertyChunkLoaderType(name, Collections2.filter(Lists.newArrayList(EnumChunkLoaderType.values()), Predicates.alwaysTrue()));
     }
 
 }

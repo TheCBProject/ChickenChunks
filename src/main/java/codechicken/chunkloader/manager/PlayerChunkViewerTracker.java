@@ -23,7 +23,7 @@ import static codechicken.chunkloader.network.ChunkLoaderSPH.channel;
 public class PlayerChunkViewerTracker {
     private final PlayerChunkViewerManager manager;
     public final EntityPlayer owner;
-    private HashSet<Integer> knownTickets = new HashSet<Integer>();
+    private HashSet<Integer> knownTickets = new HashSet<>();
 
     public PlayerChunkViewerTracker(EntityPlayer player, PlayerChunkViewerManager manager) {
         owner = player;

@@ -1,20 +1,20 @@
 package codechicken.chunkloader.proxy;
 
+import codechicken.chunkloader.ChickenChunks;
 import codechicken.chunkloader.client.TileChunkLoaderRenderer;
 import codechicken.chunkloader.gui.GuiChunkLoader;
 import codechicken.chunkloader.init.ModBlocks;
 import codechicken.chunkloader.network.ChunkLoaderCPH;
 import codechicken.chunkloader.tile.TileChunkLoader;
 import codechicken.chunkloader.tile.TileSpotLoader;
-import codechicken.core.CCUpdateChecker;
-import codechicken.core.ModDescriptionEnhancer;
+import codechicken.lib.internal.ModDescriptionEnhancer;
 import codechicken.lib.packet.PacketCustom;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 
-import static codechicken.chunkloader.ChickenChunks.config;
+public class ProxyClient extends Proxy {
 
-public class ChunkLoaderClientProxy extends ChunkLoaderProxy {
+    public static boolean lasersRenderHollow;
 
     @Override
     public void preInit() {
@@ -24,10 +24,8 @@ public class ChunkLoaderClientProxy extends ChunkLoaderProxy {
 
     @Override
     public void init() {
-        if (config.getTag("checkUpdates").getBooleanValue(true)) {
-            CCUpdateChecker.updateCheck("ChickenChunks");
-        }
-        ModDescriptionEnhancer.enhanceMod("ChickenChunks");
+        lasersRenderHollow = ChickenChunks.config.getTag("lasersRenderHollow").setComment("Sets lasers to render as an outline instead of a solid square.").getBooleanValue(false);
+        ModDescriptionEnhancer.enhanceMod(ChickenChunks.MOD_ID);
 
         super.init();
 

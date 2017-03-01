@@ -48,18 +48,18 @@ public class PlayerChunkViewerManager {
         }
     }
 
-    public LinkedList<PlayerChunkViewerTracker> playerViewers = new LinkedList<PlayerChunkViewerTracker>();
-    public HashMap<Ticket, Integer> ticketIDs = new HashMap<Ticket, Integer>();
+    public LinkedList<PlayerChunkViewerTracker> playerViewers = new LinkedList<>();
+    public HashMap<Ticket, Integer> ticketIDs = new HashMap<>();
     private int ticketID = 0;
     private int time = 0;
     //for tracking chunk changes
-    private HashMap<Integer, HashSet<ChunkPos>> lastLoadedChunkMap = new HashMap<Integer, HashSet<ChunkPos>>();
+    private HashMap<Integer, HashSet<ChunkPos>> lastLoadedChunkMap = new HashMap<>();
     //changes to be processed
-    public LinkedList<ChunkChange> chunkChanges = new LinkedList<ChunkChange>();
-    public LinkedList<TicketChange> ticketChanges = new LinkedList<TicketChange>();
-    public LinkedList<DimensionChange> dimChanges = new LinkedList<DimensionChange>();
-    public LinkedList<String> logouts = new LinkedList<String>();
-    public LinkedList<String> addViewers = new LinkedList<String>();
+    public LinkedList<ChunkChange> chunkChanges = new LinkedList<>();
+    public LinkedList<TicketChange> ticketChanges = new LinkedList<>();
+    public LinkedList<DimensionChange> dimChanges = new LinkedList<>();
+    public LinkedList<String> logouts = new LinkedList<>();
+    public LinkedList<String> addViewers = new LinkedList<>();
 
     private static PlayerChunkViewerManager instance;
 
@@ -73,11 +73,7 @@ public class PlayerChunkViewerManager {
     public void update() {
         time++;
         for (String username : logouts) {
-            for (Iterator<PlayerChunkViewerTracker> iterator = playerViewers.iterator(); iterator.hasNext(); ) {
-                if (iterator.next().owner.getName().equals(username)) {
-                    iterator.remove();
-                }
-            }
+            playerViewers.removeIf(playerChunkViewerTracker -> playerChunkViewerTracker.owner.getName().equals(username));
         }
 
         for (String username : logouts) {
@@ -152,10 +148,10 @@ public class PlayerChunkViewerManager {
     @SuppressWarnings("unchecked")
     private void updateChunkChangeMap() {
         for (WorldServer world : DimensionManager.getWorlds()) {
-            HashSet<ChunkPos> allChunks = new HashSet<ChunkPos>();
-            ArrayList<Chunk> loadedChunkCopy = new ArrayList<Chunk>(world.getChunkProvider().getLoadedChunks());
+            HashSet<ChunkPos> allChunks = new HashSet<>();
+            ArrayList<Chunk> loadedChunkCopy = new ArrayList<>(world.getChunkProvider().getLoadedChunks());
             for (Chunk chunk : loadedChunkCopy) {
-                allChunks.add(chunk.getChunkCoordIntPair());
+                allChunks.add(chunk.getPos());
             }
 
             lastLoadedChunkMap.put(CommonUtils.getDimension(world), allChunks);
@@ -171,13 +167,13 @@ public class PlayerChunkViewerManager {
         int dimension = CommonUtils.getDimension(world);
         HashSet<ChunkPos> wasLoadedChunks = lastLoadedChunkMap.get(dimension);
         if (wasLoadedChunks == null) {
-            wasLoadedChunks = new HashSet<ChunkPos>();
+            wasLoadedChunks = new HashSet<>();
         }
 
-        HashSet<ChunkPos> allChunks = new HashSet<ChunkPos>();
-        ArrayList<Chunk> loadedChunkCopy = new ArrayList<Chunk>(world.getChunkProvider().getLoadedChunks());
+        HashSet<ChunkPos> allChunks = new HashSet<>();
+        ArrayList<Chunk> loadedChunkCopy = new ArrayList<>(world.getChunkProvider().getLoadedChunks());
         for (Chunk chunk : loadedChunkCopy) {
-            ChunkPos coord = chunk.getChunkCoordIntPair();
+            ChunkPos coord = chunk.getPos();
             allChunks.add(coord);
             if (!wasLoadedChunks.remove(coord)) {
                 chunkChanges.add(new ChunkChange(dimension, coord, true));
@@ -206,10 +202,6 @@ public class PlayerChunkViewerManager {
     }
 
     public void closeViewer(String username) {
-        for (Iterator<PlayerChunkViewerTracker> iterator = playerViewers.iterator(); iterator.hasNext(); ) {
-            if (iterator.next().owner.getName().equals(username)) {
-                iterator.remove();
-            }
-        }
+        playerViewers.removeIf(playerChunkViewerTracker -> playerChunkViewerTracker.owner.getName().equals(username));
     }
 }

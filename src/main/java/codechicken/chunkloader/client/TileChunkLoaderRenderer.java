@@ -1,5 +1,6 @@
 package codechicken.chunkloader.client;
 
+import codechicken.chunkloader.proxy.ProxyClient;
 import codechicken.chunkloader.tile.TileChunkLoader;
 import codechicken.chunkloader.tile.TileChunkLoaderBase;
 import codechicken.chunkloader.tile.TileSpotLoader;
@@ -8,6 +9,7 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.RenderUtils;
 import codechicken.lib.texture.TextureUtils;
 import codechicken.lib.util.ClientUtils;
+import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import codechicken.lib.vec.Rotation;
 import codechicken.lib.vec.Vector3;
@@ -23,7 +25,9 @@ import java.util.Collection;
 import static net.minecraft.client.renderer.GlStateManager.*;
 
 public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunkLoaderBase> {
+
     public static class RenderInfo {
+
         public int activationCounter;
         public boolean showLasers;
 
@@ -120,10 +124,7 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
     }
 
     public boolean ptOnLineInSegment(Point2D point, Line2D line) {
-        return point.getX() >= Math.min(line.getX1(), line.getX2()) &&
-                point.getX() <= Math.max(line.getX1(), line.getX2()) &&
-                point.getY() >= Math.min(line.getY1(), line.getY2()) &&
-                point.getY() <= Math.max(line.getY1(), line.getY2());
+        return point.getX() >= Math.min(line.getX1(), line.getX2()) && point.getX() <= Math.max(line.getX1(), line.getX2()) && point.getY() >= Math.min(line.getY1(), line.getY2()) && point.getY() <= Math.max(line.getY1(), line.getY2());
     }
 
     public void drawRays(double d, double d1, double d2, double rotationAngle, double updown, int x, int y, int z, Collection<ChunkPos> chunkSet) {
@@ -175,7 +176,7 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
         for (int ray = 0; ray < 4; ray++) {
             distances[ray] = Math.sqrt(distances[ray]);
             rotate(90, 0, 1, 0);
-            RenderAABB.renderAABB(new AxisAlignedBB(0, -0.05, -0.05, distances[ray], 0.05, 0.05));
+            renderCuboid(new Cuboid6(0, -0.05, -0.05, distances[ray], 0.05, 0.05));
         }
         popMatrix();
 
@@ -184,7 +185,7 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
         for (int ray = 0; ray < 4; ray++) {
             pushMatrix();
             translate(absRays[ray].x * distances[ray], 0, absRays[ray].y * distances[ray]);
-            RenderAABB.renderAABB(new AxisAlignedBB(-0.05, 0, -0.05, 0.05, 256, 0.05));
+            renderCuboid(new Cuboid6(-0.05, 0, -0.05, 0.05, 256, 0.05));
             popMatrix();
         }
         popMatrix();
@@ -195,7 +196,15 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
         translate(d + 0.5, d1 + 1.2 + updown, d2 + 0.5);
         rotate((float) (Math.atan2((cx + 7.5 - x), (cz + 7.5 - z)) * 180 / 3.1415) + 90, 0, 1, 0);
         rotate((float) (-Math.asin(0.8 / toCenter) * 180 / 3.1415), 0, 0, 1);
-        RenderAABB.renderAABB(new AxisAlignedBB(-toCenter, -0.03, -0.03, 0, 0.03, 0.03));
+        renderCuboid(new Cuboid6(-toCenter, -0.03, -0.03, 0, 0.03, 0.03));
         popMatrix();
+    }
+
+    private static void renderCuboid(Cuboid6 cuboid) {
+        if (ProxyClient.lasersRenderHollow) {
+            RenderUtils.drawCuboidOutline(cuboid);
+        } else {
+            RenderUtils.drawCuboidSolid(cuboid);
+        }
     }
 }

@@ -12,6 +12,7 @@ import org.lwjgl.opengl.GL11;
 import java.io.IOException;
 
 public class GuiChunkLoader extends GuiScreen {
+
     private static LangProxy lang = new LangProxy("chickenchunks.gui");
 
     public GuiButton laserButton;
@@ -40,7 +41,7 @@ public class GuiChunkLoader extends GuiScreen {
     }
 
     public void updateScreen() {
-        if (mc.theWorld.getTileEntity(tile.getPos()) != tile)//tile changed
+        if (mc.world.getTileEntity(tile.getPos()) != tile)//tile changed
         {
             mc.currentScreen = null;
             mc.setIngameFocus();
@@ -107,7 +108,7 @@ public class GuiChunkLoader extends GuiScreen {
 
     private void drawContainerBackground() {
         GL11.glColor4f(1, 1, 1, 1);
-        TextureUtils.changeTexture("chickenchunks:textures/gui/guiSmall.png");
+        TextureUtils.changeTexture("chickenchunks:textures/gui/gui_small.png");
         int posx = width / 2 - 88;
         int posy = height / 2 - 83;
         drawTexturedModalRect(posx, posy, 0, 0, 176, 166);

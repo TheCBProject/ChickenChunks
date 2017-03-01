@@ -15,7 +15,7 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import static codechicken.chunkloader.ChickenChunks.config;
 import static codechicken.chunkloader.ChickenChunks.instance;
 
-public class ChunkLoaderProxy {
+public class Proxy {
 
     public void preInit() {
         ModBlocks.init();

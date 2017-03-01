@@ -15,9 +15,11 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 
-@SuppressWarnings("serial")
+@SuppressWarnings ("serial")
 public class PlayerChunkViewer extends JFrame {
+
     public static class TicketInfo {
+
         int ID;
         String modId;
         String player;
@@ -36,7 +38,7 @@ public class PlayerChunkViewer extends JFrame {
                 entity = world.getEntityByID(packet.readInt());
             }
             int chunks = packet.readUShort();
-            chunkSet = new HashSet<ChunkPos>(chunks);
+            chunkSet = new HashSet<>(chunks);
             for (int i = 0; i < chunks; i++) {
                 chunkSet.add(new ChunkPos(packet.readInt(), packet.readInt()));
             }
@@ -44,6 +46,7 @@ public class PlayerChunkViewer extends JFrame {
     }
 
     public static class PlayerInfo {
+
         public PlayerInfo(String username2) {
             this.username = username2;
         }
@@ -54,9 +57,10 @@ public class PlayerChunkViewer extends JFrame {
     }
 
     public static class DimensionChunkInfo {
+
         public final int dimension;
-        public HashSet<ChunkPos> allchunks = new HashSet<ChunkPos>();
-        public HashMap<Integer, TicketInfo> tickets = new HashMap<Integer, TicketInfo>();
+        public HashSet<ChunkPos> allchunks = new HashSet<>();
+        public HashMap<Integer, TicketInfo> tickets = new HashMap<>();
 
         public DimensionChunkInfo(int dim) {
             dimension = dim;
@@ -64,6 +68,7 @@ public class PlayerChunkViewer extends JFrame {
     }
 
     public class TicketInfoDialog extends JDialog implements LayoutManager {
+
         private LinkedList<TicketInfo> tickets;
 
         private JTextPane infoPane;
@@ -94,7 +99,7 @@ public class PlayerChunkViewer extends JFrame {
             chunkScrollPane = new JScrollPane(chunkPane, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
             add(chunkScrollPane);
 
-            ticketComboBox = new JComboBox<String>();
+            ticketComboBox = new JComboBox<>();
             for (TicketInfo ticket : tickets) {
                 String ident = ticket.modId;
                 if (ticket.player != null) {
@@ -131,7 +136,7 @@ public class PlayerChunkViewer extends JFrame {
             }
             info += "<br>Type: " + ticket.type.name();
             if (ticket.entity != null) {
-                info += "<br>Entity: " + EntityList.CLASS_TO_NAME.get(ticket.entity) + "#" + ticket.entity.getEntityId() + " (" + String.format("%.2f", ticket.entity.posX) + ", " + String.format("%.2f", ticket.entity.posY) + ", " + String.format("%.2f", ticket.entity.posZ) + ")";
+                info += "<br>Entity: " + EntityList.getEntityString(ticket.entity) + "#" + ticket.entity.getEntityId() + " (" + String.format("%.2f", ticket.entity.posX) + ", " + String.format("%.2f", ticket.entity.posY) + ", " + String.format("%.2f", ticket.entity.posZ) + ")";
             }
             info += "</span><p style=\"text-align:center; font-family:Tahoma; font-size:10px\">ForcedChunks</p>";
             String chunks = "<span style=\"font-family:Tahoma; font-size:10px\">";
@@ -176,8 +181,8 @@ public class PlayerChunkViewer extends JFrame {
         }
     }
 
-    private HashMap<String, PlayerInfo> players = new HashMap<String, PlayerInfo>();
-    private final HashMap<Integer, DimensionChunkInfo> dimensionChunks = new HashMap<Integer, DimensionChunkInfo>();
+    private HashMap<String, PlayerInfo> players = new HashMap<>();
+    private final HashMap<Integer, DimensionChunkInfo> dimensionChunks = new HashMap<>();
 
     private int dimension = 0;
     private int xCenter = 0;
@@ -257,12 +262,7 @@ public class PlayerChunkViewer extends JFrame {
 
         setVisible(true);
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                startUpdateThread();
-            }
-        });
+        SwingUtilities.invokeLater(() -> startUpdateThread());
     }
 
     protected void startUpdateThread() {
@@ -294,7 +294,7 @@ public class PlayerChunkViewer extends JFrame {
     protected void update() {
         int selectedDim = dimension;
         boolean needsReset = false;
-        LinkedList<Integer> dims = new LinkedList<Integer>(dimensionChunks.keySet());
+        LinkedList<Integer> dims = new LinkedList<>(dimensionChunks.keySet());
         Collections.sort(dims);
         if (dims.size() != dimComboBox.getItemCount()) {
             needsReset = true;
@@ -310,7 +310,7 @@ public class PlayerChunkViewer extends JFrame {
 
         if (needsReset) {
             dimComboBox.removeAllItems();
-            dims = new LinkedList<Integer>(dimensionChunks.keySet());
+            dims = new LinkedList<>(dimensionChunks.keySet());
             Collections.sort(dims);
             for (int dim : dims) {
                 dimComboBox.addItem(dim);
@@ -352,13 +352,10 @@ public class PlayerChunkViewer extends JFrame {
     public JTextField getXArea() {
         if (xArea == null) {
             xArea = new JTextField();
-            xArea.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    try {
-                        setCenter(Integer.parseInt(xArea.getText()), zCenter);
-                    } catch (NumberFormatException ignored) {
-                    }
+            xArea.addActionListener(e -> {
+                try {
+                    setCenter(Integer.parseInt(xArea.getText()), zCenter);
+                } catch (NumberFormatException ignored) {
                 }
             });
         }
@@ -375,13 +372,10 @@ public class PlayerChunkViewer extends JFrame {
     public JTextField getZArea() {
         if (zArea == null) {
             zArea = new JTextField();
-            zArea.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    try {
-                        setCenter(xCenter, Integer.parseInt(zArea.getText()));
-                    } catch (NumberFormatException ignored) {
-                    }
+            zArea.addActionListener(e -> {
+                try {
+                    setCenter(xCenter, Integer.parseInt(zArea.getText()));
+                } catch (NumberFormatException ignored) {
                 }
             });
         }
@@ -397,14 +391,11 @@ public class PlayerChunkViewer extends JFrame {
 
     public JComboBox<Integer> getDimComboBox() {
         if (dimComboBox == null) {
-            dimComboBox = new JComboBox<Integer>();
-            dimComboBox.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (e.getActionCommand().equals("comboBoxChanged")) {
-                        if (dimComboBox.getSelectedItem() != null) {
-                            dimension = (Integer) dimComboBox.getSelectedItem();
-                        }
+            dimComboBox = new JComboBox<>();
+            dimComboBox.addActionListener(e -> {
+                if (e.getActionCommand().equals("comboBoxChanged")) {
+                    if (dimComboBox.getSelectedItem() != null) {
+                        dimension = (Integer) dimComboBox.getSelectedItem();
                     }
                 }
             });
@@ -413,6 +404,7 @@ public class PlayerChunkViewer extends JFrame {
     }
 
     public class DisplayArea extends JPanel implements MouseListener, MouseMotionListener {
+
         int mouseClickedX;
         int centerClickedX;
         int mouseClickedY;
@@ -440,7 +432,7 @@ public class PlayerChunkViewer extends JFrame {
                     g.fillRect(pos.x, pos.y, 4, 4);
                 }
 
-                HashSet<ChunkPos> forcedChunks = new HashSet<ChunkPos>();
+                HashSet<ChunkPos> forcedChunks = new HashSet<>();
                 int numTickets = 0;
                 for (TicketInfo ticket : dimInfo.tickets.values()) {
                     if (!ticket.chunkSet.isEmpty()) {
@@ -506,7 +498,7 @@ public class PlayerChunkViewer extends JFrame {
             return getChunkRenderPosition(blockX >> 4, blockZ >> 4);
         }
 
-        @SuppressWarnings("unused")
+        @SuppressWarnings ("unused")
         @Override
         public void mouseClicked(MouseEvent event) {
             if (event.getButton() != MouseEvent.BUTTON1 || event.getClickCount() < 2) {
@@ -552,7 +544,7 @@ public class PlayerChunkViewer extends JFrame {
         }
 
         public LinkedList<TicketInfo> getTicketsUnderMouse(DimensionChunkInfo dimInfo, Point mouse) {
-            LinkedList<TicketInfo> mouseOverTickets = new LinkedList<TicketInfo>();
+            LinkedList<TicketInfo> mouseOverTickets = new LinkedList<>();
             for (TicketInfo ticket : dimInfo.tickets.values()) {
                 for (ChunkPos coord : ticket.chunkSet) {
                     Point pos = getChunkRenderPosition(coord.chunkXPos, coord.chunkZPos);

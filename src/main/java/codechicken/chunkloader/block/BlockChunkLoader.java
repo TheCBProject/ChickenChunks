@@ -23,6 +23,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -60,11 +61,6 @@ public class BlockChunkLoader extends BlockContainer {
     }
 
     @Override
-    public void addCollisionBoxToList(IBlockState state, World worldIn, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, Entity entityIn) {
-        addCollisionBoxToList(pos, entityBox, collidingBoxes, getBoundingBox(state, worldIn, pos));
-    }
-
-    @Override
     public boolean isSideSolid(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
         return !world.getBlockState(pos).getValue(TYPE).equals(EnumChunkLoaderType.SPOT) && side == EnumFacing.DOWN;
 
@@ -87,7 +83,7 @@ public class BlockChunkLoader extends BlockContainer {
     }
 
     @Override
-    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ) {
+    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
         EnumChunkLoaderType type = state.getValue(TYPE);
         if (type.equals(EnumChunkLoaderType.SPOT) || player.isSneaking()) {
             return false;
@@ -101,7 +97,7 @@ public class BlockChunkLoader extends BlockContainer {
                 packet.writePos(pos);
                 packet.sendToPlayer(player);
             } else {
-                player.addChatMessage(new TextComponentTranslation("chickenchunks.accessdenied"));
+                player.sendMessage(new TextComponentTranslation("chickenchunks.accessdenied"));
             }
         }
         return true;
@@ -133,7 +129,7 @@ public class BlockChunkLoader extends BlockContainer {
     }
 
     @Override
-    public void getSubBlocks(Item par1, CreativeTabs par2CreativeTabs, List<ItemStack> list) {
+    public void getSubBlocks(Item item, CreativeTabs creativeTab, NonNullList<ItemStack> list) {
         list.add(new ItemStack(this, 1, 0));
         list.add(new ItemStack(this, 1, 1));
     }

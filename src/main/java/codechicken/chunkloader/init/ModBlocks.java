@@ -30,7 +30,7 @@ public class ModBlocks {
     public static void initModelVariants() {
         for (int i = 0; i < EnumChunkLoaderType.values().length; i++) {
             EnumChunkLoaderType type = EnumChunkLoaderType.values()[i];
-            ModelResourceLocation location = new ModelResourceLocation("chickenchunks:chickenChunkLoader", "type=" + type.getName());
+            ModelResourceLocation location = new ModelResourceLocation("chickenchunks:chickenchunkloader", "type=" + type.getName());
             ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(blockChunkLoader), i, location);
         }
     }

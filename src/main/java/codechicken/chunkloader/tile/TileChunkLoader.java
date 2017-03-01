@@ -17,7 +17,7 @@ public class TileChunkLoader extends TileChunkLoaderBase {
     public ChunkLoaderShape shape = ChunkLoaderShape.Square;
 
     public boolean setShapeAndRadius(ChunkLoaderShape newShape, int newRadius) {
-        if (worldObj.isRemote) {
+        if (world.isRemote) {
             radius = newRadius;
             shape = newShape;
             return true;
@@ -28,15 +28,15 @@ public class TileChunkLoader extends TileChunkLoaderBase {
         } else if (powered) {
             radius = newRadius;
             shape = newShape;
-            IBlockState state = worldObj.getBlockState(getPos());
-            worldObj.notifyBlockUpdate(getPos(), state, state, 3);
+            IBlockState state = world.getBlockState(getPos());
+            world.notifyBlockUpdate(getPos(), state, state, 3);
             return true;
         } else if (ChunkLoaderManager.canLoaderAdd(this, chunks)) {
             radius = newRadius;
             shape = newShape;
             ChunkLoaderManager.updateLoader(this);
-            IBlockState state = worldObj.getBlockState(getPos());
-            worldObj.notifyBlockUpdate(getPos(), state, state, 3);
+            IBlockState state = world.getBlockState(getPos());
+            world.notifyBlockUpdate(getPos(), state, state, 3);
             return true;
         }
         return false;

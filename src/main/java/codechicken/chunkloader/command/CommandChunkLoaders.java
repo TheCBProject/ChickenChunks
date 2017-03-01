@@ -2,14 +2,14 @@ package codechicken.chunkloader.command;
 
 import codechicken.chunkloader.manager.ChunkLoaderManager;
 import codechicken.chunkloader.manager.PlayerChunkViewerManager;
-import codechicken.core.commands.PlayerCommand;
+import codechicken.lib.command.PlayerCommand;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.WorldServer;
 
 public class CommandChunkLoaders extends PlayerCommand {
     @Override
-    public String getCommandName() {
+    public String getName() {
         return "chunkloaders";
     }
 
@@ -19,7 +19,7 @@ public class CommandChunkLoaders extends PlayerCommand {
     }
 
     @Override
-    public String getCommandUsage(ICommandSender var1) {
+    public String getUsage(ICommandSender var1) {
         return "chunkloaders";
     }
 

@@ -21,7 +21,7 @@ public class ChunkLoaderSPH implements IServerPacketHandler {
             PlayerChunkViewerManager.instance().closeViewer(sender.getName());
             break;
         case 2:
-            handleChunkLoaderChangePacket(sender.worldObj, packet);
+            handleChunkLoaderChangePacket(sender.world, packet);
             break;
 
         }

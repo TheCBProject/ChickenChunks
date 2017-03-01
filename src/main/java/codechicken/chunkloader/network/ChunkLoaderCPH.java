@@ -20,10 +20,10 @@ public class ChunkLoaderCPH implements IClientPacketHandler {
     public void handlePacket(PacketCustom packet, Minecraft mc, INetHandlerPlayClient handler) {
         switch (packet.getType()) {
         case 1:
-            PlayerChunkViewer.openViewer((int) mc.thePlayer.posX, (int) mc.thePlayer.posZ, CommonUtils.getDimension(mc.theWorld));
+            PlayerChunkViewer.openViewer((int) mc.player.posX, (int) mc.player.posZ, CommonUtils.getDimension(mc.world));
             break;
         case 2:
-            PlayerChunkViewer.instance().loadDimension(packet, mc.theWorld);
+            PlayerChunkViewer.instance().loadDimension(packet, mc.world);
             break;
         case 3:
             PlayerChunkViewer.instance().unloadDimension(packet.readInt());
@@ -41,7 +41,7 @@ public class ChunkLoaderCPH implements IClientPacketHandler {
             PlayerChunkViewer.instance().removePlayer(packet.readString());
             break;
         case 8:
-            PlayerChunkViewer.instance().handleNewTicket(packet, mc.theWorld);
+            PlayerChunkViewer.instance().handleNewTicket(packet, mc.world);
             break;
         //case 10:
         //    TileChunkLoader.handleDescriptionPacket(packet, mc.theWorld);
@@ -50,7 +50,7 @@ public class ChunkLoaderCPH implements IClientPacketHandler {
         //    TileSpotLoader.handleDescriptionPacket(packet, mc.theWorld);
         //    break;
         case 12:
-            TileEntity tile = mc.theWorld.getTileEntity(packet.readPos());
+            TileEntity tile = mc.world.getTileEntity(packet.readPos());
             if (tile instanceof TileChunkLoader) {
                 mc.displayGuiScreen(new GuiChunkLoader((TileChunkLoader) tile));
             }
