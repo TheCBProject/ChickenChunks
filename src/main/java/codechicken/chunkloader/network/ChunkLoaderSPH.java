@@ -4,7 +4,7 @@ import codechicken.chunkloader.api.ChunkLoaderShape;
 import codechicken.chunkloader.manager.PlayerChunkViewerManager;
 import codechicken.chunkloader.tile.TileChunkLoader;
 import codechicken.lib.packet.PacketCustom;
-import codechicken.lib.packet.PacketCustom.IServerPacketHandler;
+import codechicken.lib.packet.ICustomPacketHandler.IServerPacketHandler;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.INetHandlerPlayServer;
 import net.minecraft.tileentity.TileEntity;

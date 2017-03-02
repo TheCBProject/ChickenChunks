@@ -5,7 +5,7 @@ import codechicken.chunkloader.gui.GuiChunkLoader;
 import codechicken.chunkloader.gui.PlayerChunkViewer;
 import codechicken.chunkloader.tile.TileChunkLoader;
 import codechicken.lib.packet.PacketCustom;
-import codechicken.lib.packet.PacketCustom.IClientPacketHandler;
+import codechicken.lib.packet.ICustomPacketHandler.IClientPacketHandler;
 import codechicken.lib.util.CommonUtils;
 import codechicken.lib.vec.Vector3;
 import net.minecraft.client.Minecraft;
