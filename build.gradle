@@ -7,16 +7,16 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
     }
 }
 
 //add dependency repositories
 repositories {
-	maven {
-		name = "Covers1624 Repo"
-		url = "http://chickenbones.net/maven"
-	}
+    maven {
+        name = "CB Repo"
+        url = "http://chickenbones.net/maven"
+    }
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
@@ -42,15 +42,15 @@ dependencies {
     compile "codechicken:CodeChickenLib:${config.mc_version}-${config.ccl_version}:deobf"
 }
 
-version =  "${project.config.mod_version}." + System.getenv("BUILD_NUMBER") ?: "1"
+version = "${project.config.mod_version}." + System.getenv("BUILD_NUMBER") ?: "1"
 
-println  config.mc_version + "-" + config.forge_version
+println config.mc_version + "-" + config.forge_version
 // Setup the forge minecraft plugin data. Specify the preferred forge/minecraft version here
 minecraft {
     version = config.mc_version + "-" + config.forge_version
     mappings = config.mappings
-	makeObfSourceJar = false
-	runDir = "run"
+    makeObfSourceJar = false
+    runDir = "run"
 }
 
 processResources {
@@ -61,17 +61,17 @@ processResources {
     // Replace properties in info files
     from(sourceSets.main.resources.srcDirs) {
         include '*.info'
-        expand 'version':project.version,'mc_version':config.mc_version
+        expand 'version': project.version, 'mc_version': config.mc_version
     }
 
-	// Move access transformer to META-INF
-	rename '(.+_at.cfg)', 'META-INF/$1'
+    // Move access transformer to META-INF
+    rename '(.+_at.cfg)', 'META-INF/$1'
 }
 
 version = "${project.minecraft.version}-${project.version}"
 def commonManifest = {
     attributes 'FMLAT': 'chickenchunks_at.cfg'
-    attributes 'CCTransformerExclusions' : 'codechicken.chunkloader.FingerprintChecker'
+    attributes 'CCTransformerExclusions': 'codechicken.chunkloader.FingerprintChecker'
 }
 
 jar {
