@@ -14,7 +14,7 @@ import java.io.File;
 
 import static codechicken.lib.CodeChickenLib.MC_VERSION;
 
-@Mod(modid = ChickenChunks.MOD_ID, name = ChickenChunks.MOD_NAME, dependencies = "required-after:codechickenlib@[" + CodeChickenLib.version + ",)", acceptedMinecraftVersions = CodeChickenLib.MC_VERSION_DEP, certificateFingerprint = "f1850c39b2516232a2108a7bd84d1cb5df93b261", updateJSON = ChickenChunks.UPDATE_URL)
+@Mod(modid = ChickenChunks.MOD_ID, name = ChickenChunks.MOD_NAME, dependencies = "required-after:codechickenlib@[" + CodeChickenLib.MOD_VERSION + ",)", acceptedMinecraftVersions = CodeChickenLib.MC_VERSION_DEP, certificateFingerprint = "f1850c39b2516232a2108a7bd84d1cb5df93b261", updateJSON = ChickenChunks.UPDATE_URL)
 public class ChickenChunks {
 
     public static final String MOD_ID = "chickenchunks";
