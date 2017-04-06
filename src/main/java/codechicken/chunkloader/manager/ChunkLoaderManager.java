@@ -457,9 +457,9 @@ public class ChunkLoaderManager {
     private static HashMap<Object, ModContainer> mods = new HashMap<Object, ModContainer>();
 
     private static boolean loaded = false;
-    private static HashMap<String, PlayerOrganiser> playerOrganisers;
-    private static HashMap<Object, ModOrganiser> modOrganisers;
-    private static HashMap<String, Long> loginTimes;
+    private static HashMap<String, PlayerOrganiser> playerOrganisers = new HashMap<String, PlayerOrganiser>();
+    private static HashMap<Object, ModOrganiser> modOrganisers = new HashMap<Object, ChunkLoaderManager.ModOrganiser>();
+    private static HashMap<String, Long> loginTimes = new HashMap<String, Long>();
     private static File saveDir;
 
     /**
@@ -492,9 +492,6 @@ public class ChunkLoaderManager {
 
         loaded = true;
 
-        playerOrganisers = new HashMap<String, PlayerOrganiser>();
-        modOrganisers = new HashMap<Object, ChunkLoaderManager.ModOrganiser>();
-        loginTimes = new HashMap<String, Long>();
         ReviveChange.load();
 
         try {
