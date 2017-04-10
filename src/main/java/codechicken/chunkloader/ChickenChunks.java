@@ -3,7 +3,6 @@ package codechicken.chunkloader;
 import codechicken.chunkloader.proxy.Proxy;
 import codechicken.lib.CodeChickenLib;
 import codechicken.lib.config.ConfigFile;
-import codechicken.lib.internal.MigrationManager;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -33,7 +32,6 @@ public class ChickenChunks {
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         FingerprintChecker.runFingerprintChecks();
-        MigrationManager.registerMigrationHandler("ChickenChunks", "chickenchunks");
         config = new ConfigFile(new File(event.getModConfigurationDirectory(), "ChickenChunks.cfg")).setComment("ChunkLoader Configuration File\nDeleting any element will restore it to it's default value");
         proxy.preInit();
     }
