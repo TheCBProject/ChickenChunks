@@ -1,18 +1,19 @@
-package codechicken.chunkloader.item;
+package codechicken.chunkloader.block;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 
 public class ItemChunkLoader extends ItemBlock {
+
     public ItemChunkLoader(Block block) {
         super(block);
         setHasSubtypes(true);
     }
 
     @Override
-    public int getMetadata(int par1) {
-        return par1;
+    public int getMetadata(int meta) {
+        return meta;
     }
 
     @Override

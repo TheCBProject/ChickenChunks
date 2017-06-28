@@ -132,16 +132,12 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
         loaded = true;
         active = false;
         ChunkLoaderManager.remChunkLoader(this);
-        //IBlockState state = worldObj.getBlockState(getPos());
-        //worldObj.notifyBlockUpdate(getPos(), state, state, 3);
     }
 
     public void activate() {
         loaded = true;
         active = true;
         ChunkLoaderManager.addChunkLoader(this);
-        //IBlockState state = worldObj.getBlockState(getPos());
-        //worldObj.notifyBlockUpdate(getPos(), state, state, 3);
     }
 
     @Override
@@ -171,7 +167,7 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
     public SPacketUpdateTileEntity getUpdatePacket() {
         PacketCustom packet = new PacketCustom(ChunkLoaderSPH.channel, 10);
         writeToPacket(packet);
-        return new SPacketUpdateTileEntity(getPos(), 0, packet.toNBTTag());
+        return packet.toTilePacket(getPos());
     }
 
     @Override

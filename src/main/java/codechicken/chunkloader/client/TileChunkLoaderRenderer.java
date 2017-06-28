@@ -15,7 +15,6 @@ import codechicken.lib.vec.Rotation;
 import codechicken.lib.vec.Vector3;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.ChunkPos;
 
 import java.awt.geom.Line2D;

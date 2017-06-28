@@ -9,6 +9,7 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraftforge.common.ForgeChunkManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,7 +24,7 @@ public class PlayerChunkViewer extends JFrame {
         int ID;
         String modId;
         String player;
-        net.minecraftforge.common.ForgeChunkManager.Type type;
+        ForgeChunkManager.Type type;
         Entity entity;
         Set<ChunkPos> chunkSet;
 
@@ -33,8 +34,8 @@ public class PlayerChunkViewer extends JFrame {
             if (packet.readBoolean()) {
                 player = packet.readString();
             }
-            type = net.minecraftforge.common.ForgeChunkManager.Type.values()[packet.readUByte()];
-            if (type == net.minecraftforge.common.ForgeChunkManager.Type.ENTITY) {
+            type = ForgeChunkManager.Type.values()[packet.readUByte()];
+            if (type == ForgeChunkManager.Type.ENTITY) {
                 entity = world.getEntityByID(packet.readInt());
             }
             int chunks = packet.readUShort();
@@ -139,13 +140,13 @@ public class PlayerChunkViewer extends JFrame {
                 info += "<br>Entity: " + EntityList.getEntityString(ticket.entity) + "#" + ticket.entity.getEntityId() + " (" + String.format("%.2f", ticket.entity.posX) + ", " + String.format("%.2f", ticket.entity.posY) + ", " + String.format("%.2f", ticket.entity.posZ) + ")";
             }
             info += "</span><p style=\"text-align:center; font-family:Tahoma; font-size:10px\">ForcedChunks</p>";
-            String chunks = "<span style=\"font-family:Tahoma; font-size:10px\">";
+            StringBuilder chunks = new StringBuilder("<span style=\"font-family:Tahoma; font-size:10px\">");
             for (ChunkPos coord : ticket.chunkSet) {
-                chunks += coord.chunkXPos + ", " + coord.chunkZPos + "<br>";
+                chunks.append(coord.chunkXPos).append(", ").append(coord.chunkZPos).append("<br>");
             }
-            chunks += "</span>";
+            chunks.append("</span>");
             infoPane.setText(info);
-            chunkPane.setText(chunks);
+            chunkPane.setText(chunks.toString());
             repaint();
         }
 
@@ -262,7 +263,7 @@ public class PlayerChunkViewer extends JFrame {
 
         setVisible(true);
 
-        SwingUtilities.invokeLater(() -> startUpdateThread());
+        SwingUtilities.invokeLater(this::startUpdateThread);
     }
 
     protected void startUpdateThread() {
@@ -284,7 +285,7 @@ public class PlayerChunkViewer extends JFrame {
 
                     try {
                         Thread.sleep(50);
-                    } catch (InterruptedException e) {
+                    } catch (InterruptedException ignored) {
                     }
                 }
             }
@@ -438,9 +439,7 @@ public class PlayerChunkViewer extends JFrame {
                     if (!ticket.chunkSet.isEmpty()) {
                         numTickets++;
                     }
-                    for (ChunkPos coord : ticket.chunkSet) {
-                        forcedChunks.add(coord);
-                    }
+                    forcedChunks.addAll(ticket.chunkSet);
                 }
 
                 g.setColor(new Color(0, 1F, 0));
@@ -565,14 +564,14 @@ public class PlayerChunkViewer extends JFrame {
                     dimension = 0;
                     return;
                 }
-                String tip = "";
+                StringBuilder tip = new StringBuilder();
                 LinkedList<TicketInfo> mouseOverTickets = getTicketsUnderMouse(dimInfo, mouse);
                 if (!mouseOverTickets.isEmpty()) {
-                    tip += mouseOverTickets.size() + (mouseOverTickets.size() == 1 ? " ticket" : " tickets");
+                    tip.append(mouseOverTickets.size()).append(mouseOverTickets.size() == 1 ? " ticket" : " tickets");
                     for (TicketInfo info : mouseOverTickets) {
-                        tip += "\n" + info.modId;
+                        tip.append("\n").append(info.modId);
                         if (info.player != null) {
-                            tip += ", " + info.player;
+                            tip.append(", ").append(info.player);
                         }
                     }
                 }
@@ -581,11 +580,11 @@ public class PlayerChunkViewer extends JFrame {
                     if (info.dimension == dimension) {
                         Point pos = getChunkRenderPosition((int) info.position.x, 0, (int) info.position.z);
                         if (new Rectangle(pos.x, pos.y, 4, 4).contains(mouse)) {
-                            tip += "\n\n" + info.username + "\n(" + String.format("%.2f", info.position.x) + ", " + String.format("%.2f", info.position.y) + ", " + String.format("%.2f", info.position.z) + ")";
+                            tip.append("\n\n").append(info.username).append("\n(").append(String.format("%.2f", info.position.x)).append(", ").append(String.format("%.2f", info.position.y)).append(", ").append(String.format("%.2f", info.position.z)).append(")");
                         }
                     }
                 }
-                setToolTipText(tip.length() > 0 ? tip : null);
+                setToolTipText(tip.length() > 0 ? tip.toString() : null);
             }
         }
 
@@ -667,10 +666,7 @@ public class PlayerChunkViewer extends JFrame {
 
     public void handlePlayerUpdate(String username, int dimension, Vector3 position) {
         synchronized (dimensionChunks) {
-            PlayerInfo info = players.get(username);
-            if (info == null) {
-                players.put(username, info = new PlayerInfo(username));
-            }
+            PlayerInfo info = players.computeIfAbsent(username, PlayerInfo::new);
             info.dimension = dimension;
             info.position = position;
         }

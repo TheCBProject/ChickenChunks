@@ -1,14 +1,15 @@
 package codechicken.chunkloader.tile;
 
+import com.google.common.collect.Sets;
 import net.minecraft.util.math.ChunkPos;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.util.Set;
 
 public class TileSpotLoader extends TileChunkLoaderBase {
+
     @Override
-    public Collection<ChunkPos> getChunks() {
-        return Collections.singletonList(getChunkPosition());
+    public Set<ChunkPos> getChunks() {
+        return Sets.newHashSet(getChunkPosition());
     }
 
 }

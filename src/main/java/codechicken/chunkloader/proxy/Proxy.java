@@ -1,7 +1,6 @@
 package codechicken.chunkloader.proxy;
 
 import codechicken.chunkloader.command.CommandChunkLoaders;
-import codechicken.chunkloader.command.CommandDebugInfo;
 import codechicken.chunkloader.handler.ChunkLoaderEventHandler;
 import codechicken.chunkloader.init.ModBlocks;
 import codechicken.chunkloader.init.ModRecipes;
@@ -31,7 +30,6 @@ public class Proxy {
 
     public void registerCommands(FMLServerStartingEvent event) {
         event.registerServerCommand(new CommandChunkLoaders());
-        event.registerServerCommand(new CommandDebugInfo());
     }
 
     public void openGui(TileChunkLoader tile) {

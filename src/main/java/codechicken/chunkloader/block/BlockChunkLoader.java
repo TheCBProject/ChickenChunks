@@ -1,6 +1,5 @@
 package codechicken.chunkloader.block;
 
-import codechicken.chunkloader.block.property.PropertyChunkLoaderType;
 import codechicken.chunkloader.manager.ChunkLoaderManager;
 import codechicken.chunkloader.network.ChunkLoaderSPH;
 import codechicken.chunkloader.tile.TileChunkLoader;
@@ -8,38 +7,36 @@ import codechicken.chunkloader.tile.TileChunkLoaderBase;
 import codechicken.chunkloader.tile.TileSpotLoader;
 import codechicken.lib.packet.PacketCustom;
 import codechicken.lib.util.ServerUtils;
+import codechicken.lib.vec.Cuboid6;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
+import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumBlockRenderType;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.NonNullList;
+import net.minecraft.util.*;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-import java.util.List;
+public class BlockChunkLoader extends Block implements ITileEntityProvider {
 
-public class BlockChunkLoader extends BlockContainer {
-
-    public static final PropertyChunkLoaderType TYPE = PropertyChunkLoaderType.create("type");
+    public static final PropertyEnum<Type> TYPE = PropertyEnum.create("type", Type.class);
 
     public BlockChunkLoader() {
         super(Material.ROCK);
         setHardness(20F);
-        setDefaultState(getDefaultState().withProperty(TYPE, EnumChunkLoaderType.FULL));
+        setDefaultState(getDefaultState().withProperty(TYPE, Type.BLOCK));
         setResistance(100F);
         setSoundType(SoundType.STONE);
     }
@@ -56,14 +53,13 @@ public class BlockChunkLoader extends BlockContainer {
 
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-        AxisAlignedBB currBox = getBoundingBoxForType(state.getValue(TYPE));
-        return currBox != null ? currBox : super.getBoundingBox(state, source, pos);
+        Type type = state.getValue(TYPE);
+        return type.getBounds().aabb();
     }
 
     @Override
     public boolean isSideSolid(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
-        return !world.getBlockState(pos).getValue(TYPE).equals(EnumChunkLoaderType.SPOT) && side == EnumFacing.DOWN;
-
+        return !world.getBlockState(pos).getValue(TYPE).equals(Type.SPOT) && side == EnumFacing.DOWN;
     }
 
     @Override
@@ -71,28 +67,17 @@ public class BlockChunkLoader extends BlockContainer {
         return true;
     }
 
-    public AxisAlignedBB getBoundingBoxForType(EnumChunkLoaderType type) {
-        switch (type) {
-        case FULL:
-            return new AxisAlignedBB(0, 0, 0, 1, 0.75F, 1);
-        case SPOT:
-            return new AxisAlignedBB(0.25F, 0, 0.25F, 0.75F, 0.4375F, 0.75F);
-        default:
-            return null;
-        }
-    }
 
     @Override
     public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
-        EnumChunkLoaderType type = state.getValue(TYPE);
-        if (type.equals(EnumChunkLoaderType.SPOT) || player.isSneaking()) {
+        Type type = state.getValue(TYPE);
+        if (type == Type.SPOT || player.isSneaking()) {
             return false;
         }
 
         if (!world.isRemote) {
             TileChunkLoader tile = (TileChunkLoader) world.getTileEntity(pos);
-            if (tile.owner == null || tile.owner.equals(player.getName()) ||
-                    ChunkLoaderManager.opInteract() && ServerUtils.isPlayerOP(player.getName())) {
+            if (tile.owner == null || tile.owner.equals(player.getName()) || ChunkLoaderManager.canOpInteract() && ServerUtils.isPlayerOP(player.getName())) {
                 PacketCustom packet = new PacketCustom(ChunkLoaderSPH.channel, 12);
                 packet.writePos(pos);
                 packet.sendToPlayer(player);
@@ -130,8 +115,9 @@ public class BlockChunkLoader extends BlockContainer {
 
     @Override
     public void getSubBlocks(Item item, CreativeTabs creativeTab, NonNullList<ItemStack> list) {
-        list.add(new ItemStack(this, 1, 0));
-        list.add(new ItemStack(this, 1, 1));
+        for (Type type : Type.VALUES) {
+            list.add(new ItemStack(this, 1, type.getMetadata()));
+        }
     }
 
     @Override
@@ -141,12 +127,12 @@ public class BlockChunkLoader extends BlockContainer {
 
     @Override
     public int getMetaFromState(IBlockState state) {
-        return state.getValue(TYPE).ordinal();
+        return state.getValue(TYPE).getMetadata();
     }
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return getDefaultState().withProperty(TYPE, EnumChunkLoaderType.values()[meta]);
+        return getDefaultState().withProperty(TYPE, Type.byMetadata(meta));
     }
 
     @Override
@@ -154,8 +140,50 @@ public class BlockChunkLoader extends BlockContainer {
         return new BlockStateContainer(this, TYPE);
     }
 
-    @Override
-    public EnumBlockRenderType getRenderType(IBlockState state) {
-        return EnumBlockRenderType.MODEL;
+    public static enum Type implements IStringSerializable {
+
+        BLOCK(0, "block_loader", new Cuboid6(0, 0, 0, 1, 0.75F, 1)),
+        SPOT(1, "spot_loader", new Cuboid6(0.25F, 0, 0.25F, 0.75F, 0.4375F, 0.75F));
+
+        public static final Type[] VALUES = new Type[values().length];
+        private final int metadata;
+        private final String name;
+        private final Cuboid6 bounds;
+
+        Type(int meta, String name, Cuboid6 bounds) {
+
+            this.metadata = meta;
+            this.name = name;
+            this.bounds = bounds;
+        }
+
+        public int getMetadata() {
+            return metadata;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        public Cuboid6 getBounds() {
+            return bounds;
+        }
+
+        public static Type byMetadata(int metadata) {
+            if (metadata < 0 || metadata >= VALUES.length) {
+                metadata = 0;
+            }
+            return VALUES[metadata];
+        }
+
+        static {
+            for (Type type : values()) {
+                VALUES[type.getMetadata()] = type;
+            }
+        }
+
     }
+
+
 }

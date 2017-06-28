@@ -10,16 +10,15 @@ import net.minecraftforge.common.ForgeChunkManager.ForceChunkEvent;
 import net.minecraftforge.common.ForgeChunkManager.UnforceChunkEvent;
 import net.minecraftforge.event.world.ChunkDataEvent;
 import net.minecraftforge.event.world.WorldEvent.Load;
-import net.minecraftforge.event.world.WorldEvent.Save;
 import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 
 public class ChunkLoaderEventHandler {
+
     @SubscribeEvent
     public void serverTick(ServerTickEvent event) {
         if (event.phase == Phase.END) {
@@ -30,20 +29,14 @@ public class ChunkLoaderEventHandler {
     @SubscribeEvent
     public void worldTick(WorldTickEvent event) {
         if (event.phase == Phase.END && !event.world.isRemote) {
-            ChunkLoaderManager.tickEnd((WorldServer) event.world);
+            ChunkLoaderManager.onTickEnd((WorldServer) event.world);
             PlayerChunkViewerManager.instance().calculateChunkChanges((WorldServer) event.world);
         }
     }
 
     @SubscribeEvent
-    public void playerLogin(PlayerLoggedInEvent event) {
-        ChunkLoaderManager.playerLogin(event.player.getName());
-    }
-
-    @SubscribeEvent
     public void playerLogout(PlayerLoggedOutEvent event) {
         PlayerChunkViewerManager.instance().logouts.add(event.player.getName());
-        ChunkLoaderManager.playerLogout(event.player.getName());
     }
 
     @SubscribeEvent
@@ -64,18 +57,13 @@ public class ChunkLoaderEventHandler {
     public void onWorldUnload(Unload event) {
         if (!event.getWorld().isRemote) {
             if (ServerUtils.mc().isServerRunning()) {
-                ChunkLoaderManager.unloadWorld(event.getWorld());
+                ChunkLoaderManager.onWorldUnload(event.getWorld());
                 PlayerChunkViewerManager.instance().dimChanges.add(new DimensionChange((WorldServer) event.getWorld(), false));
             } else {
-                PlayerChunkViewerManager.serverShutdown();
-                ChunkLoaderManager.serverShutdown();
+                PlayerChunkViewerManager.onServerShutdown();
+                ChunkLoaderManager.onServerShutdown();
             }
         }
-    }
-
-    @SubscribeEvent
-    public void onWorldSave(Save event) {
-        ChunkLoaderManager.save((WorldServer) event.getWorld());
     }
 
     @SubscribeEvent

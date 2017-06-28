@@ -9,7 +9,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Set;
 
 public class TileChunkLoader extends TileChunkLoaderBase {
 
@@ -22,7 +22,7 @@ public class TileChunkLoader extends TileChunkLoaderBase {
             shape = newShape;
             return true;
         }
-        Collection<ChunkPos> chunks = getContainedChunks(newShape, getPos().getX(), getPos().getZ(), newRadius);
+        Set<ChunkPos> chunks = getContainedChunks(newShape, getPos().getX(), getPos().getZ(), newRadius);
         if (chunks.size() > ChunkLoaderManager.maxChunksPerLoader()) {
             return false;
         } else if (powered) {
@@ -70,11 +70,11 @@ public class TileChunkLoader extends TileChunkLoaderBase {
     }
 
     @Override
-    public HashSet<ChunkPos> getChunks() {
+    public Set<ChunkPos> getChunks() {
         return getContainedChunks(shape, getPos().getX(), getPos().getZ(), radius);
     }
 
-    public static HashSet<ChunkPos> getContainedChunks(ChunkLoaderShape shape, int xCoord, int zCoord, int radius) {
+    public static Set<ChunkPos> getContainedChunks(ChunkLoaderShape shape, int xCoord, int zCoord, int radius) {
         return shape.getLoadedChunks(xCoord >> 4, zCoord >> 4, radius - 1);
     }
 
@@ -85,7 +85,7 @@ public class TileChunkLoader extends TileChunkLoaderBase {
     @Override
     public void activate() {
         if (radius == 0) {
-            //create a small one and try and increment it to 2   
+            //create a small one and try and increment it to 2
             radius = 1;
             shape = ChunkLoaderShape.Square;
             setShapeAndRadius(ChunkLoaderShape.Square, 2);

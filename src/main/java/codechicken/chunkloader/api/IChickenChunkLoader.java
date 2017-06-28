@@ -5,8 +5,10 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 
 import java.util.Collection;
+import java.util.Set;
 
 public interface IChickenChunkLoader {
+
     String getOwner();
 
     Object getMod();
@@ -19,5 +21,5 @@ public interface IChickenChunkLoader {
 
     void activate();
 
-    Collection<ChunkPos> getChunks();
+    Set<ChunkPos> getChunks();
 }

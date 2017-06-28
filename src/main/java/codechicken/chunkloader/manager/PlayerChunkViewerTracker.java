@@ -21,6 +21,7 @@ import java.util.Map.Entry;
 import static codechicken.chunkloader.network.ChunkLoaderSPH.channel;
 
 public class PlayerChunkViewerTracker {
+
     private final PlayerChunkViewerManager manager;
     public final EntityPlayer owner;
     private HashSet<Integer> knownTickets = new HashSet<>();
@@ -59,7 +60,7 @@ public class PlayerChunkViewerTracker {
         knownTickets.add(manager.ticketIDs.get(ticket));
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings ("unchecked")
     public void loadDimension(WorldServer world) {
         PacketCustom packet = new PacketCustom(channel, 2).compress();
         int dim = CommonUtils.getDimension(world);

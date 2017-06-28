@@ -5,10 +5,10 @@
   },
   "variants": {
     "type": {
-      "full": {
-        "model": "chickenchunks:loader_full"
+      "block_loader": {
+        "model": "chickenchunks:loader_block"
       },
-      "spot": {
+      "spot_loader": {
         "model": "chickenchunks:loader_spot"
       }
     }

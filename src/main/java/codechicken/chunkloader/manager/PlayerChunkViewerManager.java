@@ -9,10 +9,15 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.ForgeChunkManager.Ticket;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 
 public class PlayerChunkViewerManager {
+
     public static class TicketChange {
+
         public final Ticket ticket;
         public final ChunkPos chunk;
         public final boolean force;
@@ -27,6 +32,7 @@ public class PlayerChunkViewerManager {
     }
 
     public static class ChunkChange {
+
         public final ChunkPos chunk;
         public final boolean add;
         public final int dimension;
@@ -39,6 +45,7 @@ public class PlayerChunkViewerManager {
     }
 
     public static class DimensionChange {
+
         public final WorldServer world;
         public final boolean add;
 
@@ -145,7 +152,7 @@ public class PlayerChunkViewerManager {
         ticketChanges.clear();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings ("unchecked")
     private void updateChunkChangeMap() {
         for (WorldServer world : DimensionManager.getWorlds()) {
             HashSet<ChunkPos> allChunks = new HashSet<>();
@@ -158,7 +165,7 @@ public class PlayerChunkViewerManager {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings ("unchecked")
     public void calculateChunkChanges(WorldServer world) {
         if (playerViewers.isEmpty()) {
             return;
@@ -197,7 +204,7 @@ public class PlayerChunkViewerManager {
         return false;
     }
 
-    public static void serverShutdown() {
+    public static void onServerShutdown() {
         instance = null;
     }
 

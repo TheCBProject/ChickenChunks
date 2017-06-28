@@ -8,26 +8,29 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 
 import static codechicken.lib.CodeChickenLib.MC_VERSION;
 
-@Mod(modid = ChickenChunks.MOD_ID, name = ChickenChunks.MOD_NAME, dependencies = "required-after:codechickenlib@[" + CodeChickenLib.MOD_VERSION + ",)", acceptedMinecraftVersions = CodeChickenLib.MC_VERSION_DEP, certificateFingerprint = "f1850c39b2516232a2108a7bd84d1cb5df93b261", updateJSON = ChickenChunks.UPDATE_URL)
+@Mod (modid = ChickenChunks.MOD_ID, name = ChickenChunks.MOD_NAME, dependencies = "required-after:codechickenlib@[" + CodeChickenLib.MOD_VERSION + ",)", acceptedMinecraftVersions = CodeChickenLib.MC_VERSION_DEP, certificateFingerprint = "f1850c39b2516232a2108a7bd84d1cb5df93b261", updateJSON = ChickenChunks.UPDATE_URL)
 public class ChickenChunks {
 
     public static final String MOD_ID = "chickenchunks";
     public static final String MOD_NAME = "ChickenChunks";
     static final String UPDATE_URL = "http://chickenbones.net/Files/notification/version.php?query=forge&version=" + MC_VERSION + "&file=ChickenChunks";
 
-
-    @SidedProxy(clientSide = "codechicken.chunkloader.proxy.ProxyClient", serverSide = "codechicken.chunkloader.proxy.Proxy")
+    @SidedProxy (clientSide = "codechicken.chunkloader.proxy.ProxyClient", serverSide = "codechicken.chunkloader.proxy.Proxy")
     public static Proxy proxy;
 
     public static ConfigFile config;
 
-    @Mod.Instance(value = MOD_ID)
+    @Mod.Instance (value = MOD_ID)
     public static ChickenChunks instance;
+
+    public static Logger logger = LogManager.getLogger("ChickenChunks");
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {

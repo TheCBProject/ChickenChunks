@@ -1,8 +1,7 @@
 package codechicken.chunkloader.init;
 
 import codechicken.chunkloader.block.BlockChunkLoader;
-import codechicken.chunkloader.block.EnumChunkLoaderType;
-import codechicken.chunkloader.item.ItemChunkLoader;
+import codechicken.chunkloader.block.ItemChunkLoader;
 import codechicken.chunkloader.tile.TileChunkLoader;
 import codechicken.chunkloader.tile.TileSpotLoader;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -26,10 +25,10 @@ public class ModBlocks {
         GameRegistry.registerTileEntity(TileSpotLoader.class, "ChickenSpotLoader");
     }
 
-    @SideOnly(Side.CLIENT)
+    @SideOnly (Side.CLIENT)
     public static void initModelVariants() {
-        for (int i = 0; i < EnumChunkLoaderType.values().length; i++) {
-            EnumChunkLoaderType type = EnumChunkLoaderType.values()[i];
+        for (int i = 0; i < BlockChunkLoader.Type.values().length; i++) {
+            BlockChunkLoader.Type type = BlockChunkLoader.Type.values()[i];
             ModelResourceLocation location = new ModelResourceLocation("chickenchunks:chickenchunkloader", "type=" + type.getName());
             ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(blockChunkLoader), i, location);
         }
