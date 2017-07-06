@@ -1,0 +1,26 @@
+{
+	"type" : "minecraft:crafting_shaped",
+	"result" : {
+		"item" : "chickenchunks:chunk_loader",
+		"data": 1,
+		"count": 10
+	},
+	"pattern": [
+		"PPP",
+		"PCP",
+		"PPP"
+	],
+	"key": {
+		"P": {
+			"type": "minecraft:item",
+			"item": "minecraft:ender_pearl",
+			"data": 0
+		},
+		"C": {
+			"type": "minecraft:item",
+			"item": "chickenchunks:chunk_loader",
+			"data": 0
+		}
+	}
+	
+}

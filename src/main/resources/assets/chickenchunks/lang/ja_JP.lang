@@ -1,5 +1,5 @@
-tile.chickenChunkLoader|0.name=チャンクローダー
-tile.chickenChunkLoader|1.name=スポットローダー
+tile.chickenchunks:chunk_loader|0.name=チャンクローダー
+tile.chickenchunks:chunk_loader|1.name=スポットローダー
 
 chickenchunks.gui.name=チャンクローダー
 chickenchunks.gui.showlasers=レーザー:表示

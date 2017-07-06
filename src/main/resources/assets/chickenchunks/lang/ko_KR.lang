@@ -1,5 +1,5 @@
-tile.chickenChunkLoader|0.name=청크로더
-tile.chickenChunkLoader|1.name=작은 청크로더
+tile.chickenchunks:chunk_loader|0.name=청크로더
+tile.chickenchunks:chunk_loader|1.name=작은 청크로더
 
 chickenchunks.gui.name=청크로더
 chickenchunks.gui.showlasers=레이저 보기

@@ -22,27 +22,27 @@ public enum ChunkLoaderShape {
         radius -= 1;
         switch (this) {
             case Square:
-                for (int x = center.chunkXPos - radius; x <= center.chunkXPos + radius; x++) {
-                    for (int z = center.chunkZPos - radius; z <= center.chunkZPos + radius; z++) {
+                for (int x = center.x - radius; x <= center.x + radius; x++) {
+                    for (int z = center.z - radius; z <= center.z + radius; z++) {
                         chunkset.add(new ChunkPos(x, z));
                     }
                 }
                 break;
             case LineX:
-                for (int x = center.chunkXPos - radius; x <= center.chunkXPos + radius; x++) {
-                    chunkset.add(new ChunkPos(x, center.chunkZPos));
+                for (int x = center.x - radius; x <= center.x + radius; x++) {
+                    chunkset.add(new ChunkPos(x, center.z));
                 }
                 break;
             case LineZ:
-                for (int z = center.chunkZPos - radius; z <= center.chunkZPos + radius; z++) {
-                    chunkset.add(new ChunkPos(center.chunkXPos, z));
+                for (int z = center.z - radius; z <= center.z + radius; z++) {
+                    chunkset.add(new ChunkPos(center.x, z));
                 }
                 break;
             case Circle:
-                for (int x = center.chunkXPos - radius; x <= center.chunkXPos + radius; x++) {
-                    for (int z = center.chunkZPos - radius; z <= center.chunkZPos + radius; z++) {
-                        int relx = x - center.chunkXPos;
-                        int relz = z - center.chunkZPos;
+                for (int x = center.x - radius; x <= center.x + radius; x++) {
+                    for (int z = center.z - radius; z <= center.z + radius; z++) {
+                        int relx = x - center.x;
+                        int relz = z - center.z;
                         double dist = Math.sqrt(relx * relx + relz * relz);
                         if (dist <= radius) {
                             chunkset.add(new ChunkPos(x, z));

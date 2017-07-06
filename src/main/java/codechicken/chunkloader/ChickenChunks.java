@@ -34,7 +34,6 @@ public class ChickenChunks {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        FingerprintChecker.runFingerprintChecks();
         config = new ConfigFile(new File(event.getModConfigurationDirectory(), "ChickenChunks.cfg")).setComment("ChunkLoader Configuration File\nDeleting any element will restore it to it's default value");
         proxy.preInit();
     }

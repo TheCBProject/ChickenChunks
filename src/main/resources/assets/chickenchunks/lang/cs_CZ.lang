@@ -1,5 +1,5 @@
-tile.chickenChunkLoader|0.name=Načítač chunků
-tile.chickenChunkLoader|1.name=Načítač míst
+tile.chickenchunks:chunk_loader|0.name=Načítač chunků
+tile.chickenchunks:chunk_loader|1.name=Načítač míst
 
 chickenchunks.gui.name=Načítač chunků
 chickenchunks.gui.showlasers=Zobrazit lasery

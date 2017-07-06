@@ -1,5 +1,5 @@
-tile.chickenChunkLoader|0.name=區塊載入器
-tile.chickenChunkLoader|1.name=單點載入器
+tile.chickenchunks:chunk_loader|0.name=區塊載入器
+tile.chickenchunks:chunk_loader|1.name=單點載入器
 
 chickenchunks.gui.name=區塊載入器
 chickenchunks.gui.showlasers=顯示鐳射

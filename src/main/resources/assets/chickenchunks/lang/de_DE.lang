@@ -1,5 +1,5 @@
-﻿tile.chickenChunkLoader|0.name=Chunkloader
-tile.chickenChunkLoader|1.name=Spotloader
+﻿tile.chickenchunks:chunk_loader|0.name=Chunkloader
+tile.chickenchunks:chunk_loader|1.name=Spotloader
 
 chickenchunks.gui.name=Chunkloader
 chickenchunks.gui.showlasers=Zeige Laser

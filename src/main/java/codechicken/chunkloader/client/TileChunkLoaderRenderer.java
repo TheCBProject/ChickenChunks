@@ -40,7 +40,7 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
     }
 
     @Override
-    public void renderTileEntityAt(TileChunkLoaderBase tile, double x, double y, double z, float partialTicks, int destroyStage) {
+    public void render(TileChunkLoaderBase tile, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
         CCRenderState ccrs = CCRenderState.instance();
         ccrs.reset();
         ccrs.setBrightness(tile.getWorld(), tile.getPos());
@@ -150,8 +150,8 @@ public class TileChunkLoaderRenderer extends TileEntitySpecialRenderer<TileChunk
         Line2D.Double[] rays = new Line2D.Double[] { new Line2D.Double(center.x, center.y, center.x + 1600 * absRays[0].x, center.y + 1600 * absRays[0].y), new Line2D.Double(center.x, center.y, center.x + 1600 * absRays[1].x, center.y + 1600 * absRays[1].y), new Line2D.Double(center.x, center.y, center.x + 1600 * absRays[2].x, center.y + 1600 * absRays[2].y), new Line2D.Double(center.x, center.y, center.x + 1600 * absRays[3].x, center.y + 1600 * absRays[3].y) };
 
         for (ChunkPos pair : chunkSet) {
-            int chunkBlockX = pair.chunkXPos << 4;
-            int chunkBlockZ = pair.chunkZPos << 4;
+            int chunkBlockX = pair.x << 4;
+            int chunkBlockZ = pair.z << 4;
             for (int side = 0; side < 4; side++) {
                 int[] offset1 = coords[side];
                 int[] offset2 = coords[(side + 1) % 4];

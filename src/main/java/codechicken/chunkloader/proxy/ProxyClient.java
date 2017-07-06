@@ -19,7 +19,7 @@ public class ProxyClient extends Proxy {
     @Override
     public void preInit() {
         super.preInit();
-        ModBlocks.initModelVariants();
+        ModBlocks.registerModels();
     }
 
     @Override

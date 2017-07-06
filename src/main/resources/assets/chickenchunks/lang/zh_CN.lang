@@ -1,7 +1,7 @@
 #zh_CN
 
-tile.chickenChunkLoader|0.name=区块载入器
-tile.chickenChunkLoader|1.name=节点载入器
+tile.chickenchunks:chunk_loader|0.name=区块载入器
+tile.chickenchunks:chunk_loader|1.name=节点载入器
 
 chickenchunks.gui.name=区块载入器
 chickenchunks.gui.showlasers=显示镭射

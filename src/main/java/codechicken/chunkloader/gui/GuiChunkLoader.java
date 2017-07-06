@@ -7,7 +7,6 @@ import codechicken.lib.util.LangProxy;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
-import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
 
@@ -77,7 +76,7 @@ public class GuiChunkLoader extends GuiScreen {
     }
 
     private void drawCentered(String s, int x, int y, int colour) {
-        fontRendererObj.drawString(s, x - fontRendererObj.getStringWidth(s) / 2, y, colour);
+        fontRenderer.drawString(s, x - fontRenderer.getStringWidth(s) / 2, y, colour);
     }
 
     int button;

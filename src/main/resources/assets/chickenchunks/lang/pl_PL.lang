@@ -1,5 +1,5 @@
-tile.chickenChunkLoader|0.name=Blok ładujący chunki
-tile.chickenChunkLoader|1.name=Blok ładujący miejsca
+tile.chickenchunks:chunk_loader|0.name=Blok ładujący chunki
+tile.chickenchunks:chunk_loader|1.name=Blok ładujący miejsca
 
 chickenchunks.gui.name=Blok ładujący chunki
 chickenchunks.gui.showlasers=Pokazuj lasery

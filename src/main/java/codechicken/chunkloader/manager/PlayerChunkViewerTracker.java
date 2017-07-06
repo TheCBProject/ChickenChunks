@@ -53,8 +53,8 @@ public class PlayerChunkViewerTracker {
         }
         packet.writeShort(chunkSet.size());
         for (ChunkPos chunk : chunkSet) {
-            packet.writeInt(chunk.chunkXPos);
-            packet.writeInt(chunk.chunkZPos);
+            packet.writeInt(chunk.x);
+            packet.writeInt(chunk.z);
         }
 
         knownTickets.add(manager.ticketIDs.get(ticket));
@@ -69,8 +69,8 @@ public class PlayerChunkViewerTracker {
         Collection<Chunk> allchunks = world.getChunkProvider().getLoadedChunks();
         packet.writeInt(allchunks.size());
         for (Chunk chunk : allchunks) {
-            packet.writeInt(chunk.xPosition);
-            packet.writeInt(chunk.zPosition);
+            packet.writeInt(chunk.x);
+            packet.writeInt(chunk.z);
         }
 
         Map<Ticket, Collection<ChunkPos>> tickets = ForgeChunkManager.getPersistentChunksFor(world).inverse().asMap();
@@ -92,8 +92,8 @@ public class PlayerChunkViewerTracker {
     public void sendChunkChange(PlayerChunkViewerManager.ChunkChange change) {
         PacketCustom packet = new PacketCustom(channel, 4);
         packet.writeInt(change.dimension);
-        packet.writeInt(change.chunk.chunkXPos);
-        packet.writeInt(change.chunk.chunkZPos);
+        packet.writeInt(change.chunk.x);
+        packet.writeInt(change.chunk.z);
         packet.writeBoolean(change.add);
 
         packet.sendToPlayer(owner);
@@ -108,8 +108,8 @@ public class PlayerChunkViewerTracker {
         PacketCustom packet = new PacketCustom(channel, 5);
         packet.writeInt(change.dimension);
         packet.writeInt(ticketID);
-        packet.writeInt(change.chunk.chunkXPos);
-        packet.writeInt(change.chunk.chunkZPos);
+        packet.writeInt(change.chunk.x);
+        packet.writeInt(change.chunk.z);
         packet.writeBoolean(change.force);
 
         packet.sendToPlayer(owner);

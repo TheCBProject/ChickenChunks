@@ -8,7 +8,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.ChunkPos;
 
-import java.util.Collection;
 import java.util.Set;
 
 public class TileChunkLoader extends TileChunkLoaderBase {

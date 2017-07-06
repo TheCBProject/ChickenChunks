@@ -1,5 +1,5 @@
-tile.chickenChunkLoader|0.name=Carregador de Chunk
-tile.chickenChunkLoader|1.name=Carregador Local
+tile.chickenchunks:chunk_loader|0.name=Carregador de Chunk
+tile.chickenchunks:chunk_loader|1.name=Carregador Local
 
 chickenchunks.gui.name=Carregador de Chunk
 chickenchunks.gui.showlasers=Mostrar Lasers

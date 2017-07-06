@@ -1,5 +1,5 @@
-tile.chickenChunkLoader|0.name=Chargeur de Chunk
-tile.chickenChunkLoader|1.name=Chargeur de Lieu
+tile.chickenchunks:chunk_loader|0.name=Chargeur de Chunk
+tile.chickenchunks:chunk_loader|1.name=Chargeur de Lieu
 
 chickenchunks.gui.name=Chargeur de Chunk
 chickenchunks.gui.showlasers=Montrer les rayons

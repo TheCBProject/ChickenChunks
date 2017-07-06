@@ -142,7 +142,7 @@ public class PlayerChunkViewer extends JFrame {
             info += "</span><p style=\"text-align:center; font-family:Tahoma; font-size:10px\">ForcedChunks</p>";
             StringBuilder chunks = new StringBuilder("<span style=\"font-family:Tahoma; font-size:10px\">");
             for (ChunkPos coord : ticket.chunkSet) {
-                chunks.append(coord.chunkXPos).append(", ").append(coord.chunkZPos).append("<br>");
+                chunks.append(coord.x).append(", ").append(coord.z).append("<br>");
             }
             chunks.append("</span>");
             infoPane.setText(info);
@@ -429,7 +429,7 @@ public class PlayerChunkViewer extends JFrame {
 
                 g.setColor(new Color(1F, 0, 0));
                 for (ChunkPos coord : dimInfo.allchunks) {
-                    Point pos = getChunkRenderPosition(coord.chunkXPos, coord.chunkZPos);
+                    Point pos = getChunkRenderPosition(coord.x, coord.z);
                     g.fillRect(pos.x, pos.y, 4, 4);
                 }
 
@@ -444,7 +444,7 @@ public class PlayerChunkViewer extends JFrame {
 
                 g.setColor(new Color(0, 1F, 0));
                 for (ChunkPos coord : forcedChunks) {
-                    Point pos = getChunkRenderPosition(coord.chunkXPos, coord.chunkZPos);
+                    Point pos = getChunkRenderPosition(coord.x, coord.z);
                     g.fillRect(pos.x + 1, pos.y + 1, 2, 2);
                 }
 
@@ -546,7 +546,7 @@ public class PlayerChunkViewer extends JFrame {
             LinkedList<TicketInfo> mouseOverTickets = new LinkedList<>();
             for (TicketInfo ticket : dimInfo.tickets.values()) {
                 for (ChunkPos coord : ticket.chunkSet) {
-                    Point pos = getChunkRenderPosition(coord.chunkXPos, coord.chunkZPos);
+                    Point pos = getChunkRenderPosition(coord.x, coord.z);
                     if (new Rectangle(pos.x, pos.y, 4, 4).contains(mouse)) {
                         mouseOverTickets.add(ticket);
                     }

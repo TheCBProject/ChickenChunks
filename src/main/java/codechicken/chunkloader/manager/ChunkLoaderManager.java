@@ -47,7 +47,7 @@ public class ChunkLoaderManager {
         public final int chunkZ;
 
         public DimChunkCoord(int dim, ChunkPos coord) {
-            this(dim, coord.chunkXPos, coord.chunkZPos);
+            this(dim, coord.x, coord.z);
         }
 
         public DimChunkCoord(int dim, int x, int z) {
@@ -502,7 +502,7 @@ public class ChunkLoaderManager {
 
     public static World getWorld(int dim, boolean create) {
         if (create) {
-            return FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(dim);
+            return FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(dim);
         }
         return DimensionManager.getWorld(dim);
     }

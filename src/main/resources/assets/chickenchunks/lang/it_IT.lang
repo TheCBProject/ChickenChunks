@@ -1,5 +1,5 @@
-tile.chickenChunkLoader|0.name=Carica-chunk
-tile.chickenChunkLoader|1.name=Carica-punto
+tile.chickenchunks:chunk_loader|0.name=Carica-chunk
+tile.chickenchunks:chunk_loader|1.name=Carica-punto
 
 chickenchunks.gui.name=Carica-chunk
 chickenchunks.gui.showlasers=mostra lasers
