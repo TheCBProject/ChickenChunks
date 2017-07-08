@@ -77,7 +77,6 @@ public class OrganiserStorage {
 
         @Deprecated
         void loadLegacyData(File folder);//TODO 1.12 Remove this, as no more LegacyConversion
-
     }
 
     public static class SavedData extends WorldSavedData implements IOrganiserStorage {

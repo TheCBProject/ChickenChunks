@@ -524,13 +524,14 @@ public class ChunkLoaderManager {
             if (saveDir.exists()) {
                 storage.loadLegacyData(saveDir);
                 tracker.loadLegacyData(saveDir);
-            }
-            File[] list = saveDir.listFiles();
-            if (list == null || list.length == 0) {
-                saveDir.delete();
-                logger.info("Old ChickenChunks conversion completed! Removing old folder..");
-            } else {
-                logger.warn("After conversion {} files still exist in {}, Wot..", list.length, saveDir.getAbsolutePath());
+
+                File[] list = saveDir.listFiles();
+                if (list == null || list.length == 0) {
+                    saveDir.delete();
+                    logger.info("Old ChickenChunks conversion completed! Removing old folder..");
+                } else {
+                    logger.warn("After conversion {} files still exist in {}, Wot..", list.length, saveDir.getAbsolutePath());
+                }
             }
 
         } catch (Exception e) {
