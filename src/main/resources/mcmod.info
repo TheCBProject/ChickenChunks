@@ -1,16 +1,12 @@
 [
-{
-  "modid": "chickenchunks",
-  "name": "ChickenChunks",
-  "description": "Advanced chunkloading management
-
-Credits: Sanguine - Texture
-
-Supporters:",
-  "version": "${version}",
-  "mcversion": "${mc_version}",
-  "url": "http://www.minecraftforum.net/topic/909223",
-  "authorList": [ "ChickenBones" ],
-  "dependencies": [ "CodeChickenCore" ]
-}
+	{
+		"modid": "chickenchunks",
+		"name": "ChickenChunks",
+		"description": "Advanced chunkloading management",
+		"version": "${version}",
+		"mcversion": "${mc_version}",
+		"url": "http://www.minecraftforum.net/topic/909223",
+		"authorList": ["ChickenBones"],
+		"dependencies": ["codechickenlib"]
+	}
 ]

@@ -3,7 +3,9 @@ package codechicken.chunkloader;
 import codechicken.chunkloader.proxy.Proxy;
 import codechicken.lib.CodeChickenLib;
 import codechicken.lib.config.ConfigFile;
+import codechicken.lib.internal.ModDescriptionEnhancer;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -36,6 +38,9 @@ public class ChickenChunks {
     public void preInit(FMLPreInitializationEvent event) {
         config = new ConfigFile(new File(event.getModConfigurationDirectory(), "ChickenChunks.cfg")).setComment("ChunkLoader Configuration File\nDeleting any element will restore it to it's default value");
         proxy.preInit();
+        ModMetadata metadata = event.getModMetadata();
+        metadata.description = modifyDesc(metadata.description);
+        ModDescriptionEnhancer.registerEnhancement(MOD_ID, MOD_NAME);
     }
 
     @Mod.EventHandler
@@ -46,5 +51,11 @@ public class ChickenChunks {
     @Mod.EventHandler
     public void serverStarting(FMLServerStartingEvent event) {
         proxy.registerCommands(event);
+    }
+
+    private static String modifyDesc(String desc) {
+        desc += "\n";
+        desc += "    Credits: Sanguine - Texture\n";
+        return desc;
     }
 }
