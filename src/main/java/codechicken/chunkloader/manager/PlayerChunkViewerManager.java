@@ -89,14 +89,6 @@ public class PlayerChunkViewerManager {
             }
         }
 
-        for (DimensionChange change : dimChanges) {
-            if (change.add) {
-                for (PlayerChunkViewerTracker tracker : playerViewers) {
-                    tracker.loadDimension(change.world);
-                }
-            }
-        }
-
         for (ChunkChange change : chunkChanges) {
             for (PlayerChunkViewerTracker tracker : playerViewers) {
                 tracker.sendChunkChange(change);
@@ -117,8 +109,10 @@ public class PlayerChunkViewerManager {
         }
 
         for (DimensionChange change : dimChanges) {
-            if (!change.add) {
-                for (PlayerChunkViewerTracker tracker : playerViewers) {
+            for (PlayerChunkViewerTracker tracker : playerViewers) {
+                if (change.add) {
+                    tracker.loadDimension(change.world);
+                } else {
                     tracker.unloadDimension(CommonUtils.getDimension(change.world));
                 }
             }
