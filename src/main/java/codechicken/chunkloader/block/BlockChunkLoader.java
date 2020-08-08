@@ -17,6 +17,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.shapes.ISelectionContext;
@@ -67,13 +68,13 @@ public class BlockChunkLoader extends Block {
         if (!world.isRemote) {
             TileChunkLoader tile = (TileChunkLoader) world.getTileEntity(pos);
             if (tile.owner == null) {
-                player.sendMessage(new TranslationTextComponent("chickenchunks.brokentile"));
+                player.sendMessage(new TranslationTextComponent("chickenchunks.brokentile"), Util.field_240973_b_);
             } else if (tile.owner.equals(player.getUniqueID()) || ChickenChunksConfig.doesBypassLoaderAccess((ServerPlayerEntity) player)) {
                 PacketCustom packet = new PacketCustom(NET_CHANNEL, C_OPEN_LOADER_GUI);
                 packet.writePos(pos);
                 packet.sendToPlayer((ServerPlayerEntity) player);
             } else {
-                player.sendMessage(new TranslationTextComponent("chickenchunks.accessdenied"));
+                player.sendMessage(new TranslationTextComponent("chickenchunks.accessdenied"), Util.field_240973_b_);
             }
         }
         return ActionResultType.SUCCESS;

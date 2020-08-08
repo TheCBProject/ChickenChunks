@@ -109,6 +109,7 @@ jar {
         attributes 'Implementation-Version': version
         attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
     }
+    from file("LICENSE.txt")
 }
 
 task signJar(type: net.minecraftforge.gradle.common.task.SignJar, dependsOn: 'reobfJar') {
@@ -129,6 +130,7 @@ task srcJar(type: Jar) {
     build.dependsOn it
     from sourceSets.main.allSource
     classifier = 'sources'
+    from file("LICENSE.txt")
 }
 
 

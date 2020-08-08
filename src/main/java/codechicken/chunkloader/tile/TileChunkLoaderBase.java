@@ -47,18 +47,18 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
         super.write(tag);
         tag.putBoolean("powered", powered);
         if (owner != null) {
-            tag.put("owner", NBTUtil.writeUniqueId(owner));
+            tag.putUniqueId("owner", owner);
             tag.putString("owner_name", ITextComponent.Serializer.toJson(ownerName));
         }
         return tag;
     }
 
     @Override
-    public void read(CompoundNBT tag) {
-        super.read(tag);
+    public void func_230337_a_(BlockState state, CompoundNBT tag) {
+        super.func_230337_a_(state, tag);
         if (tag.contains("owner")) {
-            owner = NBTUtil.readUniqueId(tag.getCompound("owner"));
-            ownerName = ITextComponent.Serializer.fromJson(tag.getString("owner_name"));
+            owner = tag.getUniqueId("owner");
+            ownerName = ITextComponent.Serializer.func_240643_a_(tag.getString("owner_name"));
         }
         if (tag.contains("powered")) {
             powered = tag.getBoolean("powered");
@@ -208,7 +208,7 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
     }
 
     @Override
-    public void handleUpdateTag(CompoundNBT tag) {
+    public void handleUpdateTag(BlockState state, CompoundNBT tag) {
         readFromPacket(PacketCustom.fromNBTTag(tag));
     }
 

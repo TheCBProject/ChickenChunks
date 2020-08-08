@@ -13,15 +13,14 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.NBTUtil;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Direction;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.server.TicketManager;
 import net.minecraftforge.common.MinecraftForge;
@@ -83,16 +82,19 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
     }
 
     private static void onWorldLoad(WorldEvent.Load event) {
-        if (event.getWorld().getDimension().getType() == DimensionType.OVERWORLD && event.getWorld() instanceof ServerWorld) {
-            ChunkLoaderHandler handler = getHandler(event.getWorld());
-            handler.onOverWorldLoad();
+        if (event.getWorld() instanceof ServerWorld) {
+            ServerWorld world = (ServerWorld) event.getWorld();
+            if (world.func_234923_W_() == World.field_234918_g_) {
+                ChunkLoaderHandler handler = getHandler(world);
+                handler.onOverWorldLoad();
+            }
         }
     }
 
     private static void onWorldTick(TickEvent.WorldTickEvent event) {
         if (event.world instanceof ServerWorld) {
             ServerWorld world = (ServerWorld) event.world;
-            if (world.getDimension().getType() == DimensionType.OVERWORLD) {
+            if (world.func_234923_W_() == World.field_234918_g_) {
                 ChunkLoaderHandler handler = getHandler(world);
                 if (handler != null) {
                     handler.tick(event);
@@ -104,10 +106,13 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
     //Attach our IChunkLoaderHandler capability to the overworld.
 
     private static void attachCapabilities(AttachCapabilitiesEvent<World> event) {
-        if (event.getObject().isRemote || event.getObject().getDimension().getType() != DimensionType.OVERWORLD) {
+        if (event.getObject().isRemote) {
             return;
         }
         ServerWorld world = (ServerWorld) event.getObject();
+        if (world.func_234923_W_() != World.field_234918_g_) {
+            return;
+        }
         IChunkLoaderHandler handler = new ChunkLoaderHandler(world.getServer());
         LazyOptional<IChunkLoaderHandler> handlerOpt = LazyOptional.of(() -> handler);
         event.addCapability(KEY, new ICapabilitySerializable<INBT>() {
@@ -241,10 +246,11 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
 
             //Handle devive / revive list.
             for (Organiser organiser : reviveList) {
-                //Don't care this is deprecated, forge wants us to use ModDimension, obviously invalid here.
-                //noinspection deprecation
-                Registry.DIMENSION_TYPE.getValue(organiser.dim)//
-                        .ifPresent(type -> organiser.revive(server.getWorld(type)));
+                RegistryKey<World> key = RegistryKey.func_240903_a_(Registry.field_239699_ae_, organiser.dim);
+                ServerWorld world = server.getWorld(key);
+                if (world != null) {
+                    organiser.revive(world);
+                }
             }
             reviveList.clear();
             for (Organiser organiser : deviveList) {
@@ -268,11 +274,8 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
     }
 
     public void addChunk(IChunkLoader loader, ResourceLocation dim, ChunkPos pos) {
-        //Don't care this is deprecated, forge wants us to use ModDimension, obviously invalid here.
-        //noinspection deprecation
-        DimensionType type = Registry.DIMENSION_TYPE.getValue(dim).orElse(null);
-        Objects.requireNonNull(type);
-        ServerWorld world = server.getWorld(type);
+        RegistryKey<World> key = RegistryKey.func_240903_a_(Registry.field_239699_ae_, dim);
+        ServerWorld world = server.getWorld(key);
         TicketManager ticketManager = world.getChunkProvider().ticketManager;
         ChunkTicket ticket = computeIfAbsent(activeTickets, dim, pos, () -> new ChunkTicket(ticketManager, pos));
         ticket.loaders.add(loader);
@@ -292,11 +295,11 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
     public Organiser getOrganiser(IChunkLoader loader) {
         Objects.requireNonNull(loader);
         UUID player = Objects.requireNonNull(loader.getOwner());
-        return getOrganiser(loader.world().getDimension().getType(), player);
+        return getOrganiser(loader.world().getWorld().func_234923_W_(), player);
     }
 
-    public Organiser getOrganiser(DimensionType dim, UUID player) {
-        return getOrganiser(dim.getRegistryName(), player);
+    public Organiser getOrganiser(RegistryKey<World> dim, UUID player) {
+        return getOrganiser(dim.func_240901_a_(), player);
     }
 
     public Organiser getOrganiser(ResourceLocation dim, UUID player) {
@@ -322,7 +325,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
             ListNBT playerList = new ListNBT();
             for (Map.Entry<UUID, Map<ResourceLocation, Organiser>> playerEntry : handler.playerOrganisers.rowMap().entrySet()) {
                 CompoundNBT playerTag = new CompoundNBT();
-                playerTag.put("player", NBTUtil.writeUniqueId(playerEntry.getKey()));
+                playerTag.putUniqueId("player", playerEntry.getKey());
                 ListNBT dimensions = new ListNBT();
                 for (Map.Entry<ResourceLocation, Organiser> dimEntry : playerEntry.getValue().entrySet()) {
                     if (dimEntry.getValue().isEmpty()) {
@@ -346,7 +349,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
             ListNBT loginList = new ListNBT();
             for (Object2LongMap.Entry<UUID> uuidEntry : handler.loginTimes.object2LongEntrySet()) {
                 CompoundNBT playerTag = new CompoundNBT();
-                playerTag.put("player", NBTUtil.writeUniqueId(uuidEntry.getKey()));
+                playerTag.putUniqueId("player", uuidEntry.getKey());
                 playerTag.putLong("time", uuidEntry.getLongValue());
                 loginList.add(playerTag);
             }
@@ -365,7 +368,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
             ListNBT playerList = tag.getList("playerOrganisers", 10);
             for (int i = 0; i < playerList.size(); i++) {
                 CompoundNBT playerTag = playerList.getCompound(i);
-                UUID player = NBTUtil.readUniqueId(playerTag.getCompound("player"));
+                UUID player = playerTag.getUniqueId("player");
                 ListNBT dimensions = playerTag.getList("dimensions", 10);
                 for (int j = 0; j < dimensions.size(); j++) {
                     CompoundNBT dimTag = dimensions.getCompound(j);
@@ -378,7 +381,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
             ListNBT loginList = tag.getList("times", 10);
             for (int i = 0; i < loginList.size(); i++) {
                 CompoundNBT playerTag = loginList.getCompound(i);
-                handler.loginTimes.put(NBTUtil.readUniqueId(playerTag.getCompound("player")), playerTag.getLong("time"));
+                handler.loginTimes.put(playerTag.getUniqueId("player"), playerTag.getLong("time"));
             }
         }
     }

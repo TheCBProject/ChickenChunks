@@ -1,6 +1,7 @@
 modLoader="javafml"
-loaderVersion="[28,)"
+loaderVersion="[32,)"
 issueTrackerURL="https://github.com/TheCBProject/ChickenChunks"
+license="The MIT License (MIT)"
 
 [[mods]]
 	modId="chickenchunks"
@@ -14,13 +15,13 @@ issueTrackerURL="https://github.com/TheCBProject/ChickenChunks"
 [[dependencies.chickenchunks]]
 	modId="forge"
 	mandatory=true
-	versionRange="[28,)"
+	versionRange="[32,)"
 	ordering="NONE"
 	side="BOTH"
 [[dependencies.chickenchunks]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.15.2]"
+    versionRange="[1.16.1]"
     ordering="NONE"
     side="BOTH"
 [[dependencies.chickenchunks]]

@@ -9,6 +9,8 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.arguments.GameProfileArgument;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -37,7 +39,12 @@ public class ChickenChunksCommand {
     private static final String CHUNKS_PER_LOADER_SET_FOR = MOD_ID + ":commands.restrictions.player.chunks_per_loader.set";
     private static final String CHUNKS_PER_LOADER_RESET_FOR = MOD_ID + ":commands.restrictions.player.chunks_per_loader.reset";
 
-    public static void register(CommandDispatcher<CommandSource> dispatcher) {
+    public static void init() {
+        MinecraftForge.EVENT_BUS.addListener(ChickenChunksCommand::onRegisterCommands);
+    }
+
+    private static void onRegisterCommands(RegisterCommandsEvent event) {
+        CommandDispatcher<CommandSource> dispatcher = event.getDispatcher();
         dispatcher.register(literal("chickenchunks")//
                 .requires(e -> e.hasPermissionLevel(4))//
                 .then(literal("restrict")//
