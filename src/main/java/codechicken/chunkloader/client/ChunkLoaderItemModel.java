@@ -5,65 +5,61 @@ import codechicken.lib.render.CCModelLibrary;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.RenderUtils;
 import codechicken.lib.render.item.IItemRenderer;
-import codechicken.lib.texture.TextureUtils;
 import codechicken.lib.util.ClientUtils;
 import codechicken.lib.util.TransformUtils;
 import codechicken.lib.vec.Matrix4;
 import codechicken.lib.vec.Rotation;
 import codechicken.lib.vec.Vector3;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import com.google.common.collect.ImmutableMap;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.TransformationMatrix;
+import net.minecraft.client.renderer.model.IBakedModel;
+import net.minecraft.client.renderer.model.ItemCameraTransforms.TransformType;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.common.model.IModelState;
-
-import java.util.function.Supplier;
-
-import static net.minecraft.client.renderer.GlStateManager.*;
 
 /**
  * Created by covers1624 on 5/07/2017.
  */
 public class ChunkLoaderItemModel extends WrappedItemModel implements IItemRenderer {
 
-    public ChunkLoaderItemModel(Supplier<ModelResourceLocation> wrappedModel) {
+    private final boolean spotLoader;
+
+    public ChunkLoaderItemModel(IBakedModel wrappedModel, boolean spotLoader) {
         super(wrappedModel);
+        this.spotLoader = spotLoader;
     }
 
     @Override
-    public void renderItem(ItemStack stack, TransformType transformType) {
-        renderWrapped(stack);
+    public void renderItem(ItemStack stack, TransformType transformType, MatrixStack mStack, IRenderTypeBuffer getter, int packedLight, int packedOverlay) {
+        renderWrapped(stack, transformType, mStack, getter, packedLight, packedOverlay);
 
-        double rot = ClientUtils.getRenderTime() / 3F;
+        double rot = ClientUtils.getRenderTime() / 6F;
         double height;
         double size;
-        double updown = (float) Math.sin(((ClientUtils.getRenderTime() % 50) / 25F) * 3.141593) * 0.2;
 
-        if (stack.getMetadata() == 0) {
+        if (!spotLoader) {
             height = 0.9;
             size = 0.08;
         } else {
-            height = 0.5;
+            height = 0.55;
             size = 0.05;
         }
 
         CCRenderState ccrs = CCRenderState.instance();
+        ccrs.brightness = packedLight;
+        ccrs.overlay = packedOverlay;
         ccrs.reset();
 
-        Matrix4 pearlMat = RenderUtils.getMatrix(new Vector3(0.5, height + (updown + 0.3), 0.5), new Rotation(rot, new Vector3(0, 1, 0)), size);
-
-        disableLighting();
-        pushMatrix();
-        TextureUtils.changeTexture("chickenchunks:textures/hedronmap.png");
-        ccrs.startDrawing(4, DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
+        Matrix4 pearlMat = RenderUtils.getMatrix(new Matrix4(mStack), new Vector3(0.5, height, 0.5), new Rotation(rot, Vector3.Y_POS), size);
+        ccrs.brightness = 15728880;
+        ccrs.bind(TileChunkLoaderRenderer.pearlType, getter);
         CCModelLibrary.icosahedron4.render(ccrs, pearlMat);
-        ccrs.draw();
-        popMatrix();
-        enableLighting();
+        ccrs.reset();
     }
 
     @Override
-    public IModelState getTransforms() {
+    public ImmutableMap<TransformType, TransformationMatrix> getTransforms() {
         return TransformUtils.DEFAULT_BLOCK;
     }
 
@@ -74,6 +70,11 @@ public class ChunkLoaderItemModel extends WrappedItemModel implements IItemRende
 
     @Override
     public boolean isGui3d() {
+        return true;
+    }
+
+    @Override
+    public boolean func_230044_c_() {
         return true;
     }
 }

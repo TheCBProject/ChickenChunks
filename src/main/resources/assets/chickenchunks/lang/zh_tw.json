@@ -1,0 +1,14 @@
+{
+  "block.chickenchunks.chunk_loader": "區塊載入器",
+  "block.chickenchunks.spot_loader": "單點載入器",
+  "chickenchunks.gui.name": "區塊載入器",
+  "chickenchunks.gui.showlasers": "顯示鐳射",
+  "chickenchunks.gui.hidelasers": "隱藏鐳射",
+  "chickenchunks.gui.chunk": "%d 個區塊",
+  "chickenchunks.gui.chunks": "%d 個區塊",
+  "chickenchunks.gui.radius": "半徑",
+  "chickenchunks.shape.square": "方形",
+  "chickenchunks.shape.circle": "圓形",
+  "chickenchunks.shape.linex": "線形 X",
+  "chickenchunks.shape.linez": "線形 Z"
+}

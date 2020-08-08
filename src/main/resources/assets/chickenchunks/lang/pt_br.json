@@ -1,0 +1,19 @@
+{
+  "block.chickenchunks.chunk_loader": "Carregador de Chunk",
+  "block.chickenchunks.spot_loader": "Carregador Local",
+  "chickenchunks.gui.name": "Carregador de Chunk",
+  "chickenchunks.gui.showlasers": "Mostrar Lasers",
+  "chickenchunks.gui.hidelasers": "Esconder Lasers",
+  "chickenchunks.gui.chunk": "%d Chunk",
+  "chickenchunks.gui.chunks": "%d Chunks",
+  "chickenchunks.gui.radius": "Raio",
+  "chickenchunks.shape.square": "Quadrado",
+  "chickenchunks.shape.circle": "Círculo",
+  "chickenchunks.shape.linex": "Linha X",
+  "chickenchunks.shape.linez": "Linha Z",
+  "chickenchunks.accessdenied": "Este carregador de Chunk não pertence a você.",
+  "command.ccdebug": "/ccdebug [dimensão]",
+  "command.chunkloaders": "/chunkloaders",
+  "command.chunkloaders.denied": "Você não está autorizado a usar o Visualizador de Chunks.",
+  "command.chunkloaders.alreadyopen": "Visualizador de chunks já aberto."
+}

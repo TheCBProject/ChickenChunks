@@ -5,7 +5,7 @@
 	},
 	"variants": {
 		"": {
-			"model": "chickenchunks:block/chunk_loader"
+			"model": "chickenchunks:block/spot_loader"
 		}
 	}
 }

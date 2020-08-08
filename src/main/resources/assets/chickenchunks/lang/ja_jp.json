@@ -1,0 +1,19 @@
+{
+  "block.chickenchunks.chunk_loader": "チャンクローダー",
+  "block.chickenchunks.spot_loader": "スポットローダー",
+  "chickenchunks.gui.name": "チャンクローダー",
+  "chickenchunks.gui.showlasers": "レーザー:表示",
+  "chickenchunks.gui.hidelasers": "レーザー:非表示",
+  "chickenchunks.gui.chunk": "%d チャンク",
+  "chickenchunks.gui.chunks": "%d チャンク",
+  "chickenchunks.gui.radius": "範囲",
+  "chickenchunks.shape.square": "四角形",
+  "chickenchunks.shape.circle": "円形",
+  "chickenchunks.shape.linex": "X線上",
+  "chickenchunks.shape.linez": "Z線上",
+  "chickenchunks.accessdenied": "このチャンクローダーはあなたの管理下ではありません。",
+  "command.ccdebug": "/ccdebug [dimension]",
+  "command.chunkloaders": "/chunkloaders",
+  "command.chunkloaders.denied": "あなたはチャンクビューワを使用できません。",
+  "command.chunkloaders.alreadyopen": "チャンクビューワは既に開いています。"
+}

@@ -1,0 +1,14 @@
+{
+  "block.chickenchunks.chunk_loader": "청크로더",
+  "block.chickenchunks.spot_loader": "작은 청크로더",
+  "chickenchunks.gui.name": "청크로더",
+  "chickenchunks.gui.showlasers": "레이저 보기",
+  "chickenchunks.gui.hidelasers": "레이저 숨기기",
+  "chickenchunks.gui.chunk": "%d 청크",
+  "chickenchunks.gui.chunks": "%d 청크",
+  "chickenchunks.gui.radius": "반지름",
+  "chickenchunks.shape.square": "사각형",
+  "chickenchunks.shape.circle": "원",
+  "chickenchunks.shape.linex": "X라인",
+  "chickenchunks.shape.linez": "Z라인"
+}

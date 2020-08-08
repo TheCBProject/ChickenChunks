@@ -1,0 +1,19 @@
+{
+  "block.chickenchunks.chunk_loader": "Načítač chunků",
+  "block.chickenchunks.spot_loader": "Načítač míst",
+  "chickenchunks.gui.name": "Načítač chunků",
+  "chickenchunks.gui.showlasers": "Zobrazit lasery",
+  "chickenchunks.gui.hidelasers": "Schovat lasery",
+  "chickenchunks.gui.chunk": "%d chunk",
+  "chickenchunks.gui.chunks": "%d chunků",
+  "chickenchunks.gui.radius": "Vzdálenost",
+  "chickenchunks.shape.square": "Čtverec",
+  "chickenchunks.shape.circle": "Kruh",
+  "chickenchunks.shape.linex": "Řada X",
+  "chickenchunks.shape.linez": "Řada Z",
+  "chickenchunks.accessdenied": "Tento načítač chunků ti nepatří.",
+  "command.ccdebug": "/ccdebug [dimenze]",
+  "command.chunkloaders": "/chunkloaders",
+  "command.chunkloaders.denied": "Nejsi oprávněn používat Zobrazovač chunků.",
+  "command.chunkloaders.alreadyopen": "Zobrazovač chunků je již otevřený."
+}

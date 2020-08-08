@@ -1,11 +1,13 @@
 package codechicken.chunkloader.tile;
 
 import codechicken.chunkloader.api.ChunkLoaderShape;
-import codechicken.chunkloader.manager.ChunkLoaderManager;
+import codechicken.chunkloader.api.IChunkLoaderHandler;
+import codechicken.chunkloader.handler.ChickenChunksConfig;
+import codechicken.chunkloader.init.ModContent;
 import codechicken.lib.data.MCDataInput;
 import codechicken.lib.data.MCDataOutput;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.block.BlockState;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.Set;
@@ -13,28 +15,40 @@ import java.util.Set;
 public class TileChunkLoader extends TileChunkLoaderBase {
 
     public int radius;
-    public ChunkLoaderShape shape = ChunkLoaderShape.Square;
+    public ChunkLoaderShape shape = ChunkLoaderShape.SQUARE;
+
+    public TileChunkLoader() {
+        super(ModContent.tileChunkLoaderType);
+    }
 
     public boolean setShapeAndRadius(ChunkLoaderShape newShape, int newRadius) {
+        if (owner == null) {
+            return false;
+        }
+        Set<ChunkPos> chunks = getContainedChunks(newShape, getPos().getX(), getPos().getZ(), newRadius);
+        //Synced to client.
+        ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getRestrictions(owner);
+        if (chunks.size() > restrictions.getChunksPerLoader()) {
+            return false;
+        }
         if (world.isRemote) {
             radius = newRadius;
             shape = newShape;
             return true;
         }
-        Set<ChunkPos> chunks = getContainedChunks(newShape, getPos().getX(), getPos().getZ(), newRadius);
-        if (chunks.size() > ChunkLoaderManager.maxChunksPerLoader()) {
-            return false;
-        } else if (powered) {
+        if (powered) {
             radius = newRadius;
             shape = newShape;
-            IBlockState state = world.getBlockState(getPos());
+            BlockState state = world.getBlockState(getPos());
             world.notifyBlockUpdate(getPos(), state, state, 3);
             return true;
-        } else if (ChunkLoaderManager.canLoaderAdd(this, chunks)) {
+        }
+        IChunkLoaderHandler handler = IChunkLoaderHandler.getCapability(world);
+        if (handler.canLoadChunks(this, chunks)) {
             radius = newRadius;
             shape = newShape;
-            ChunkLoaderManager.updateLoader(this);
-            IBlockState state = world.getBlockState(getPos());
+            handler.updateLoader(this);
+            BlockState state = world.getBlockState(getPos());
             world.notifyBlockUpdate(getPos(), state, state, 3);
             return true;
         }
@@ -54,16 +68,17 @@ public class TileChunkLoader extends TileChunkLoaderBase {
         setShapeAndRadius(ChunkLoaderShape.values()[packet.readUByte()], packet.readUByte());
     }
 
-    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
-        tag.setByte("radius", (byte) radius);
-        tag.setByte("shape", (byte) shape.ordinal());
+    @Override
+    public CompoundNBT write(CompoundNBT tag) {
+        super.write(tag);
+        tag.putByte("radius", (byte) radius);
+        tag.putByte("shape", (byte) shape.ordinal());
         return tag;
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound tag) {
-        super.readFromNBT(tag);
+    public void read(CompoundNBT tag) {
+        super.read(tag);
         radius = tag.getByte("radius");
         shape = ChunkLoaderShape.values()[tag.getByte("shape")];
     }
@@ -83,11 +98,14 @@ public class TileChunkLoader extends TileChunkLoaderBase {
 
     @Override
     public void activate() {
+        if (owner == null) {
+            return;
+        }
         if (radius == 0) {
             //create a small one and try and increment it to 2
             radius = 1;
-            shape = ChunkLoaderShape.Square;
-            setShapeAndRadius(ChunkLoaderShape.Square, 2);
+            shape = ChunkLoaderShape.SQUARE;
+            setShapeAndRadius(ChunkLoaderShape.SQUARE, 2);
         }
 
         super.activate();

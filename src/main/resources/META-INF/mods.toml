@@ -1,0 +1,31 @@
+modLoader="javafml"
+loaderVersion="[28,)"
+issueTrackerURL="https://github.com/TheCBProject/ChickenChunks"
+
+[[mods]]
+	modId="chickenchunks"
+	displayName="ChickenChunks"
+	version="${version}"
+
+	updateJSONURL="http://chickenbones.net/Files/notification/version.php?query=forge&file=ChickenChunks&version=${mc_version}"
+	displayURL="http://chickenbones.net/Pages/links.html"
+	authors="ChickenBones, covers1624"
+	description="Advanced ChunkLoading management"
+[[dependencies.chickenchunks]]
+	modId="forge"
+	mandatory=true
+	versionRange="[28,)"
+	ordering="NONE"
+	side="BOTH"
+[[dependencies.chickenchunks]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.15.2]"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.chickenchunks]]
+    modId="codechickenlib"
+    mandatory=true
+    versionRange="[${ccl_version},)"
+    ordering="NONE"
+    side="BOTH"

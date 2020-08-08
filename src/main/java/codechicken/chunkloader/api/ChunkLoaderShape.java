@@ -1,111 +1,75 @@
 package codechicken.chunkloader.api;
 
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.text.translation.I18n;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Set;
 
 public enum ChunkLoaderShape {
-    Square("square"),
-    Circle("circle"),
-    LineX("linex"),
-    LineZ("linez");
+    SQUARE("square"),
+    CIRCLE("circle"),
+    LINE_X("linex"),
+    LINE_Z("linez");
 
-    String name;
+    private final String name;
+    private static final ChunkLoaderShape[] VALUES = values();
+    private static final ChunkLoaderShape[] NEXT_LOOKUP = Arrays.stream(VALUES)//
+            .map(e -> VALUES[(e.ordinal() + 1) % VALUES.length])//
+            .toArray(ChunkLoaderShape[]::new);
+    private static final ChunkLoaderShape[] PREV_LOOKUP = Arrays.stream(VALUES)//
+            .map(e -> VALUES[Math.floorMod((e.ordinal() - 1), VALUES.length)])//
+            .toArray(ChunkLoaderShape[]::new);
 
     ChunkLoaderShape(String s) {
         name = s;
     }
 
-    public HashSet<ChunkPos> getChunks(int radius, ChunkPos center) {
-        HashSet<ChunkPos> chunkset = new HashSet<>();
-        radius -= 1;
-        switch (this) {
-            case Square:
-                for (int x = center.x - radius; x <= center.x + radius; x++) {
-                    for (int z = center.z - radius; z <= center.z + radius; z++) {
-                        chunkset.add(new ChunkPos(x, z));
-                    }
-                }
-                break;
-            case LineX:
-                for (int x = center.x - radius; x <= center.x + radius; x++) {
-                    chunkset.add(new ChunkPos(x, center.z));
-                }
-                break;
-            case LineZ:
-                for (int z = center.z - radius; z <= center.z + radius; z++) {
-                    chunkset.add(new ChunkPos(center.x, z));
-                }
-                break;
-            case Circle:
-                for (int x = center.x - radius; x <= center.x + radius; x++) {
-                    for (int z = center.z - radius; z <= center.z + radius; z++) {
-                        int relx = x - center.x;
-                        int relz = z - center.z;
-                        double dist = Math.sqrt(relx * relx + relz * relz);
-                        if (dist <= radius) {
-                            chunkset.add(new ChunkPos(x, z));
-                        }
-                    }
-                }
-        }
-        return chunkset;
-    }
-
     public ChunkLoaderShape next() {
-        int index = ordinal();
-        index++;
-        if (index == values().length) {
-            index = 0;
-        }
-        return values()[index];
+        return NEXT_LOOKUP[ordinal()];
     }
 
     public ChunkLoaderShape prev() {
-        int index = ordinal();
-        index--;
-        if (index == -1) {
-            index = values().length - 1;
-        }
-        return values()[index];
+        return PREV_LOOKUP[ordinal()];
     }
 
-    public HashSet<ChunkPos> getLoadedChunks(int chunkx, int chunkz, int radius) {
-        HashSet<ChunkPos> chunkSet = new HashSet<>();
+    public Set<ChunkPos> getLoadedChunks(int chunkx, int chunkz, int radius) {
+        Set<ChunkPos> chunks = new HashSet<>();
         switch (this) {
-            case Square:
+            case SQUARE:
                 for (int cx = chunkx - radius; cx <= chunkx + radius; cx++) {
                     for (int cz = chunkz - radius; cz <= chunkz + radius; cz++) {
-                        chunkSet.add(new ChunkPos(cx, cz));
+                        chunks.add(new ChunkPos(cx, cz));
                     }
                 }
                 break;
-            case LineX:
+            case LINE_X:
                 for (int cx = chunkx - radius; cx <= chunkx + radius; cx++) {
-                    chunkSet.add(new ChunkPos(cx, chunkz));
+                    chunks.add(new ChunkPos(cx, chunkz));
                 }
                 break;
-            case LineZ:
+            case LINE_Z:
                 for (int cz = chunkz - radius; cz <= chunkz + radius; cz++) {
-                    chunkSet.add(new ChunkPos(chunkx, cz));
+                    chunks.add(new ChunkPos(chunkx, cz));
                 }
                 break;
-            case Circle:
+            case CIRCLE:
                 for (int cx = chunkx - radius; cx <= chunkx + radius; cx++) {
                     for (int cz = chunkz - radius; cz <= chunkz + radius; cz++) {
                         double distSquared = (cx - chunkx) * (cx - chunkx) + (cz - chunkz) * (cz - chunkz);
                         if (distSquared <= radius * radius) {
-                            chunkSet.add(new ChunkPos(cx, cz));
+                            chunks.add(new ChunkPos(cx, cz));
                         }
                     }
                 }
 
         }
-        return chunkSet;
+        return chunks;
     }
 
-    public String getName() {
-        return I18n.translateToLocal("chickenchunks.shape." + name);
+    public ITextComponent getTranslation() {
+        return new TranslationTextComponent("chickenchunks.shape." + name);
     }
 }

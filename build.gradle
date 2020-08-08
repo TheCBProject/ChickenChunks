@@ -1,157 +1,222 @@
 buildscript {
     repositories {
+        mavenLocal()
         jcenter()
-        maven {
-            name = "forge"
-            url = "http://files.minecraftforge.net/maven"
-        }
+        mavenCentral()
+        maven { url = "http://files.minecraftforge.net/maven" }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:3.+'
     }
 }
 
-//add dependency repositories
-repositories {
-    maven {
-        name = "CB Repo"
-        url = "http://chickenbones.net/maven"
-    }
-}
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'maven-publish'
 
-apply plugin: 'net.minecraftforge.gradle.forge'
-apply plugin: 'maven'
-
-group = "codechicken" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+group = "codechicken"
 archivesBaseName = "ChickenChunks"
 
 targetCompatibility = "1.8"
 sourceCompatibility = "1.8"
 
-// Define properties file
-ext.configFile = file "build.properties"
+sourceSets.main.resources.srcDirs += "src/generated/resources"
 
-configFile.withReader {
-    // Load config.  It shall from now be referenced as simply config or project.config
+file('build.properties').withReader {
     def prop = new Properties()
     prop.load(it)
     project.ext.config = new ConfigSlurper().parse prop
 }
 
+def signProps = [:]
+if (System.getenv("KEY_STORE")) {
+    println "Using Env variables for jar signing."
+    signProps['keyStore'] = System.getenv("KEY_STORE")
+    file(System.getenv("KEY_STORE_PROPS")).withReader {
+        def props = new Properties()
+        props.load(it)
+        signProps.putAll(props)
+    }
+} else if (project.hasProperty('keyStore')) {
+    println "Using Project properties for jar signing."
+    signProps['keyStore'] = project.getProperty('keyStore')
+    signProps['storePass'] = project.getProperty('keyStorePass')
+    signProps['alias'] = project.getProperty('keyStoreAlias')
+    signProps['keyPass'] = project.getProperty('keyStoreKeyPass')
+} else {
+    println 'No signing secrets found, build will not be signed.'
+}
+
+version = "${project.config.mod_version}." + (System.getenv("BUILD_NUMBER") ?: "1")
+println "Starting build of ${archivesBaseName}, Version: ${version}"
+println "Using Forge: ${config.forge_version}, for Minecraft: ${config.mc_version}, with Mappings: ${config.mappings}"
+
+minecraft {
+    mappings channel: 'snapshot', version: config.mappings
+    accessTransformer = file("src/main/resources/META-INF/accesstransformer.cfg")
+    runs {
+        client {
+            workingDirectory file('run')
+            mods { chickenchunks { source sourceSets.main } }
+        }
+        server {
+            workingDirectory file('run')
+            mods { chickenchunks { source sourceSets.main } }
+        }
+        data {
+            workingDirectory file('run')
+            args '--mod', 'chickenchunks', '--all', '--output', file("src/generated/resources")
+            mods { chickenchunks { source sourceSets.main } }
+        }
+    }
+}
+
+repositories {
+    mavenLocal()
+    maven { url = "http://chickenbones.net/maven" }
+}
+
 dependencies {
+    minecraft "net.minecraftforge:forge:${config.mc_version}-${config.forge_version}"
     compile "codechicken:CodeChickenLib:${config.mc_version}-${config.ccl_version}:deobf"
 }
 
-version = "${project.config.mod_version}." + System.getenv("BUILD_NUMBER") ?: "1"
-
-println config.mc_version + "-" + config.forge_version
-// Setup the forge minecraft plugin data. Specify the preferred forge/minecraft version here
-minecraft {
-    version = config.mc_version + "-" + config.forge_version
-    mappings = config.mappings
-    makeObfSourceJar = false
-    runDir = "run"
-}
-
-processResources {
-    // Redo task if any of these properties change
-    inputs.property "version", project.version
+processResources { task ->
+    inputs.property "version", version
     inputs.property "mc_version", config.mc_version
 
-    // Replace properties in info files
-    from(sourceSets.main.resources.srcDirs) {
-        include '*.info'
-        expand 'version': project.version, 'mc_version': config.mc_version
+    from(sourceSets.main.resources.srcDirs) { spec ->
+        spec.include 'META-INF/mods.toml'
+        task.doFirst {
+            spec.expand 'version': version,
+                    'mc_version': config.mc_version,
+                    'ccl_version': resolve("CodeChickenLib")
+        }
     }
-
-    // Move access transformer to META-INF
-    rename '(.+_at.cfg)', 'META-INF/$1'
 }
 
-version = "${project.minecraft.version}-${project.version}"
-def commonManifest = {
-    attributes 'FMLAT': 'chickenchunks_at.cfg'
-}
+version = "${config.mc_version}-${version}"
 
 jar {
+    finalizedBy 'reobfJar'
+    finalizedBy 'signJar'
     classifier = 'universal'
-    manifest commonManifest
-}
-
-task srcJar(type: Jar) {
-    from sourceSets.main.java
-    classifier = 'sources'
-}
-
-task deobfJar(type: Jar) {
-    from sourceSets.main.output
-    classifier = 'deobf'
-    manifest commonManifest
-}
-
-
-task signJar(type: SignJar, dependsOn: reobfJar) {
-    onlyIf { // Skip the task if our secret data isn't available
-        project.hasProperty('keyStore')
+    manifest {
+        attributes 'Specification-Title': archivesBaseName
+        attributes 'Specification-Vendor': 'covers1624'
+        attributes 'Specification-Version': "1"
+        attributes 'Implementation-Title': archivesBaseName
+        attributes 'Implementation-Vendor': 'covers1624'
+        attributes 'Implementation-Version': version
+        attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
     }
+}
 
-    if (project.hasProperty('keyStore')) {
-        keyStore = project.keyStore // This needs to be a path to the keystore file
-        alias = project.keyStoreAlias
-        storePass = project.keyStorePass
-        keyPass = project.keyStoreKeyPass
+task signJar(type: net.minecraftforge.gradle.common.task.SignJar, dependsOn: 'reobfJar') {
+    onlyIf { !signProps.isEmpty() }
+
+    if (!signProps.isEmpty()) {
+        keyStore = signProps.keyStore
+        alias = signProps.alias
+        storePass = signProps.storePass
+        keyPass = signProps.keyPass
+
         inputFile = jar.archivePath
         outputFile = jar.archivePath
     }
 }
 
-build.dependsOn signJar
-
-// Tell the artifact system about our extra jars
-artifacts {
-    archives srcJar, deobfJar
+task srcJar(type: Jar) {
+    build.dependsOn it
+    from sourceSets.main.allSource
+    classifier = 'sources'
 }
 
-uploadArchives {
+
+publishing {
     repositories {
-        mavenDeployer {
-            if (project.hasProperty("local_maven")) {
-                repository(url: "file://${local_maven}")
-                pom {
-                    groupId = project.group
-                    version = project.version
-                    artifactId = project.archivesBaseName
-                    project {
-                        name project.archivesBaseName
-                        packaging 'jar'
-                        description 'ChickenChunks'
-                        url 'https://github.com/TheCBProject/ChickenChunks'
-                        scm {
-                            url 'https://github.com/TheCBProject/ChickenChunks'
-                            connection 'scm:git:git@github.com:TheCBProject/ChickenChunks.git'
-                            developerConnection 'scm:git:git@github.com:TheCBProject/ChickenChunks.git'
-                        }
-                        issueManagement {
-                            system 'github'
-                            url 'https://github.com/TheCBProject/ChickenChunks/issues'
-                        }
-                        licenses {
-                            license {
-                                name 'License'
-                                url 'https://raw.githubusercontent.com/TheCBProject/ChickenChunks/master/LICENSE.txt'
-                                distribution 'repo'
-                            }
-                        }
-                        developers {
-                            developer {
-                                id 'chicken-bones'
-                                name 'chicken-bones'
-                                roles { role 'developer' }
-                            }
-                        }
+        if (System.getenv('MAVEN_PASS')) {
+            maven {
+                url "https://maven-upload.covers1624.net/"
+                credentials {
+                    username 'covers1624'
+                    password System.getenv('MAVEN_PASS')
+                }
+            }
+        }
+    }
+    publications {
+        EnderStorage(MavenPublication) {
+            groupId project.group
+            artifactId project.archivesBaseName
+            version project.version
+            artifact jar
+            artifact srcJar
+
+            pom {
+                name = archivesBaseName
+                description = archivesBaseName
+                //The publish plugin doesnt like GString's here apparently..
+                url = "https://github.com/TheCBProject/${archivesBaseName}".toString()
+                scm {
+                    url = "https://github.com/TheCBProject/${archivesBaseName}".toString()
+                    connection = "scm:git:git://github.com/TheCBProject/${archivesBaseName}.git".toString()
+                    connection = "scm:git:git@github.com:TheCBProject/${archivesBaseName}.git".toString()
+                }
+
+                issueManagement {
+                    system = 'github'
+                    url = "https://github.com/TheCBProject/${archivesBaseName}/issues".toString()
+                }
+                licenses {
+                    license {
+                        name = "MIT"
+                        url = "https://raw.githubusercontent.com/TheCBProject/ChickenChunks/master/LICENSE.txt"
+                        distribution = 'repo'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'covers1624'
+                        name = 'covers1624'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'chicken-bones'
+                        name = 'chicken-bones'
                     }
                 }
             }
         }
     }
+}
+
+/**
+ * Polls the 'compile' configuration for a dependency with the given module name
+ * and resolves, and returns its version. E.g: '1.2.+' will resolve to '1.2.3.4'
+ *
+ * @param module The module to search for.
+ * @param chop If the string should be chopped on the last '-' in its string.
+ * @param configuration The name of the configuration to search.
+ * @param errorMissing If an error should be thrown if it can't be found.
+ * @return The version string, '0' if 'errorMissing' is false and nothing was found.
+ */
+def resolve(module, chop = true, configuration = 'compile', errorMissing = true) {
+    //Copy and lenient resolve the configuration, Forge cant be resolved at this time so lenient is required.
+    def filtered = configurations.getByName(configuration).copy().incoming.artifactView({ it.lenient = true }).artifacts
+            .findAll { it.id.componentIdentifier.module == module }
+            .collect { it.id.componentIdentifier.version }
+    if (filtered.size() > 1) {
+        println "WARNING: Found ${filtered.size()} Dependencies with ModuleName '${module}' in configuration '${configuration.name}'"
+    }
+    if (errorMissing && filtered.isEmpty()) {
+        throw new RuntimeException("Failed resolve dependency version for '${module}'")
+    }
+    if (filtered.isEmpty()) return "0"
+    def version = filtered.first() as String
+    if (chop) {
+        def idx = version.lastIndexOf('-')
+        return version.substring(idx + 1)
+    }
+    return version
 }

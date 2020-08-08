@@ -1,0 +1,19 @@
+{
+  "block.chickenchunks.chunk_loader": "Carica-chunk",
+  "block.chickenchunks.spot_loader": "Carica-punto",
+  "chickenchunks.gui.name": "Carica-chunk",
+  "chickenchunks.gui.showlasers": "mostra lasers",
+  "chickenchunks.gui.hidelasers": "Nascondi lasers",
+  "chickenchunks.gui.chunk": "%d Chunk",
+  "chickenchunks.gui.chunks": "%d Chunks",
+  "chickenchunks.gui.radius": "Raggio",
+  "chickenchunks.shape.square": "Quadrato",
+  "chickenchunks.shape.circle": "Cerchio",
+  "chickenchunks.shape.linex": "Linea X",
+  "chickenchunks.shape.linez": "Linea Z",
+  "chickenchunks.accessdenied": "Questo Carica-chunk non ti appartiene.",
+  "command.ccdebug": "/ccdebug [dimensione]",
+  "command.chunkloaders": "/chunkloaders",
+  "command.chunkloaders.denied": "Non hai il permesso di usare il ChunkViewer.",
+  "command.chunkloaders.alreadyopen": "ChunkViewer già aperto."
+}

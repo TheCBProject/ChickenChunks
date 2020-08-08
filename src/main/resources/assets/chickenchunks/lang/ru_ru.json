@@ -1,0 +1,19 @@
+{
+  "block.chickenchunks.chunk_loader": "Загрузчик чанков",
+  "block.chickenchunks.spot_loader": "Загрузчик чанка",
+  "chickenchunks.gui.name": "Загрузчик чанков",
+  "chickenchunks.gui.showlasers": "Показать лазеры",
+  "chickenchunks.gui.hidelasers": "Скрыть Лазеры",
+  "chickenchunks.gui.chunk": "%d чанк",
+  "chickenchunks.gui.chunks": "%d чанки",
+  "chickenchunks.gui.radius": "Радиус",
+  "chickenchunks.shape.square": "Квадрат",
+  "chickenchunks.shape.circle": "Круг",
+  "chickenchunks.shape.linex": "Line X",
+  "chickenchunks.shape.linez": "Line Z",
+  "chickenchunks.accessdenied": "Этот загрузчик чанков не принадлежат вам.",
+  "command.ccdebug": "/ccdebug [dimension]",
+  "command.chunkloaders": "/chunkloaders",
+  "command.chunkloaders.denied": "Вам не разрешено пользоваться просмотром чанков.",
+  "command.chunkloaders.alreadyopen": "Просмотр чанков уже открыт"
+}

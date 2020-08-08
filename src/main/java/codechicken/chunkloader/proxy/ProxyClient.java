@@ -1,40 +1,40 @@
 package codechicken.chunkloader.proxy;
 
-import codechicken.chunkloader.ChickenChunks;
+import codechicken.chunkloader.client.ChunkLoaderItemModel;
 import codechicken.chunkloader.client.TileChunkLoaderRenderer;
 import codechicken.chunkloader.gui.GuiChunkLoader;
-import codechicken.chunkloader.init.ModBlocks;
-import codechicken.chunkloader.network.ChunkLoaderCPH;
+import codechicken.chunkloader.init.ModContent;
 import codechicken.chunkloader.tile.TileChunkLoader;
-import codechicken.chunkloader.tile.TileSpotLoader;
-import codechicken.lib.packet.PacketCustom;
+import codechicken.lib.model.ModelRegistryHelper;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.model.IBakedModel;
+import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+
+import static codechicken.chunkloader.init.ModContent.*;
 
 public class ProxyClient extends Proxy {
 
-    public static boolean lasersRenderHollow;
+    private static final ModelRegistryHelper modelHelper = new ModelRegistryHelper();
 
     @Override
-    public void preInit() {
-        super.preInit();
-        ModBlocks.registerModels();
-    }
+    public void clientSetup(FMLClientSetupEvent event) {
+        super.clientSetup(event);
+        ClientRegistry.bindTileEntityRenderer(ModContent.tileChunkLoaderType, TileChunkLoaderRenderer::new);
+        ClientRegistry.bindTileEntityRenderer(ModContent.tileSpotLoaderType, TileChunkLoaderRenderer::new);
 
-    @Override
-    public void init() {
-        lasersRenderHollow = ChickenChunks.config.getTag("lasersRenderHollow").setComment("Sets lasers to render as an outline instead of a solid square.").getBooleanValue(false);
-
-        super.init();
-
-        PacketCustom.assignHandler(ChunkLoaderCPH.channel, new ChunkLoaderCPH());
-
-        ClientRegistry.bindTileEntitySpecialRenderer(TileChunkLoader.class, new TileChunkLoaderRenderer());
-        ClientRegistry.bindTileEntitySpecialRenderer(TileSpotLoader.class, new TileChunkLoaderRenderer());
+        //Pull our block models, and wrap them with a ChunkLoaderItemModel as our item model.
+        modelHelper.registerCallback(e -> {
+            IBakedModel loaderModel = e.getModelRegistry().get(new ModelResourceLocation(blockChunkLoader.getRegistryName(), ""));
+            IBakedModel spotModel = e.getModelRegistry().get(new ModelResourceLocation(blockSpotLoader.getRegistryName(), ""));
+            e.getModelRegistry().put(new ModelResourceLocation(itemChunkLoader.getRegistryName(), "inventory"), new ChunkLoaderItemModel(loaderModel, false));
+            e.getModelRegistry().put(new ModelResourceLocation(itemSpotLoader.getRegistryName(), "inventory"), new ChunkLoaderItemModel(spotModel, true));
+        });
     }
 
     @Override
     public void openGui(TileChunkLoader tile) {
-        Minecraft.getMinecraft().displayGuiScreen(new GuiChunkLoader(tile));
+        Minecraft.getInstance().displayGuiScreen(new GuiChunkLoader(tile));
     }
 }

@@ -5,20 +5,24 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 
 import java.util.Set;
+import java.util.UUID;
 
-public interface IChickenChunkLoader {
+public interface IChunkLoader {
 
-    String getOwner();
+    UUID getOwner();
 
-    Object getMod();
+    @Deprecated
+    String getMod();
 
-    World getLoaderWorld();
+    World world();
 
-    BlockPos getPosition();
+    BlockPos pos();
 
     void deactivate();
 
     void activate();
+
+    boolean isValid();
 
     Set<ChunkPos> getChunks();
 }

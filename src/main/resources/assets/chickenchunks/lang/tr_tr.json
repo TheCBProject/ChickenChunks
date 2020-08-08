@@ -1,0 +1,19 @@
+{
+  "block.chickenchunks.chunk_loader": "Chunk Yükleyici",
+  "block.chickenchunks.spot_loader": "Nokta Yükleyici",
+  "chickenchunks.gui.name": "Chunk Yükleyici",
+  "chickenchunks.gui.showlasers": "Lazerleri Aç",
+  "chickenchunks.gui.hidelasers": "Lazerleri Kapat",
+  "chickenchunks.gui.chunk": "%d Chunk",
+  "chickenchunks.gui.chunks": "%d Chunklar",
+  "chickenchunks.gui.radius": "Etki Alanı",
+  "chickenchunks.shape.square": "Kare",
+  "chickenchunks.shape.circle": "Daire",
+  "chickenchunks.shape.linex": "X Hattı",
+  "chickenchunks.shape.linez": "Z Hattı",
+  "chickenchunks.accessdenied": "Bu Chunk Yükleyici size ait değildir.",
+  "command.ccdebug": "/ccdebug [boyut]",
+  "command.chunkloaders": "/chunkloaders",
+  "command.chunkloaders.denied": "Bu Chunk Yükleyici size ait olmadığı için kullanamazsınız.",
+  "command.chunkloaders.alreadyopen": "Chunk Görüntüleyicisi zaten açık."
+}
