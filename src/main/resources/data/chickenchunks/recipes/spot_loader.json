@@ -1,8 +1,7 @@
 {
 	"type" : "minecraft:crafting_shaped",
 	"result" : {
-		"item" : "chickenchunks:chunk_loader",
-		"data": 1,
+		"item" : "chickenchunks:spot_loader",
 		"count": 10
 	},
 	"pattern": [
@@ -13,13 +12,11 @@
 	"key": {
 		"P": {
 			"type": "minecraft:item",
-			"item": "minecraft:ender_pearl",
-			"data": 0
+			"item": "minecraft:ender_pearl"
 		},
 		"C": {
 			"type": "minecraft:item",
-			"item": "chickenchunks:chunk_loader",
-			"data": 0
+			"item": "chickenchunks:chunk_loader"
 		}
 	}
 	
