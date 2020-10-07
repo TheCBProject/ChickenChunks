@@ -295,7 +295,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
     public Organiser getOrganiser(IChunkLoader loader) {
         Objects.requireNonNull(loader);
         UUID player = Objects.requireNonNull(loader.getOwner());
-        return getOrganiser(loader.world().getWorld().func_234923_W_(), player);
+        return getOrganiser(loader.world().func_234923_W_(), player);
     }
 
     public Organiser getOrganiser(RegistryKey<World> dim, UUID player) {

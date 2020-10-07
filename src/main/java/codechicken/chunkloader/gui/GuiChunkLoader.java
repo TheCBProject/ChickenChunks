@@ -83,7 +83,7 @@ public class GuiChunkLoader extends Screen {
     }
 
     private void drawCentered(MatrixStack mStack, ITextComponent s, int x, int y, int colour) {
-        field_230712_o_.func_238422_b_(mStack, s, x - field_230712_o_.func_238414_a_(s) / 2f, y, colour);
+        field_230712_o_.func_238422_b_(mStack, s.func_241878_f(), x - field_230712_o_.func_238414_a_(s) / 2f, y, colour);
     }
 
     @Override
