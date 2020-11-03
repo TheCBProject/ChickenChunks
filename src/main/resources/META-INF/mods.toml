@@ -21,7 +21,7 @@ license="The MIT License (MIT)"
 [[dependencies.chickenchunks]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.16.3]"
+    versionRange="[1.16.3,1.16.4]"
     ordering="NONE"
     side="BOTH"
 [[dependencies.chickenchunks]]
