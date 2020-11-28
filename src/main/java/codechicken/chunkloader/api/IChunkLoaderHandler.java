@@ -11,7 +11,7 @@ import java.util.Set;
 /**
  * Handler for interacting with the ChickenChunks loading backend.
  * IChunkLoader implementations are expected to be TileEntities at this moment.
- * This Capability only exists on the {@link World#field_234918_g_} and handles all dimensions.
+ * This Capability only exists on the {@link World#OVERWORLD} and handles all dimensions.
  * Due to complexity limitations, its not viable to move this to a per-world capability at the current moment.
  * <p>
  * Created by covers1624 on 5/4/20.
@@ -31,8 +31,8 @@ public interface IChunkLoaderHandler {
             throw new IllegalArgumentException("ServerWorld required.");
         }
         ServerWorld overWorld = (ServerWorld) world;
-        if (((ServerWorld) world).func_234923_W_() != World.field_234918_g_) {
-            overWorld = overWorld.getServer().getWorld(World.field_234918_g_);
+        if (((ServerWorld) world).getDimensionKey() != World.OVERWORLD) {
+            overWorld = overWorld.getServer().getWorld(World.OVERWORLD);
         }
         return overWorld.getCapability(ChunkLoaderHandler.HANDLER_CAPABILITY).orElse(null);
     }

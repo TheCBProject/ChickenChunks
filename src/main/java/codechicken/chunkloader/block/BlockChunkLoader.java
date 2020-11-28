@@ -68,13 +68,13 @@ public class BlockChunkLoader extends Block {
         if (!world.isRemote) {
             TileChunkLoader tile = (TileChunkLoader) world.getTileEntity(pos);
             if (tile.owner == null) {
-                player.sendMessage(new TranslationTextComponent("chickenchunks.brokentile"), Util.field_240973_b_);
+                player.sendMessage(new TranslationTextComponent("chickenchunks.brokentile"), Util.DUMMY_UUID);
             } else if (tile.owner.equals(player.getUniqueID()) || ChickenChunksConfig.doesBypassLoaderAccess((ServerPlayerEntity) player)) {
                 PacketCustom packet = new PacketCustom(NET_CHANNEL, C_OPEN_LOADER_GUI);
                 packet.writePos(pos);
                 packet.sendToPlayer((ServerPlayerEntity) player);
             } else {
-                player.sendMessage(new TranslationTextComponent("chickenchunks.accessdenied"), Util.field_240973_b_);
+                player.sendMessage(new TranslationTextComponent("chickenchunks.accessdenied"), Util.DUMMY_UUID);
             }
         }
         return ActionResultType.SUCCESS;

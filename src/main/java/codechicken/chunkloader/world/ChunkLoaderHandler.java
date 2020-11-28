@@ -84,7 +84,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
     private static void onWorldLoad(WorldEvent.Load event) {
         if (event.getWorld() instanceof ServerWorld) {
             ServerWorld world = (ServerWorld) event.getWorld();
-            if (world.func_234923_W_() == World.field_234918_g_) {
+            if (world.getDimensionKey() == World.OVERWORLD) {
                 ChunkLoaderHandler handler = getHandler(world);
                 handler.onOverWorldLoad();
             }
@@ -94,7 +94,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
     private static void onWorldTick(TickEvent.WorldTickEvent event) {
         if (event.world instanceof ServerWorld) {
             ServerWorld world = (ServerWorld) event.world;
-            if (world.func_234923_W_() == World.field_234918_g_) {
+            if (world.getDimensionKey() == World.OVERWORLD) {
                 ChunkLoaderHandler handler = getHandler(world);
                 if (handler != null) {
                     handler.tick(event);
@@ -110,7 +110,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
             return;
         }
         ServerWorld world = (ServerWorld) event.getObject();
-        if (world.func_234923_W_() != World.field_234918_g_) {
+        if (world.getDimensionKey() != World.OVERWORLD) {
             return;
         }
         IChunkLoaderHandler handler = new ChunkLoaderHandler(world.getServer());
@@ -246,7 +246,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
 
             //Handle devive / revive list.
             for (Organiser organiser : reviveList) {
-                RegistryKey<World> key = RegistryKey.func_240903_a_(Registry.field_239699_ae_, organiser.dim);
+                RegistryKey<World> key = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, organiser.dim);
                 ServerWorld world = server.getWorld(key);
                 if (world != null) {
                     organiser.revive(world);
@@ -274,7 +274,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
     }
 
     public void addChunk(IChunkLoader loader, ResourceLocation dim, ChunkPos pos) {
-        RegistryKey<World> key = RegistryKey.func_240903_a_(Registry.field_239699_ae_, dim);
+        RegistryKey<World> key = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, dim);
         ServerWorld world = server.getWorld(key);
         TicketManager ticketManager = world.getChunkProvider().ticketManager;
         ChunkTicket ticket = computeIfAbsent(activeTickets, dim, pos, () -> new ChunkTicket(ticketManager, pos));
@@ -295,11 +295,11 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
     public Organiser getOrganiser(IChunkLoader loader) {
         Objects.requireNonNull(loader);
         UUID player = Objects.requireNonNull(loader.getOwner());
-        return getOrganiser(loader.world().func_234923_W_(), player);
+        return getOrganiser(loader.world().getDimensionKey(), player);
     }
 
     public Organiser getOrganiser(RegistryKey<World> dim, UUID player) {
-        return getOrganiser(dim.func_240901_a_(), player);
+        return getOrganiser(dim.getLocation(), player);
     }
 
     public Organiser getOrganiser(ResourceLocation dim, UUID player) {

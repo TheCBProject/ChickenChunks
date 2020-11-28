@@ -54,11 +54,11 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
     }
 
     @Override
-    public void func_230337_a_(BlockState state, CompoundNBT tag) {
-        super.func_230337_a_(state, tag);
+    public void read(BlockState state, CompoundNBT tag) {
+        super.read(state, tag);
         if (tag.contains("owner")) {
             owner = tag.getUniqueId("owner");
-            ownerName = ITextComponent.Serializer.func_240643_a_(tag.getString("owner_name"));
+            ownerName = ITextComponent.Serializer.getComponentFromJson(tag.getString("owner_name"));
         }
         if (tag.contains("powered")) {
             powered = tag.getBoolean("powered");
