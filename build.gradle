@@ -116,7 +116,6 @@ processResources { task ->
 
 jar {
     finalizedBy 'reobfJar'
-    finalizedBy 'signJar'
     classifier = 'universal'
     manifest {
         attributes 'Specification-Title': archivesBaseName
