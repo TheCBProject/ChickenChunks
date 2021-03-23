@@ -46,7 +46,7 @@ public class ChickenChunksCommand {
     private static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSource> dispatcher = event.getDispatcher();
         dispatcher.register(literal("chickenchunks")//
-                .requires(e -> e.hasPermissionLevel(4))//
+                .requires(e -> e.hasPermission(4))//
                 .then(literal("restrict")//
                         .then(literal("player")//
                                 .then(argument("players", GameProfileArgument.gameProfile())//
@@ -80,7 +80,7 @@ public class ChickenChunksCommand {
         Collection<GameProfile> profiles = GameProfileArgument.getGameProfiles(ctx, "players");
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.resetRestrictions(profile.getId());
-            src.sendFeedback(new TranslationTextComponent(RESTRICTIONS_RESET_FOR, profile.getName()), true);
+            src.sendSuccess(new TranslationTextComponent(RESTRICTIONS_RESET_FOR, profile.getName()), true);
         }
         return profiles.size();
     }
@@ -92,7 +92,7 @@ public class ChickenChunksCommand {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             boolean state = !restrictions.canLoadOffline();
             restrictions.setAllowOffline(state);
-            src.sendFeedback(new TranslationTextComponent(state ? OFFLINE_ENABLE_FOR : OFFLINE_DISABLE_FOR, profile.getName()), true);
+            src.sendSuccess(new TranslationTextComponent(state ? OFFLINE_ENABLE_FOR : OFFLINE_DISABLE_FOR, profile.getName()), true);
         }
         return profiles.size();
     }
@@ -111,7 +111,7 @@ public class ChickenChunksCommand {
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             restrictions.setAllowOffline(state);
-            src.sendFeedback(new TranslationTextComponent(state ? OFFLINE_ENABLE_FOR : OFFLINE_DISABLE_FOR, profile.getName()), true);
+            src.sendSuccess(new TranslationTextComponent(state ? OFFLINE_ENABLE_FOR : OFFLINE_DISABLE_FOR, profile.getName()), true);
         }
         return profiles.size();
     }
@@ -122,7 +122,7 @@ public class ChickenChunksCommand {
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             restrictions.remAllowOffline();
-            src.sendFeedback(new TranslationTextComponent(OFFLINE_RESET_FOR, profile.getName()), true);
+            src.sendSuccess(new TranslationTextComponent(OFFLINE_RESET_FOR, profile.getName()), true);
         }
         return profiles.size();
     }
@@ -134,7 +134,7 @@ public class ChickenChunksCommand {
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             restrictions.setOfflineTimeout(timeout);
-            src.sendFeedback(new TranslationTextComponent(TIMEOUT_SET_FOR, profile.getName(), timeout), true);
+            src.sendSuccess(new TranslationTextComponent(TIMEOUT_SET_FOR, profile.getName(), timeout), true);
         }
         return profiles.size();
     }
@@ -145,7 +145,7 @@ public class ChickenChunksCommand {
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             restrictions.remOfflineTimeout();
-            src.sendFeedback(new TranslationTextComponent(TIMEOUT_RESET_FOR, profile.getName()), true);
+            src.sendSuccess(new TranslationTextComponent(TIMEOUT_RESET_FOR, profile.getName()), true);
         }
         return profiles.size();
     }
@@ -157,7 +157,7 @@ public class ChickenChunksCommand {
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             restrictions.setTotalAllowedChunks(chunks);
-            src.sendFeedback(new TranslationTextComponent(ALLOWED_CHUNKS_SET_FOR, profile.getName(), chunks), true);
+            src.sendSuccess(new TranslationTextComponent(ALLOWED_CHUNKS_SET_FOR, profile.getName(), chunks), true);
         }
         return profiles.size();
     }
@@ -168,7 +168,7 @@ public class ChickenChunksCommand {
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             restrictions.remTotalAllowedChunks();
-            src.sendFeedback(new TranslationTextComponent(ALLOWED_CHUNKS_RESET_FOR, profile.getName()), true);
+            src.sendSuccess(new TranslationTextComponent(ALLOWED_CHUNKS_RESET_FOR, profile.getName()), true);
         }
         return profiles.size();
     }
@@ -180,7 +180,7 @@ public class ChickenChunksCommand {
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             restrictions.setChunksPerLoader(chunks);
-            src.sendFeedback(new TranslationTextComponent(CHUNKS_PER_LOADER_SET_FOR, profile.getName(), chunks), true);
+            src.sendSuccess(new TranslationTextComponent(CHUNKS_PER_LOADER_SET_FOR, profile.getName(), chunks), true);
         }
         return profiles.size();
     }
@@ -191,7 +191,7 @@ public class ChickenChunksCommand {
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             restrictions.remChunksPerLoader();
-            src.sendFeedback(new TranslationTextComponent(CHUNKS_PER_LOADER_RESET_FOR, profile.getName()), true);
+            src.sendSuccess(new TranslationTextComponent(CHUNKS_PER_LOADER_RESET_FOR, profile.getName()), true);
         }
         return profiles.size();
     }

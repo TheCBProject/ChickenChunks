@@ -18,9 +18,9 @@ public class ChunkLoaderCPH implements IClientPacketHandler {
     public void handlePacket(PacketCustom packet, Minecraft mc, IClientPlayNetHandler handler) {
         switch (packet.getType()) {
             case C_OPEN_LOADER_GUI:
-                TileEntity tile = mc.world.getTileEntity(packet.readPos());
+                TileEntity tile = mc.level.getBlockEntity(packet.readPos());
                 if (tile instanceof TileChunkLoader) {
-                    mc.displayGuiScreen(new GuiChunkLoader((TileChunkLoader) tile));
+                    mc.setScreen(new GuiChunkLoader((TileChunkLoader) tile));
                 }
                 break;
 
@@ -29,7 +29,7 @@ public class ChunkLoaderCPH implements IClientPacketHandler {
 
     public static void sendShapeChange(TileChunkLoader tile, ChunkLoaderShape shape, int radius) {
         PacketCustom packet = new PacketCustom(ChickenChunksNetwork.NET_CHANNEL, S_SET_SHAPE);
-        packet.writePos(tile.getPos());
+        packet.writePos(tile.getBlockPos());
         packet.writeByte(shape.ordinal());
         packet.writeByte(radius);
         packet.sendToServer();

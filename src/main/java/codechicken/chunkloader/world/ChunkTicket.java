@@ -18,7 +18,7 @@ import java.util.Set;
  */
 public class ChunkTicket {
 
-    private static final TicketType<ChunkPos> TICKET_TYPE = TicketType.create("chicken_chunks", Comparator.comparingLong(ChunkPos::asLong));
+    private static final TicketType<ChunkPos> TICKET_TYPE = TicketType.create("chicken_chunks", Comparator.comparingLong(ChunkPos::toLong));
 
     private final TicketManager ticketManager;
     public final ChunkPos pos;
@@ -40,7 +40,7 @@ public class ChunkTicket {
         }
 
         vanillaTicket = new Ticket<>(TICKET_TYPE, 31, pos);
-        ticketManager.register(pos.asLong(), vanillaTicket);
+        ticketManager.addTicket(pos.toLong(), vanillaTicket);
         return true;
     }
 
@@ -52,7 +52,7 @@ public class ChunkTicket {
             return false;
         }
 
-        ticketManager.release(pos.asLong(), vanillaTicket);
+        ticketManager.removeTicket(pos.toLong(), vanillaTicket);
         vanillaTicket = null;
         return true;
     }

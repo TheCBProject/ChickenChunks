@@ -17,14 +17,14 @@ public class ChunkLoaderSPH implements IServerPacketHandler {
     public void handlePacket(PacketCustom packet, ServerPlayerEntity sender, IServerPlayNetHandler handler) {
         switch (packet.getType()) {
             case S_SET_SHAPE:
-                handleChunkLoaderChangePacket(sender.world, packet);
+                handleChunkLoaderChangePacket(sender.level, packet);
                 break;
 
         }
     }
 
     private void handleChunkLoaderChangePacket(World world, PacketCustom packet) {
-        TileEntity tile = world.getTileEntity(packet.readPos());
+        TileEntity tile = world.getBlockEntity(packet.readPos());
         if (tile instanceof TileChunkLoader) {
             TileChunkLoader ctile = (TileChunkLoader) tile;
             ctile.setShapeAndRadius(ChunkLoaderShape.values()[packet.readUByte()], packet.readUByte());

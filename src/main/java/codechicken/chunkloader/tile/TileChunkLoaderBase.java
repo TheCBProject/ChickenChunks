@@ -43,22 +43,22 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
     }
 
     @Override
-    public CompoundNBT write(CompoundNBT tag) {
-        super.write(tag);
+    public CompoundNBT save(CompoundNBT tag) {
+        super.save(tag);
         tag.putBoolean("powered", powered);
         if (owner != null) {
-            tag.putUniqueId("owner", owner);
+            tag.putUUID("owner", owner);
             tag.putString("owner_name", ITextComponent.Serializer.toJson(ownerName));
         }
         return tag;
     }
 
     @Override
-    public void read(BlockState state, CompoundNBT tag) {
-        super.read(state, tag);
+    public void load(BlockState state, CompoundNBT tag) {
+        super.load(state, tag);
         if (tag.contains("owner")) {
-            owner = tag.getUniqueId("owner");
-            ownerName = ITextComponent.Serializer.getComponentFromJson(tag.getString("owner_name"));
+            owner = tag.getUUID("owner");
+            ownerName = ITextComponent.Serializer.fromJson(tag.getString("owner_name"));
         }
         if (tag.contains("powered")) {
             powered = tag.getBoolean("powered");
@@ -66,20 +66,20 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
         loaded = true;
     }
 
-    public void validate() {
-        super.validate();
-        if (!world.isRemote && loaded && !powered) {
+    public void clearRemoved() {
+        super.clearRemoved();
+        if (!level.isClientSide && loaded && !powered) {
             activate();
         }
 
-        if (world.isRemote) {
+        if (level.isClientSide) {
             renderInfo = new RenderInfo();
         }
     }
 
     public boolean isPowered() {
-        for (Direction face : Direction.BY_INDEX) {
-            boolean isPowered = isPoweringTo(world, getPos().offset(face), face);
+        for (Direction face : Direction.BY_3D_DATA) {
+            boolean isPowered = isPoweringTo(level, getBlockPos().relative(face), face);
             if (isPowered) {
                 return true;
             }
@@ -89,13 +89,13 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
 
     public static boolean isPoweringTo(World world, BlockPos pos, Direction side) {
         BlockState state = world.getBlockState(pos);
-        return state.getBlock().getWeakPower(state, world, pos, side) > 0;
+        return state.getBlock().getSignal(state, world, pos, side) > 0;
     }
 
     @Override
-    public void remove() {
-        super.remove();
-        if (!world.isRemote) {
+    public void setRemoved() {
+        super.setRemoved();
+        if (!level.isClientSide) {
             deactivate();
         }
     }
@@ -106,12 +106,12 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
     }
 
     public ChunkPos getChunkPosition() {
-        return new ChunkPos(getPos().getX() >> 4, getPos().getZ() >> 4);
+        return new ChunkPos(getBlockPos().getX() >> 4, getBlockPos().getZ() >> 4);
     }
 
     public void onBlockPlacedBy(LivingEntity entityliving) {
         if (entityliving instanceof PlayerEntity) {
-            owner = entityliving.getUniqueID();
+            owner = entityliving.getUUID();
             ownerName = entityliving.getName();
         }
         //TODO
@@ -133,12 +133,12 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
 
     @Override
     public World world() {
-        return world;
+        return level;
     }
 
     @Override
     public BlockPos pos() {
-        return getPos();
+        return getBlockPos();
     }
 
     @Override
@@ -148,7 +148,7 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
         }
         loaded = true;
         active = false;
-        IChunkLoaderHandler.getCapability(world).removeChunkLoader(this);
+        IChunkLoaderHandler.getCapability(level).removeChunkLoader(this);
     }
 
     public void activate() {
@@ -157,17 +157,17 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
         }
         loaded = true;
         active = true;
-        IChunkLoaderHandler.getCapability(world).addChunkLoader(this);
+        IChunkLoaderHandler.getCapability(level).addChunkLoader(this);
     }
 
     @Override
     public boolean isValid() {
-        return !removed;
+        return !remove;
     }
 
     @Override
     public void tick() {
-        if (!world.isRemote) {
+        if (!level.isClientSide) {
             boolean nowPowered = isPowered();
             if (powered != nowPowered) {
                 powered = nowPowered;
@@ -192,7 +192,7 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
     public SUpdateTileEntityPacket getUpdatePacket() {
         PacketCustom packet = new PacketCustom(NET_CHANNEL, 1);//Dummy Index.
         writeToPacket(packet);
-        return packet.toTilePacket(getPos());
+        return packet.toTilePacket(getBlockPos());
     }
 
     @Override
@@ -230,7 +230,7 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
     }
 
     @Override
-    public double getMaxRenderDistanceSquared() {
+    public double getViewDistance() {
         return 65536.0D;
     }
 

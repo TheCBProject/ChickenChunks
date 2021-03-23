@@ -31,8 +31,8 @@ public interface IChunkLoaderHandler {
             throw new IllegalArgumentException("ServerWorld required.");
         }
         ServerWorld overWorld = (ServerWorld) world;
-        if (((ServerWorld) world).getDimensionKey() != World.OVERWORLD) {
-            overWorld = overWorld.getServer().getWorld(World.OVERWORLD);
+        if (((ServerWorld) world).dimension() != World.OVERWORLD) {
+            overWorld = overWorld.getServer().getLevel(World.OVERWORLD);
         }
         return overWorld.getCapability(ChunkLoaderHandler.HANDLER_CAPABILITY).orElse(null);
     }

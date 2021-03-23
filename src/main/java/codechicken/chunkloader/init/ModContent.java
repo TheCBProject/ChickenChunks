@@ -58,7 +58,7 @@ public class ModContent {
     @SubscribeEvent
     public static void onRegisterItems(RegistryEvent.Register<Item> event) {
         IForgeRegistry<Item> registry = event.getRegistry();
-        Item.Properties props = new Item.Properties().group(ItemGroup.MISC);
+        Item.Properties props = new Item.Properties().tab(ItemGroup.TAB_MISC);
         registry.register(new BlockItem(blockChunkLoader, props).setRegistryName("chunk_loader"));
         registry.register(new BlockItem(blockSpotLoader, props).setRegistryName("spot_loader"));
     }
@@ -66,8 +66,8 @@ public class ModContent {
     @SubscribeEvent
     public static void onRegisterTiles(RegistryEvent.Register<TileEntityType<?>> event) {
         IForgeRegistry<TileEntityType<?>> registry = event.getRegistry();
-        registry.register(TileEntityType.Builder.create(TileChunkLoader::new, blockChunkLoader).build(null).setRegistryName("chunk_loader"));
-        registry.register(TileEntityType.Builder.create(TileSpotLoader::new, blockSpotLoader).build(null).setRegistryName("spot_loader"));
+        registry.register(TileEntityType.Builder.of(TileChunkLoader::new, blockChunkLoader).build(null).setRegistryName("chunk_loader"));
+        registry.register(TileEntityType.Builder.of(TileSpotLoader::new, blockSpotLoader).build(null).setRegistryName("spot_loader"));
     }
 
 }

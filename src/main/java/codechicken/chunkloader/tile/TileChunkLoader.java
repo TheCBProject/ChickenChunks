@@ -25,13 +25,13 @@ public class TileChunkLoader extends TileChunkLoaderBase {
         if (owner == null) {
             return false;
         }
-        Set<ChunkPos> chunks = getContainedChunks(newShape, getPos().getX(), getPos().getZ(), newRadius);
+        Set<ChunkPos> chunks = getContainedChunks(newShape, getBlockPos().getX(), getBlockPos().getZ(), newRadius);
         //Synced to client.
         ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getRestrictions(owner);
         if (chunks.size() > restrictions.getChunksPerLoader()) {
             return false;
         }
-        if (world.isRemote) {
+        if (level.isClientSide) {
             radius = newRadius;
             shape = newShape;
             return true;
@@ -39,17 +39,17 @@ public class TileChunkLoader extends TileChunkLoaderBase {
         if (powered) {
             radius = newRadius;
             shape = newShape;
-            BlockState state = world.getBlockState(getPos());
-            world.notifyBlockUpdate(getPos(), state, state, 3);
+            BlockState state = level.getBlockState(getBlockPos());
+            level.sendBlockUpdated(getBlockPos(), state, state, 3);
             return true;
         }
-        IChunkLoaderHandler handler = IChunkLoaderHandler.getCapability(world);
+        IChunkLoaderHandler handler = IChunkLoaderHandler.getCapability(level);
         if (handler.canLoadChunks(this, chunks)) {
             radius = newRadius;
             shape = newShape;
             handler.updateLoader(this);
-            BlockState state = world.getBlockState(getPos());
-            world.notifyBlockUpdate(getPos(), state, state, 3);
+            BlockState state = level.getBlockState(getBlockPos());
+            level.sendBlockUpdated(getBlockPos(), state, state, 3);
             return true;
         }
         return false;
@@ -69,23 +69,23 @@ public class TileChunkLoader extends TileChunkLoaderBase {
     }
 
     @Override
-    public CompoundNBT write(CompoundNBT tag) {
-        super.write(tag);
+    public CompoundNBT save(CompoundNBT tag) {
+        super.save(tag);
         tag.putByte("radius", (byte) radius);
         tag.putByte("shape", (byte) shape.ordinal());
         return tag;
     }
 
     @Override
-    public void read(BlockState state, CompoundNBT tag) {
-        super.read(state, tag);
+    public void load(BlockState state, CompoundNBT tag) {
+        super.load(state, tag);
         radius = tag.getByte("radius");
         shape = ChunkLoaderShape.values()[tag.getByte("shape")];
     }
 
     @Override
     public Set<ChunkPos> getChunks() {
-        return getContainedChunks(shape, getPos().getX(), getPos().getZ(), radius);
+        return getContainedChunks(shape, getBlockPos().getX(), getBlockPos().getZ(), radius);
     }
 
     public static Set<ChunkPos> getContainedChunks(ChunkLoaderShape shape, int xCoord, int zCoord, int radius) {

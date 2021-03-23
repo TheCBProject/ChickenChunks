@@ -34,10 +34,10 @@ import static codechicken.lib.util.SneakyUtils.none;
 
 public class TileChunkLoaderRenderer extends TileEntityRenderer<TileChunkLoaderBase> {
 
-    public static final RenderType laserType = RenderType.makeType("lasers", DefaultVertexFormats.POSITION_COLOR, GL11.GL_QUADS, 256, RenderType.State.getBuilder()//
-            .texturing(new RenderState.TexturingState("disable_lighting", RenderSystem::disableLighting, none()))//
-            .fog(RenderState.NO_FOG)//
-            .build(false)//
+    public static final RenderType laserType = RenderType.create("lasers", DefaultVertexFormats.POSITION_COLOR, GL11.GL_QUADS, 256, RenderType.State.builder()//
+            .setTexturingState(new RenderState.TexturingState("disable_lighting", RenderSystem::disableLighting, none()))//
+            .setFogState(RenderState.NO_FOG)//
+            .createCompositeState(false)//
     );
     public static final RenderType pearlType = CCModelLibrary.getIcos4RenderType(new ResourceLocation("chickenchunks:textures/hedronmap.png"), false);
 
@@ -85,7 +85,7 @@ public class TileChunkLoaderRenderer extends TileEntityRenderer<TileChunkLoaderB
 
         if (renderInfo.showLasers) {
             IVertexBuilder builder = getter.getBuffer(laserType);
-            drawRays(builder, mat, rot, updown, tile.getPos().getX(), tile.getPos().getY(), tile.getPos().getZ(), tile.getChunks());
+            drawRays(builder, mat, rot, updown, tile.getBlockPos().getX(), tile.getBlockPos().getY(), tile.getBlockPos().getZ(), tile.getChunks());
         }
         rot = ClientUtils.getRenderTime() * active / 3F;
 

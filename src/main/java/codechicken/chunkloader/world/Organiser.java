@@ -147,7 +147,7 @@ public class Organiser {
 
         for (BlockPos pos : dormantLoaders) {
             reviving = true;
-            TileEntity tile = world.getTileEntity(pos);
+            TileEntity tile = world.getBlockEntity(pos);
             reviving = false;
             if (tile instanceof IChunkLoader) {
                 handler.addChunkLoader((IChunkLoader) tile);

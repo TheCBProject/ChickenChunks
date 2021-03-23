@@ -42,10 +42,10 @@ public class GuiChunkLoader extends Screen {
 
     @Override
     public void tick() {
-        if (minecraft.world.getTileEntity(tile.getPos()) != tile)//tile changed
+        if (minecraft.level.getBlockEntity(tile.getBlockPos()) != tile)//tile changed
         {
-            minecraft.currentScreen = null;
-            minecraft.mouseHelper.grabMouse();
+            minecraft.screen = null;
+            minecraft.mouseHandler.grabMouse();
         }
         updateNames();
         super.tick();
@@ -54,7 +54,7 @@ public class GuiChunkLoader extends Screen {
     @Override
     public void render(MatrixStack mStack, int p_render_1_, int p_render_2_, float p_render_3_) {
         renderBackground(mStack);
-        GlStateManager.color4f(1F, 1F, 1F, 1F);
+        GlStateManager._color4f(1F, 1F, 1F, 1F);
         TextureUtils.changeTexture("chickenchunks:textures/gui/gui_small.png");
         int posx = width / 2 - 88;
         int posy = height / 2 - 83;
@@ -62,8 +62,8 @@ public class GuiChunkLoader extends Screen {
 
         super.render(mStack, p_render_1_, p_render_2_, p_render_3_);//buttons
 
-        GlStateManager.disableLighting();
-        GlStateManager.disableDepthTest();
+        GlStateManager._disableLighting();
+        GlStateManager._disableDepthTest();
 
         drawCentered(mStack, new TranslationTextComponent("chickenchunks.gui.name"), width / 2 - 40, height / 2 - 74, 0x303030);
         if (tile.owner != null) {
@@ -78,12 +78,12 @@ public class GuiChunkLoader extends Screen {
         //TODO: sradius = "Total "+ChunkLoaderManager.activeChunkLoaders+"/"+ChunkLoaderManager.allowedChunkloaders+" Chunks";
         //fontRenderer.drawString(sradius, width / 2 - fontRenderer.getStringWidth(sradius) / 2, height / 2 - 8, 0x108000);
 
-        GlStateManager.enableLighting();
-        GlStateManager.enableDepthTest();
+        GlStateManager._enableLighting();
+        GlStateManager._enableDepthTest();
     }
 
     private void drawCentered(MatrixStack mStack, ITextComponent s, int x, int y, int colour) {
-        font.func_238422_b_(mStack, s.func_241878_f(), x - font.getStringPropertyWidth(s) / 2f, y, colour);
+        font.draw(mStack, s.getVisualOrderText(), x - font.width(s) / 2f, y, colour);
     }
 
     @Override

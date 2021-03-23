@@ -33,11 +33,11 @@ import static codechicken.chunkloader.network.ChickenChunksNetwork.*;
 
 public class BlockChunkLoader extends Block {
 
-    public static final VoxelShape SHAPE = VoxelShapes.create(0, 0, 0, 1, 0.75F, 1);
+    public static final VoxelShape SHAPE = VoxelShapes.box(0, 0, 0, 1, 0.75F, 1);
 
     public BlockChunkLoader() {
-        super(Block.Properties.create(Material.ROCK)//
-                .hardnessAndResistance(20F, 100F)//
+        super(Block.Properties.of(Material.STONE)//
+                .strength(20F, 100F)//
                 .sound(SoundType.STONE)//
         );
     }
@@ -64,28 +64,28 @@ public class BlockChunkLoader extends Block {
     }
 
     @Override
-    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (!world.isRemote) {
-            TileChunkLoader tile = (TileChunkLoader) world.getTileEntity(pos);
+    public ActionResultType use(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+        if (!world.isClientSide) {
+            TileChunkLoader tile = (TileChunkLoader) world.getBlockEntity(pos);
             if (tile.owner == null) {
-                player.sendMessage(new TranslationTextComponent("chickenchunks.brokentile"), Util.DUMMY_UUID);
-            } else if (tile.owner.equals(player.getUniqueID()) || ChickenChunksConfig.doesBypassLoaderAccess((ServerPlayerEntity) player)) {
+                player.sendMessage(new TranslationTextComponent("chickenchunks.brokentile"), Util.NIL_UUID);
+            } else if (tile.owner.equals(player.getUUID()) || ChickenChunksConfig.doesBypassLoaderAccess((ServerPlayerEntity) player)) {
                 PacketCustom packet = new PacketCustom(NET_CHANNEL, C_OPEN_LOADER_GUI);
                 packet.writePos(pos);
                 packet.sendToPlayer((ServerPlayerEntity) player);
             } else {
-                player.sendMessage(new TranslationTextComponent("chickenchunks.accessdenied"), Util.DUMMY_UUID);
+                player.sendMessage(new TranslationTextComponent("chickenchunks.accessdenied"), Util.NIL_UUID);
             }
         }
         return ActionResultType.SUCCESS;
     }
 
     @Override
-    public void onBlockPlacedBy(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
-        if (world.isRemote) {
+    public void setPlacedBy(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+        if (world.isClientSide) {
             return;
         }
-        TileChunkLoaderBase loader = (TileChunkLoaderBase) world.getTileEntity(pos);
+        TileChunkLoaderBase loader = (TileChunkLoaderBase) world.getBlockEntity(pos);
         loader.onBlockPlacedBy(placer);
     }
 }

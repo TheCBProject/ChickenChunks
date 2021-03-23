@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
  */
 public class BlockSpotLoader extends BlockChunkLoader {
 
-    public static final VoxelShape SHAPE = VoxelShapes.create(0.25F, 0, 0.25F, 0.75F, 0.4375F, 0.75F);
+    public static final VoxelShape SHAPE = VoxelShapes.box(0.25F, 0, 0.25F, 0.75F, 0.4375F, 0.75F);
 
     @Nullable
     @Override
@@ -35,7 +35,7 @@ public class BlockSpotLoader extends BlockChunkLoader {
     }
 
     @Override
-    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+    public ActionResultType use(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
         return ActionResultType.PASS;
     }
 }

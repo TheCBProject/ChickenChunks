@@ -35,6 +35,6 @@ public class ProxyClient extends Proxy {
 
     @Override
     public void openGui(TileChunkLoader tile) {
-        Minecraft.getInstance().displayGuiScreen(new GuiChunkLoader(tile));
+        Minecraft.getInstance().setScreen(new GuiChunkLoader(tile));
     }
 }
