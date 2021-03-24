@@ -39,7 +39,7 @@ public class ChunkTicket {
             return false;
         }
 
-        vanillaTicket = new Ticket<>(TICKET_TYPE, 31, pos);
+        vanillaTicket = new Ticket<>(TICKET_TYPE, 31, pos, true);
         ticketManager.addTicket(pos.toLong(), vanillaTicket);
         return true;
     }
