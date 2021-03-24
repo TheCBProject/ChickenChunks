@@ -47,26 +47,26 @@ public class Organiser {
     }
 
     public CompoundNBT write(CompoundNBT tag) {
-        tag.put("dormantLoaders", dormantLoaders.stream()//
-                .map(NBTUtil::writeBlockPos)//
-                .collect(Collectors.toCollection(ListNBT::new))//
+        tag.put("dormantLoaders", dormantLoaders.stream()
+                .map(NBTUtil::writeBlockPos)
+                .collect(Collectors.toCollection(ListNBT::new))
         );
-        tag.put("loaders", forcedChunksByLoader.keySet().stream()//
-                .map(IChunkLoader::pos)//
-                .map(NBTUtil::writeBlockPos)//
-                .collect(Collectors.toCollection(ListNBT::new))//
+        tag.put("loaders", forcedChunksByLoader.keySet().stream()
+                .map(IChunkLoader::pos)
+                .map(NBTUtil::writeBlockPos)
+                .collect(Collectors.toCollection(ListNBT::new))
         );
         return tag;
     }
 
     public Organiser read(CompoundNBT tag) {
-        tag.getList("dormantLoaders", 10).stream()//
-                .map(e -> (CompoundNBT) e)//
-                .map(NBTUtil::readBlockPos)//
+        tag.getList("dormantLoaders", 10).stream()
+                .map(e -> (CompoundNBT) e)
+                .map(NBTUtil::readBlockPos)
                 .forEach(dormantLoaders::add);
-        tag.getList("loaders", 10).stream()//
-                .map(e -> (CompoundNBT) e)//
-                .map(NBTUtil::readBlockPos)//
+        tag.getList("loaders", 10).stream()
+                .map(e -> (CompoundNBT) e)
+                .map(NBTUtil::readBlockPos)
                 .forEach(dormantLoaders::add);
         dormant = true;
         return this;

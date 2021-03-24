@@ -32,9 +32,4 @@ public class ProxyClient extends Proxy {
             e.getModelRegistry().put(new ModelResourceLocation(itemSpotLoader.getRegistryName(), "inventory"), new ChunkLoaderItemModel(spotModel, true));
         });
     }
-
-    @Override
-    public void openGui(TileChunkLoader tile) {
-        Minecraft.getInstance().setScreen(new GuiChunkLoader(tile));
-    }
 }

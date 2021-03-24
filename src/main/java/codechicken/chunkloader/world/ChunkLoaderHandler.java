@@ -3,6 +3,7 @@ package codechicken.chunkloader.world;
 import codechicken.chunkloader.api.IChunkLoader;
 import codechicken.chunkloader.api.IChunkLoaderHandler;
 import codechicken.chunkloader.handler.ChickenChunksConfig;
+import codechicken.lib.capability.SimpleCapProviderSerializable;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
@@ -113,22 +114,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
         if (world.dimension() != World.OVERWORLD) {
             return;
         }
-        IChunkLoaderHandler handler = new ChunkLoaderHandler(world.getServer());
-        LazyOptional<IChunkLoaderHandler> handlerOpt = LazyOptional.of(() -> handler);
-        event.addCapability(KEY, new ICapabilitySerializable<INBT>() {
-            @Override
-            public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-                if (cap == HANDLER_CAPABILITY) {
-                    return handlerOpt.cast();
-                }
-                return LazyOptional.empty();
-            }
-
-            //@formatter:off
-            @Override public INBT serializeNBT() { return HANDLER_CAPABILITY.writeNBT(handler, null); }
-            @Override public void deserializeNBT(INBT nbt) { HANDLER_CAPABILITY.readNBT(handler, null, nbt); }
-            //@formatter:on
-        });
+        event.addCapability(KEY, new SimpleCapProviderSerializable<>(HANDLER_CAPABILITY, new ChunkLoaderHandler(world.getServer())));
     }
 
     //endregion
@@ -136,15 +122,15 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
 
     //Use ResourceLocation instead of DimensionType so we can write unknown DimensionTypes back to disk instead of voiding it.
     //<Player, DimensionType, Organiser> / For each player, their per dimension Organiser instance.
-
     private final Table<UUID, ResourceLocation, Organiser> playerOrganisers = HashBasedTable.create();
+
     //<DimensionType, Chunk, ChunkTicket> / Each dimensions, ChunkTicket instances per chunk.
     private final Table<ResourceLocation, ChunkPos, ChunkTicket> activeTickets = HashBasedTable.create();
     private final List<Organiser> deviveList = new LinkedList<>();
 
     private final List<Organiser> reviveList = new LinkedList<>();
-    //When, in Millis was the player last seen online.
 
+    //When, in Millis was the player last seen online.
     private final Object2LongMap<UUID> loginTimes = new Object2LongOpenHashMap<>();
 
     protected ChunkLoaderHandler(MinecraftServer server) {
@@ -287,8 +273,8 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
 
     //region Utility methods.
     public int getLoadedChunkCount(UUID player) {
-        return playerOrganisers.row(player).values().stream()//
-                .mapToInt(organiser -> organiser.forcedChunksByChunk.size())//
+        return playerOrganisers.row(player).values().stream()
+                .mapToInt(organiser -> organiser.forcedChunksByChunk.size())
                 .sum();
     }
 

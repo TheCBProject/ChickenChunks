@@ -12,7 +12,7 @@ import java.util.Set;
 
 /**
  * Holds a reference to all IChunkLoaders currently loading a given chunk.
- * Automatically allocates and frees a vanilla Ticket automatically.
+ * Automatically allocates and frees a vanilla Ticket.
  * <p>
  * Created by covers1624 on 11/5/20.
  */
