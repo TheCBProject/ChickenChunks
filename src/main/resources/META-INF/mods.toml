@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[36,)"
+loaderVersion="[${forge_version},)"
 issueTrackerURL="https://github.com/TheCBProject/ChickenChunks"
 license="The MIT License (MIT)"
 
@@ -8,14 +8,14 @@ license="The MIT License (MIT)"
 	displayName="ChickenChunks"
 	version="${version}"
 
-	updateJSONURL="http://chickenbones.net/Files/notification/version.php?query=forge&file=ChickenChunks&version=${mc_version}"
+	updateJSONURL="https://version-check.covers1624.net/check/?mod=ChickenChunks&mc=${mc_version}"
 	displayURL="http://chickenbones.net/Pages/links.html"
 	authors="ChickenBones, covers1624"
 	description="Advanced ChunkLoading management"
 [[dependencies.chickenchunks]]
 	modId="forge"
 	mandatory=true
-	versionRange="[36.1,)"
+	versionRange="[${forge_version},)"
 	ordering="NONE"
 	side="BOTH"
 [[dependencies.chickenchunks]]
@@ -27,6 +27,6 @@ license="The MIT License (MIT)"
 [[dependencies.chickenchunks]]
     modId="codechickenlib"
     mandatory=true
-    versionRange="[${ccl_version},)"
+    versionRange="${ccl_version_range}"
     ordering="NONE"
     side="BOTH"

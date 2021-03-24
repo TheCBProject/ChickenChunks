@@ -18,13 +18,12 @@ plugins {
 
 apply plugin: 'net.minecraftforge.gradle'
 
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+
 group = "codechicken"
 archivesBaseName = "ChickenChunks"
 
-targetCompatibility = "1.8"
-sourceCompatibility = "1.8"
-
-sourceSets.main.resources.srcDirs += "src/generated/resources"
+sourceSets.main.resources.srcDirs += "src/main/generated"
 
 file('build.properties').withReader {
     def prop = new Properties()
@@ -70,7 +69,7 @@ minecraft {
         }
         data {
             workingDirectory file('run')
-            args '--mod', 'chickenchunks', '--all', '--output', file("src/generated/resources")
+            args '--mod', 'chickenchunks', '--all', '--output', file("src/main/generated"), '--existing', file("src/main/resources")
             mods { chickenchunks { source sourceSets.main } }
         }
     }
@@ -78,7 +77,7 @@ minecraft {
 
 repositories {
     mavenLocal()
-    maven { url = "http://chickenbones.net/maven" }
+    maven { url = "https://chickenbones.net/maven" }
 }
 
 dependencies {
@@ -109,7 +108,8 @@ processResources { task ->
         task.doFirst {
             spec.expand 'version': config.mod_version,
                     'mc_version': config.mc_version,
-                    'ccl_version': resolve("CodeChickenLib")
+                    'forge_version': config.forge_version,
+                    'ccl_version_range': "[${resolve("CodeChickenLib")},${config.ccl_version_max})"
         }
     }
 }
@@ -135,7 +135,6 @@ task srcJar(type: Jar) {
     classifier = 'sources'
     from file("LICENSE.txt")
 }
-
 
 publishing {
     repositories {
