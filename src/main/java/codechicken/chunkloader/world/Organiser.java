@@ -1,6 +1,7 @@
 package codechicken.chunkloader.world;
 
 import codechicken.chunkloader.api.IChunkLoader;
+import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.nbt.CompoundNBT;
@@ -127,7 +128,7 @@ public class Organiser {
         if (dormant) {
             return;
         }
-        for (IChunkLoader loader : forcedChunksByLoader.keySet()) {
+        for (IChunkLoader loader : ImmutableSet.copyOf(forcedChunksByLoader.keySet())) {
             dormantLoaders.add(loader.pos());
             handler.removeChunkLoader(loader);
         }
