@@ -28,8 +28,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.common.capabilities.ICapabilitySerializable;
-import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.common.world.ForgeChunkManager;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -63,6 +62,11 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
         MinecraftForge.EVENT_BUS.addListener(ChunkLoaderHandler::onWorldTick);
         MinecraftForge.EVENT_BUS.addGenericListener(World.class, ChunkLoaderHandler::attachCapabilities);
         CapabilityManager.INSTANCE.register(IChunkLoaderHandler.class, new Storage(), nullC());
+        ForgeChunkManager.setForcedChunkLoadingCallback(MOD_ID, (world, ticketHelper) -> {
+            // On load, nuke everything. We manually re-register tickets.
+            ticketHelper.getBlockTickets().keySet().forEach(ticketHelper::removeAllTickets);
+            ticketHelper.getEntityTickets().keySet().forEach(ticketHelper::removeAllTickets);
+        });
     }
 
     //region Events
@@ -105,7 +109,6 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
     }
 
     //Attach our IChunkLoaderHandler capability to the overworld.
-
     private static void attachCapabilities(AttachCapabilitiesEvent<World> event) {
         if (event.getObject().isClientSide) {
             return;
@@ -116,21 +119,20 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
         }
         event.addCapability(KEY, new SimpleCapProviderSerializable<>(HANDLER_CAPABILITY, new ChunkLoaderHandler(world.getServer())));
     }
-
     //endregion
+
     private final MinecraftServer server;
 
-    //Use ResourceLocation instead of DimensionType so we can write unknown DimensionTypes back to disk instead of voiding it.
-    //<Player, DimensionType, Organiser> / For each player, their per dimension Organiser instance.
+    // <Player, DimensionType, Organiser> / For each player, their per dimension Organiser instance.
     private final Table<UUID, ResourceLocation, Organiser> playerOrganisers = HashBasedTable.create();
 
-    //<DimensionType, Chunk, ChunkTicket> / Each dimensions, ChunkTicket instances per chunk.
+    // <DimensionType, Chunk, ChunkTicket> / Each dimensions, ChunkTicket instances per chunk.
     private final Table<ResourceLocation, ChunkPos, ChunkTicket> activeTickets = HashBasedTable.create();
     private final List<Organiser> deviveList = new LinkedList<>();
 
     private final List<Organiser> reviveList = new LinkedList<>();
 
-    //When, in Millis was the player last seen online.
+    // When, in Millis was the player last seen online.
     private final Object2LongMap<UUID> loginTimes = new Object2LongOpenHashMap<>();
 
     protected ChunkLoaderHandler(MinecraftServer server) {
@@ -198,7 +200,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getRestrictions(player);
             int timeout = restrictions.getOfflineTimeout();
             long lastSeen = loginTimes.getOrDefault(player, -1L);
-            //If the user is allowed to load things offline, or their timeout hasn't expired yet.
+            // If the user is allowed to load things offline, or their timeout hasn't expired yet.
             if (restrictions.canLoadOffline() || (lastSeen != -1 || (curr - lastSeen) / 60000L < timeout)) {
                 reviveList.addAll(playerEntry.getValue().values());
             }
@@ -207,14 +209,14 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
 
     public void tick(TickEvent.WorldTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
-            //Every minute.
+            // Every minute.
             if (event.world.getGameTime() % 1200 == 0) {
                 long curr = System.currentTimeMillis();
-                //Update login times of players.
+                // Update login times of players.
                 for (ServerPlayerEntity player : server.getPlayerList().getPlayers()) {
                     loginTimes.put(player.getUUID(), curr);
                 }
-                //Queue their Organisers for unload if needed.
+                // Queue their Organisers for unload if needed.
                 for (Map.Entry<UUID, Map<ResourceLocation, Organiser>> playerEntry : playerOrganisers.rowMap().entrySet()) {
                     UUID player = playerEntry.getKey();
                     ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getRestrictions(player);
@@ -227,10 +229,10 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
                     }
                 }
             }
-            //Tick unload queue for each organiser.
+            // Tick unload queue for each organiser.
             playerOrganisers.values().forEach(Organiser::tickUnloads);
 
-            //Handle devive / revive list.
+            // Handle devive / revive list.
             for (Organiser organiser : reviveList) {
                 RegistryKey<World> key = RegistryKey.create(Registry.DIMENSION_REGISTRY, organiser.dim);
                 ServerWorld world = server.getLevel(key);
@@ -249,8 +251,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
     public void remChunk(IChunkLoader loader, ResourceLocation dim, ChunkPos pos) {
         ChunkTicket ticket = activeTickets.get(dim, pos);
         if (ticket != null) {
-            ticket.loaders.remove(loader);
-            if (ticket.tryFree()) {
+            if (ticket.remLoader(loader)) {
                 activeTickets.remove(dim, pos);
                 if (DEBUG) {
                     logger.info("Un-Forcing chunk: {}", pos);
@@ -262,10 +263,8 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
     public void addChunk(IChunkLoader loader, ResourceLocation dim, ChunkPos pos) {
         RegistryKey<World> key = RegistryKey.create(Registry.DIMENSION_REGISTRY, dim);
         ServerWorld world = server.getLevel(key);
-        TicketManager ticketManager = world.getChunkSource().distanceManager;
-        ChunkTicket ticket = computeIfAbsent(activeTickets, dim, pos, () -> new ChunkTicket(ticketManager, pos));
-        ticket.loaders.add(loader);
-        ticket.tryAlloc();
+        ChunkTicket ticket = computeIfAbsent(activeTickets, dim, pos, () -> new ChunkTicket(world, pos));
+        ticket.addLoader(loader);
         if (DEBUG) {
             logger.info("Forcing chunk: {}", pos);
         }
@@ -314,18 +313,14 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
                 playerTag.putUUID("player", playerEntry.getKey());
                 ListNBT dimensions = new ListNBT();
                 for (Map.Entry<ResourceLocation, Organiser> dimEntry : playerEntry.getValue().entrySet()) {
-                    if (dimEntry.getValue().isEmpty()) {
-                        continue;//Culling.
-                    }
+                    if (dimEntry.getValue().isEmpty()) continue; // Culling.
 
                     CompoundNBT dimTag = new CompoundNBT();
                     dimTag.putString("dimension", dimEntry.getKey().toString());
                     dimTag.put("organiser", dimEntry.getValue().write(new CompoundNBT()));
                     dimensions.add(dimTag);
                 }
-                if (dimensions.isEmpty()) {
-                    continue;//Culling.
-                }
+                if (dimensions.isEmpty()) continue; // Culling.
 
                 playerTag.put("dimensions", dimensions);
                 playerList.add(playerTag);

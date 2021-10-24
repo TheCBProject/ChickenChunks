@@ -1,12 +1,12 @@
 package codechicken.chunkloader.world;
 
+import codechicken.chunkloader.ChickenChunks;
 import codechicken.chunkloader.api.IChunkLoader;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.server.Ticket;
-import net.minecraft.world.server.TicketManager;
-import net.minecraft.world.server.TicketType;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.world.ForgeChunkManager;
 
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,46 +18,44 @@ import java.util.Set;
  */
 public class ChunkTicket {
 
-    private static final TicketType<ChunkPos> TICKET_TYPE = TicketType.create("chicken_chunks", Comparator.comparingLong(ChunkPos::toLong));
+    private final ServerWorld level;
+    private final ChunkPos pos;
 
-    private final TicketManager ticketManager;
-    public final ChunkPos pos;
+    private final Set<IChunkLoader> loaders = new HashSet<>();
 
-    public final Set<IChunkLoader> loaders = new HashSet<>();
-    public Ticket<ChunkPos> vanillaTicket;
-
-    public ChunkTicket(TicketManager ticketManager, ChunkPos pos) {
-        this.ticketManager = ticketManager;
+    public ChunkTicket(ServerWorld level, ChunkPos pos) {
+        this.level = level;
         this.pos = pos;
     }
 
-    public boolean tryAlloc() {
-        if (vanillaTicket != null) {
-            return true;
+    /**
+     * Adds an {@link IChunkLoader} to this ticket.
+     *
+     * @param loader The loader to add.
+     * @return If this chunk had no loaders previously.
+     */
+    public boolean addLoader(IChunkLoader loader) {
+        boolean empty = loaders.isEmpty();
+        if (loaders.add(loader)) {
+            ForgeChunkManager.forceChunk(level, ChickenChunks.MOD_ID, loader.pos(), pos.x, pos.z, true, true);
         }
-        if (loaders.isEmpty()) {
-            return false;
-        }
-
-        vanillaTicket = new Ticket<>(TICKET_TYPE, 31, pos, true);
-        ticketManager.addTicket(pos.toLong(), vanillaTicket);
-        return true;
+        return empty;
     }
 
-    public boolean tryFree() {
-        if (vanillaTicket == null) {
-            return true;
+    /**
+     * Removes an {@link IChunkLoader} from this ticket.
+     *
+     * @param loader The loadder to remove.
+     * @return If the chunk is now empty.
+     */
+    public boolean remLoader(IChunkLoader loader) {
+        if (loaders.remove(loader)) {
+            ForgeChunkManager.forceChunk(level, ChickenChunks.MOD_ID, loader.pos(), pos.x, pos.z, false, true);
         }
-        if (!loaders.isEmpty()) {
-            return false;
-        }
-
-        ticketManager.removeTicket(pos.toLong(), vanillaTicket);
-        vanillaTicket = null;
-        return true;
+        return loaders.isEmpty();
     }
 
-    public boolean isActive() {
-        return vanillaTicket != null;
+    public Set<IChunkLoader> getLoaders() {
+        return Collections.unmodifiableSet(loaders);
     }
 }
