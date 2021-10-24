@@ -17,5 +17,4 @@ public class TileSpotLoader extends TileChunkLoaderBase {
     public Set<ChunkPos> getChunks() {
         return Sets.newHashSet(getChunkPosition());
     }
-
 }

@@ -14,6 +14,7 @@ public class ChickenChunksNetwork {
 
     //Client handled.
     public static final int C_OPEN_LOADER_GUI = 1;
+    public static final int C_UPDATE_STATE = 2;
 
     //Server handled.
     public static final int S_SET_SHAPE = 1;

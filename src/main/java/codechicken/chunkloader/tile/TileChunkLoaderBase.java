@@ -4,6 +4,7 @@ import codechicken.chunkloader.ChickenChunks;
 import codechicken.chunkloader.api.IChunkLoader;
 import codechicken.chunkloader.api.IChunkLoaderHandler;
 import codechicken.chunkloader.network.ChickenChunksNetwork;
+import codechicken.chunkloader.network.ChunkLoaderSPH;
 import codechicken.lib.data.MCDataInput;
 import codechicken.lib.data.MCDataOutput;
 import codechicken.lib.packet.PacketCustom;
@@ -100,11 +101,6 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
         }
     }
 
-    public void destroyBlock() {
-        //        ModBlocks.blockChunkLoader.dropBlockAsItem(world, getPos(), world.getBlockState(pos), 0);
-        //        world.setBlockToAir(getPos());
-    }
-
     public ChunkPos getChunkPosition() {
         return new ChunkPos(getBlockPos().getX() >> 4, getBlockPos().getZ() >> 4);
     }
@@ -114,10 +110,6 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
             owner = entityliving.getUUID();
             ownerName = entityliving.getName();
         }
-        //TODO
-        //        if (owner.equals("")) {
-        //            owner = null;
-        //        }
         activate();
     }
 
@@ -149,6 +141,7 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
         loaded = true;
         active = false;
         IChunkLoaderHandler.getCapability(level).removeChunkLoader(this);
+        ChunkLoaderSPH.sendStateUpdate(this);
     }
 
     public void activate() {
@@ -158,6 +151,7 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
         loaded = true;
         active = true;
         IChunkLoaderHandler.getCapability(level).addChunkLoader(this);
+        ChunkLoaderSPH.sendStateUpdate(this);
     }
 
     @Override
@@ -186,25 +180,11 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
     public AxisAlignedBB getRenderBoundingBox() {
         return INFINITE_EXTENT_AABB;
     }
-
-    @Nullable
-    @Override
-    public SUpdateTileEntityPacket getUpdatePacket() {
-        PacketCustom packet = new PacketCustom(NET_CHANNEL, 1);//Dummy Index.
-        writeToPacket(packet);
-        return packet.toTilePacket(getBlockPos());
-    }
-
     @Override
     public CompoundNBT getUpdateTag() {
         PacketCustom packet = new PacketCustom(NET_CHANNEL, 1);//Dummy Index.
         writeToPacket(packet);
         return packet.writeToNBT(super.getUpdateTag());
-    }
-
-    @Override
-    public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
-        readFromPacket(PacketCustom.fromTilePacket(pkt));
     }
 
     @Override

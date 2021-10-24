@@ -45,8 +45,6 @@ public class TileChunkLoaderRenderer extends TileEntityRenderer<TileChunkLoaderB
         super(dispatcher);
     }
 
-
-
     @Override
     public void render(TileChunkLoaderBase tile, float partialTicks, MatrixStack mStack, IRenderTypeBuffer getter, int packedLight, int packedOverlay) {
         Matrix4 mat = new Matrix4(mStack);
