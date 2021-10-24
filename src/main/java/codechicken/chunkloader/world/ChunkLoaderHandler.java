@@ -223,7 +223,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
                     if (!restrictions.canLoadOffline()) {
                         int timeout = restrictions.getOfflineTimeout();
                         long lastSeen = loginTimes.getOrDefault(player, -1L);
-                        if (timeout == 0 || lastSeen == -1 || (curr - lastSeen) / 60000L < timeout) {
+                        if (lastSeen != curr && (timeout == 0 || lastSeen == -1 || (curr - lastSeen) / 60000L < timeout)){
                             deviveList.addAll(playerEntry.getValue().values());
                         }
                     }
