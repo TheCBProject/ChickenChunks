@@ -4,6 +4,7 @@ import codechicken.chunkloader.api.ChunkLoaderShape;
 import codechicken.chunkloader.api.IChunkLoaderHandler;
 import codechicken.chunkloader.handler.ChickenChunksConfig;
 import codechicken.chunkloader.init.ModContent;
+import codechicken.chunkloader.network.ChunkLoaderSPH;
 import codechicken.lib.data.MCDataInput;
 import codechicken.lib.data.MCDataOutput;
 import net.minecraft.block.BlockState;
@@ -41,6 +42,7 @@ public class TileChunkLoader extends TileChunkLoaderBase {
             shape = newShape;
             BlockState state = level.getBlockState(getBlockPos());
             level.sendBlockUpdated(getBlockPos(), state, state, 3);
+            ChunkLoaderSPH.sendStateUpdate(this);
             return true;
         }
         IChunkLoaderHandler handler = IChunkLoaderHandler.getCapability(level);
@@ -50,6 +52,7 @@ public class TileChunkLoader extends TileChunkLoaderBase {
             handler.updateLoader(this);
             BlockState state = level.getBlockState(getBlockPos());
             level.sendBlockUpdated(getBlockPos(), state, state, 3);
+            ChunkLoaderSPH.sendStateUpdate(this);
             return true;
         }
         return false;
