@@ -1,5 +1,6 @@
 package codechicken.chunkloader.gui;
 
+import codechicken.chunkloader.api.ChunkLoaderShape;
 import codechicken.chunkloader.network.ChunkLoaderCPH;
 import codechicken.chunkloader.tile.TileChunkLoader;
 import codechicken.lib.texture.TextureUtils;
@@ -9,7 +10,10 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+
+import javax.annotation.Nullable;
 
 public class GuiChunkLoader extends Screen {
 
@@ -17,7 +21,15 @@ public class GuiChunkLoader extends Screen {
     public Button shapeButton;
     public TileChunkLoader tile;
 
+    private int lastRadius = -1;
+    @Nullable
+    private ChunkLoaderShape lastShape = null;
+
     private int lastButton;
+
+    private long warningEnd = -1;
+    @Nullable
+    private ITextComponent warningText;
 
     public GuiChunkLoader(TileChunkLoader tile) {
         super(new StringTextComponent("DOOOOOOOT"));
@@ -38,12 +50,22 @@ public class GuiChunkLoader extends Screen {
     public void updateNames() {
         laserButton.setMessage(new TranslationTextComponent(tile.renderInfo.showLasers ? "chickenchunks.gui.hidelasers" : "chickenchunks.gui.showlasers"));
         shapeButton.setMessage(tile.shape.getTranslation());
+        if (lastRadius != tile.radius || lastShape != tile.shape) {
+            warningEnd = -1;
+            warningText = null;
+            lastRadius = tile.radius;
+            lastShape = tile.shape;
+        }
+    }
+
+    public void addWarning(ITextComponent text) {
+        warningText = text;
+        warningEnd = System.currentTimeMillis() + 3500;
     }
 
     @Override
     public void tick() {
-        if (minecraft.level.getBlockEntity(tile.getBlockPos()) != tile)//tile changed
-        {
+        if (minecraft.level.getBlockEntity(tile.getBlockPos()) != tile) { //tile changed
             minecraft.screen = null;
             minecraft.mouseHandler.grabMouse();
         }
@@ -74,6 +96,17 @@ public class GuiChunkLoader extends Screen {
 
         int chunks = tile.countLoadedChunks();
         drawCentered(mStack, new TranslationTextComponent(chunks == 1 ? "chickenchunks.gui.chunk" : "chickenchunks.gui.chunks", chunks), width / 2 - 39, height / 2 - 21, 0x108000);
+
+        if (warningText != null && warningEnd != -1) {
+            float fade = (warningEnd - System.currentTimeMillis()) / 1000F;
+            if (fade <= 0.1) {
+                warningEnd = -1;
+                warningText = null;
+            } else {
+                int alpha = fade <= 1.0F ? (int) (255 * fade) : 255;
+                drawCentered(mStack, warningText, width / 2, height / 2 - 8, 0xFF5555 | (alpha & 0xFF) << 24);
+            }
+        }
 
         //TODO: sradius = "Total "+ChunkLoaderManager.activeChunkLoaders+"/"+ChunkLoaderManager.allowedChunkloaders+" Chunks";
         //fontRenderer.drawString(sradius, width / 2 - fontRenderer.getStringWidth(sradius) / 2, height / 2 - 8, 0x108000);

@@ -8,8 +8,10 @@ import codechicken.chunkloader.network.ChunkLoaderSPH;
 import codechicken.lib.data.MCDataInput;
 import codechicken.lib.data.MCDataOutput;
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.Set;
 
@@ -23,19 +25,26 @@ public class TileChunkLoader extends TileChunkLoaderBase {
     }
 
     public boolean setShapeAndRadius(ChunkLoaderShape newShape, int newRadius) {
-        if (owner == null) {
-            return false;
-        }
-        Set<ChunkPos> chunks = getContainedChunks(newShape, getBlockPos().getX(), getBlockPos().getZ(), newRadius);
-        //Synced to client.
-        ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getRestrictions(owner);
-        if (chunks.size() > restrictions.getChunksPerLoader()) {
-            return false;
-        }
+        return setShapeAndRadius(null, newShape, newRadius);
+    }
+
+    public boolean setShapeAndRadius(ServerPlayerEntity player, ChunkLoaderShape newShape, int newRadius) {
+        if (owner == null || newRadius < 0 || newRadius > 255) return false;
+
         if (level.isClientSide) {
             radius = newRadius;
             shape = newShape;
             return true;
+        }
+
+        Set<ChunkPos> chunks = getContainedChunks(newShape, getBlockPos().getX(), getBlockPos().getZ(), newRadius);
+        ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getRestrictions(owner);
+        if (chunks.size() > restrictions.getChunksPerLoader()) {
+            if (player != null) {
+                int more = chunks.size() - restrictions.getChunksPerLoader();
+                ChunkLoaderSPH.sendGuiWarning(player, new TranslationTextComponent("chickenchunks.gui.morechunks", more));
+            }
+            return false;
         }
         if (powered) {
             radius = newRadius;
@@ -61,14 +70,14 @@ public class TileChunkLoader extends TileChunkLoaderBase {
     @Override
     public void writeToPacket(MCDataOutput packet) {
         super.writeToPacket(packet);
-        packet.writeByte(shape.ordinal());
+        packet.writeEnum(shape);
         packet.writeByte(radius);
     }
 
     @Override
     public void readFromPacket(MCDataInput packet) {
         super.readFromPacket(packet);
-        setShapeAndRadius(ChunkLoaderShape.values()[packet.readUByte()], packet.readUByte());
+        setShapeAndRadius(packet.readEnum(ChunkLoaderShape.class), packet.readUByte());
     }
 
     @Override

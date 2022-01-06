@@ -7,6 +7,7 @@
   "chickenchunks.gui.chunk": "%d Chunk",
   "chickenchunks.gui.chunks": "%d Chunks",
   "chickenchunks.gui.radius": "Radius",
+  "chickenchunks.gui.morechunks": "Exceeds allowance by %d chunks",
   "chickenchunks.shape.square": "Square",
   "chickenchunks.shape.circle": "Circle",
   "chickenchunks.shape.linex": "Line X",

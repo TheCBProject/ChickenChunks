@@ -32,15 +32,23 @@ public class ChunkLoaderCPH implements IClientPacketHandler {
                 }
                 break;
             }
+            case C_ADD_GUI_WARNING: {
+                if (mc.screen instanceof GuiChunkLoader) {
+                    ((GuiChunkLoader) mc.screen).addWarning(packet.readTextComponent());
+                }
+                break;
+            }
 
         }
     }
 
     public static void sendShapeChange(TileChunkLoader tile, ChunkLoaderShape shape, int radius) {
+        if (radius < 0 || radius > 255) return;
+
         PacketCustom packet = new PacketCustom(ChickenChunksNetwork.NET_CHANNEL, S_SET_SHAPE);
         packet.writePos(tile.getBlockPos());
-        packet.writeByte(shape.ordinal());
-        packet.writeByte(radius);
+        packet.writeEnum(shape);
+        packet.writeShort(radius);
         packet.sendToServer();
     }
 }
