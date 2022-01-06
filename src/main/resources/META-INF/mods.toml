@@ -9,7 +9,7 @@ license="The MIT License (MIT)"
 	version="${version}"
 
 	updateJSONURL="https://version-check.covers1624.net/check/?mod=ChickenChunks&mc=${mc_version}"
-	displayURL="http://chickenbones.net/Pages/links.html"
+	displayURL="https://www.curseforge.com/minecraft/mc-mods/chicken-chunks-1-8"
 	authors="ChickenBones, covers1624"
 	description="Advanced ChunkLoading management"
 [[dependencies.chickenchunks]]
