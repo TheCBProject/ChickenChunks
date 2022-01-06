@@ -67,11 +67,17 @@ public abstract class TileChunkLoaderBase extends TileEntity implements ITickabl
         loaded = true;
     }
 
-    public void clearRemoved() {
-        super.clearRemoved();
+    @Override
+    public void onLoad() {
+        super.onLoad();
         if (!level.isClientSide && loaded && !powered) {
             activate();
         }
+    }
+
+    @Override
+    public void clearRemoved() {
+        super.clearRemoved();
 
         if (level.isClientSide) {
             renderInfo = new RenderInfo();
