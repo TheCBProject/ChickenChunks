@@ -23,7 +23,6 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.server.TicketManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
@@ -223,14 +222,15 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
                     if (!restrictions.canLoadOffline()) {
                         int timeout = restrictions.getOfflineTimeout();
                         long lastSeen = loginTimes.getOrDefault(player, -1L);
-                        if (lastSeen != curr && (timeout == 0 || lastSeen == -1 || (curr - lastSeen) / 60000L < timeout)){
+                        if (lastSeen != curr && (timeout == 0 || lastSeen == -1 || (curr - lastSeen) / 60000L < timeout)) {
                             deviveList.addAll(playerEntry.getValue().values());
                         }
                     }
                 }
             }
-            // Tick unload queue for each organiser.
-            playerOrganisers.values().forEach(Organiser::tickUnloads);
+
+            // Tick each organizer, it may want to load/unload things.
+            playerOrganisers.values().forEach(Organiser::onTickEnd);
 
             // Handle devive / revive list.
             for (Organiser organiser : reviveList) {
@@ -253,9 +253,9 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
         if (ticket != null) {
             if (ticket.remLoader(loader)) {
                 activeTickets.remove(dim, pos);
-                if (DEBUG) {
-                    logger.info("Un-Forcing chunk: {}", pos);
-                }
+            }
+            if (DEBUG) {
+                logger.info("Loader {} Un-Forcing chunk: {}", loader.pos(), pos);
             }
         }
     }
@@ -266,7 +266,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
         ChunkTicket ticket = computeIfAbsent(activeTickets, dim, pos, () -> new ChunkTicket(world, pos));
         ticket.addLoader(loader);
         if (DEBUG) {
-            logger.info("Forcing chunk: {}", pos);
+            logger.info("Loader {} Forcing chunk: {}", loader.pos(), pos);
         }
     }
 

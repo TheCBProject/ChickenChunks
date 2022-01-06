@@ -30,6 +30,8 @@ public class Organiser {
     //Queue of un-forcing chunks for any given loader.
     public final Map<IChunkLoader, Object2IntMap<ChunkPos>> timedUnloadQueue = new HashMap<>();
 
+    public final List<IChunkLoader> pendingLoaders = new LinkedList<>();
+
     private final ChunkLoaderHandler handler;
     public final ResourceLocation dim;
     public final UUID player;
@@ -80,7 +82,7 @@ public class Organiser {
         if (dormant) {
             dormantLoaders.add(loader.pos());
         } else {
-            forceChunks(loader, loader.getChunks());
+            pendingLoaders.add(loader);
         }
     }
 
@@ -175,6 +177,21 @@ public class Organiser {
         }
         if (!newChunks.isEmpty()) {
             forceChunks(loader, newChunks);
+        }
+    }
+
+    public void onTickEnd() {
+        tickLoads();
+        tickUnloads();
+    }
+
+    public void tickLoads() {
+        if (!pendingLoaders.isEmpty()) {
+            List<IChunkLoader> loaders = new ArrayList<>(pendingLoaders);
+            pendingLoaders.clear();
+            for (IChunkLoader loader : loaders) {
+                forceChunks(loader, loader.getChunks());
+            }
         }
     }
 
