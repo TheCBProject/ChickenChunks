@@ -2,8 +2,8 @@ package codechicken.chunkloader.world;
 
 import codechicken.chunkloader.ChickenChunks;
 import codechicken.chunkloader.api.IChunkLoader;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.common.world.ForgeChunkManager;
 
 import java.util.Collections;
@@ -18,12 +18,12 @@ import java.util.Set;
  */
 public class ChunkTicket {
 
-    private final ServerWorld level;
+    private final ServerLevel level;
     private final ChunkPos pos;
 
     private final Set<IChunkLoader> loaders = new HashSet<>();
 
-    public ChunkTicket(ServerWorld level, ChunkPos pos) {
+    public ChunkTicket(ServerLevel level, ChunkPos pos) {
         this.level = level;
         this.pos = pos;
     }

@@ -5,18 +5,17 @@ import codechicken.chunkloader.tile.TileChunkLoader;
 import codechicken.chunkloader.tile.TileChunkLoaderBase;
 import codechicken.lib.packet.ICustomPacketHandler.IServerPacketHandler;
 import codechicken.lib.packet.PacketCustom;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.play.IServerPlayNetHandler;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.World;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.world.level.Level;
 
 import static codechicken.chunkloader.network.ChickenChunksNetwork.*;
 
 public class ChunkLoaderSPH implements IServerPacketHandler {
 
     @Override
-    public void handlePacket(PacketCustom packet, ServerPlayerEntity sender, IServerPlayNetHandler handler) {
+    public void handlePacket(PacketCustom packet, ServerPlayer sender, ServerGamePacketListenerImpl handler) {
         switch (packet.getType()) {
             case S_SET_SHAPE: {
                 handleChunkLoaderChangePacket(sender.level, sender, packet);
@@ -25,11 +24,9 @@ public class ChunkLoaderSPH implements IServerPacketHandler {
         }
     }
 
-    private void handleChunkLoaderChangePacket(World world, ServerPlayerEntity sender, PacketCustom packet) {
-        TileEntity tile = world.getBlockEntity(packet.readPos());
-        if (tile instanceof TileChunkLoader) {
-            TileChunkLoader ctile = (TileChunkLoader) tile;
-            ctile.setShapeAndRadius(sender, packet.readEnum(ChunkLoaderShape.class), packet.readShort());
+    private void handleChunkLoaderChangePacket(Level world, ServerPlayer sender, PacketCustom packet) {
+        if (world.getBlockEntity(packet.readPos()) instanceof TileChunkLoader tile) {
+            tile.setShapeAndRadius(sender, packet.readEnum(ChunkLoaderShape.class), packet.readShort());
         }
     }
 
@@ -41,7 +38,7 @@ public class ChunkLoaderSPH implements IServerPacketHandler {
         packet.sendToChunk(tile);
     }
 
-    public static void sendGuiWarning(ServerPlayerEntity player, ITextComponent component) {
+    public static void sendGuiWarning(ServerPlayer player, Component component) {
         PacketCustom packet = new PacketCustom(NET_CHANNEL, C_ADD_GUI_WARNING);
         packet.writeTextComponent(component);
         packet.sendToPlayer(player);

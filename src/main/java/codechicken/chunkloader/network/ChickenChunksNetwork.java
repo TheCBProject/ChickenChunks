@@ -1,8 +1,8 @@
 package codechicken.chunkloader.network;
 
 import codechicken.lib.packet.PacketCustomChannelBuilder;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.network.event.EventNetworkChannel;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.network.event.EventNetworkChannel;
 
 /**
  * Created by covers1624 on 1/11/19.
@@ -21,9 +21,9 @@ public class ChickenChunksNetwork {
     public static final int S_SET_SHAPE = 1;
 
     public static void init() {
-        netChannel = PacketCustomChannelBuilder.named(NET_CHANNEL)//
-                .assignClientHandler(() -> ChunkLoaderCPH::new)//
-                .assignServerHandler(() -> ChunkLoaderSPH::new)//
+        netChannel = PacketCustomChannelBuilder.named(NET_CHANNEL)
+                .assignClientHandler(() -> ChunkLoaderCPH::new)
+                .assignServerHandler(() -> ChunkLoaderSPH::new)
                 .build();
     }
 

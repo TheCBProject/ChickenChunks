@@ -10,12 +10,12 @@ import codechicken.lib.util.TransformUtils;
 import codechicken.lib.vec.Matrix4;
 import codechicken.lib.vec.Rotation;
 import codechicken.lib.vec.Vector3;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.model.IModelTransform;
-import net.minecraft.client.renderer.model.ItemCameraTransforms.TransformType;
-import net.minecraft.item.ItemStack;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.ModelState;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Created by covers1624 on 5/07/2017.
@@ -24,14 +24,14 @@ public class ChunkLoaderItemModel extends WrappedItemModel implements IItemRende
 
     private final boolean spotLoader;
 
-    public ChunkLoaderItemModel(IBakedModel wrappedModel, boolean spotLoader) {
+    public ChunkLoaderItemModel(BakedModel wrappedModel, boolean spotLoader) {
         super(wrappedModel);
         this.spotLoader = spotLoader;
     }
 
     @Override
-    public void renderItem(ItemStack stack, TransformType transformType, MatrixStack mStack, IRenderTypeBuffer getter, int packedLight, int packedOverlay) {
-        renderWrapped(stack, transformType, mStack, getter, packedLight, packedOverlay, false);
+    public void renderItem(ItemStack stack, ItemTransforms.TransformType transformType, PoseStack mStack, MultiBufferSource getter, int packedLight, int packedOverlay) {
+        renderWrapped(stack, mStack, getter, packedLight, packedOverlay, false);
 
         double rot = ClientUtils.getRenderTime() / 6F;
         double height;
@@ -58,7 +58,7 @@ public class ChunkLoaderItemModel extends WrappedItemModel implements IItemRende
     }
 
     @Override
-    public IModelTransform getModelTransform() {
+    public ModelState getModelTransform() {
         return TransformUtils.DEFAULT_BLOCK;
     }
 

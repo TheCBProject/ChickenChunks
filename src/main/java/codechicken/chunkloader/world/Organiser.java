@@ -4,14 +4,14 @@ import codechicken.chunkloader.api.IChunkLoader;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -49,27 +49,27 @@ public class Organiser {
         return dormantLoaders.isEmpty() && forcedChunksByLoader.isEmpty();
     }
 
-    public CompoundNBT write(CompoundNBT tag) {
+    public CompoundTag write(CompoundTag tag) {
         tag.put("dormantLoaders", dormantLoaders.stream()
-                .map(NBTUtil::writeBlockPos)
-                .collect(Collectors.toCollection(ListNBT::new))
+                .map(NbtUtils::writeBlockPos)
+                .collect(Collectors.toCollection(ListTag::new))
         );
         tag.put("loaders", forcedChunksByLoader.keySet().stream()
                 .map(IChunkLoader::pos)
-                .map(NBTUtil::writeBlockPos)
-                .collect(Collectors.toCollection(ListNBT::new))
+                .map(NbtUtils::writeBlockPos)
+                .collect(Collectors.toCollection(ListTag::new))
         );
         return tag;
     }
 
-    public Organiser read(CompoundNBT tag) {
+    public Organiser read(CompoundTag tag) {
         tag.getList("dormantLoaders", 10).stream()
-                .map(e -> (CompoundNBT) e)
-                .map(NBTUtil::readBlockPos)
+                .map(e -> (CompoundTag) e)
+                .map(NbtUtils::readBlockPos)
                 .forEach(dormantLoaders::add);
         tag.getList("loaders", 10).stream()
-                .map(e -> (CompoundNBT) e)
-                .map(NBTUtil::readBlockPos)
+                .map(e -> (CompoundTag) e)
+                .map(NbtUtils::readBlockPos)
                 .forEach(dormantLoaders::add);
         dormant = true;
         return this;
@@ -137,7 +137,7 @@ public class Organiser {
         dormant = true;
     }
 
-    public void revive(ServerWorld world) {
+    public void revive(ServerLevel world) {
         if (!dormant) {
             return;
         }
@@ -150,7 +150,7 @@ public class Organiser {
 
         for (BlockPos pos : dormantLoaders) {
             reviving = true;
-            TileEntity tile = world.getBlockEntity(pos);
+            BlockEntity tile = world.getBlockEntity(pos);
             reviving = false;
             if (tile instanceof IChunkLoader) {
                 handler.addChunkLoader((IChunkLoader) tile);

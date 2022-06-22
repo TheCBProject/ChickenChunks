@@ -1,8 +1,8 @@
 package codechicken.chunkloader.api;
 
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.level.ChunkPos;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -69,7 +69,7 @@ public enum ChunkLoaderShape {
         return chunks;
     }
 
-    public ITextComponent getTranslation() {
-        return new TranslationTextComponent("chickenchunks.shape." + name);
+    public Component getTranslation() {
+        return new TranslatableComponent("chickenchunks.shape." + name);
     }
 }

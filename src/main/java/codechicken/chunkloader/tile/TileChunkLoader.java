@@ -3,15 +3,16 @@ package codechicken.chunkloader.tile;
 import codechicken.chunkloader.api.ChunkLoaderShape;
 import codechicken.chunkloader.api.IChunkLoaderHandler;
 import codechicken.chunkloader.handler.ChickenChunksConfig;
-import codechicken.chunkloader.init.ModContent;
+import codechicken.chunkloader.init.ChickenChunksModContent;
 import codechicken.chunkloader.network.ChunkLoaderSPH;
 import codechicken.lib.data.MCDataInput;
 import codechicken.lib.data.MCDataOutput;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Set;
 
@@ -20,15 +21,15 @@ public class TileChunkLoader extends TileChunkLoaderBase {
     public int radius;
     public ChunkLoaderShape shape = ChunkLoaderShape.SQUARE;
 
-    public TileChunkLoader() {
-        super(ModContent.tileChunkLoaderType);
+    public TileChunkLoader(BlockPos pos, BlockState state) {
+        super(ChickenChunksModContent.CHUNK_LOADER_TILE.get(), pos, state);
     }
 
     public boolean setShapeAndRadius(ChunkLoaderShape newShape, int newRadius) {
         return setShapeAndRadius(null, newShape, newRadius);
     }
 
-    public boolean setShapeAndRadius(ServerPlayerEntity player, ChunkLoaderShape newShape, int newRadius) {
+    public boolean setShapeAndRadius(ServerPlayer player, ChunkLoaderShape newShape, int newRadius) {
         if (owner == null || newRadius < 0 || newRadius > 255) return false;
 
         if (level.isClientSide) {
@@ -42,7 +43,7 @@ public class TileChunkLoader extends TileChunkLoaderBase {
         if (chunks.size() > restrictions.getChunksPerLoader()) {
             if (player != null) {
                 int more = chunks.size() - restrictions.getChunksPerLoader();
-                ChunkLoaderSPH.sendGuiWarning(player, new TranslationTextComponent("chickenchunks.gui.morechunks", more));
+                ChunkLoaderSPH.sendGuiWarning(player, new TranslatableComponent("chickenchunks.gui.morechunks", more));
             }
             return false;
         }
@@ -81,16 +82,14 @@ public class TileChunkLoader extends TileChunkLoaderBase {
     }
 
     @Override
-    public CompoundNBT save(CompoundNBT tag) {
-        super.save(tag);
+    public void saveAdditional(CompoundTag tag) {
         tag.putByte("radius", (byte) radius);
         tag.putByte("shape", (byte) shape.ordinal());
-        return tag;
     }
 
     @Override
-    public void load(BlockState state, CompoundNBT tag) {
-        super.load(state, tag);
+    public void load(CompoundTag tag) {
+        super.load(tag);
         radius = tag.getByte("radius");
         shape = ChunkLoaderShape.values()[tag.getByte("shape")];
     }

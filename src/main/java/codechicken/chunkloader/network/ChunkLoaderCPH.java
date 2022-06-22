@@ -7,38 +7,33 @@ import codechicken.chunkloader.tile.TileChunkLoaderBase;
 import codechicken.lib.packet.ICustomPacketHandler.IClientPacketHandler;
 import codechicken.lib.packet.PacketCustom;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.network.play.IClientPlayNetHandler;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 
 import static codechicken.chunkloader.network.ChickenChunksNetwork.*;
 
 public class ChunkLoaderCPH implements IClientPacketHandler {
 
     @Override
-    public void handlePacket(PacketCustom packet, Minecraft mc, IClientPlayNetHandler handler) {
+    public void handlePacket(PacketCustom packet, Minecraft mc, ClientPacketListener handler) {
         switch (packet.getType()) {
-            case C_UPDATE_STATE: {
-                TileEntity tile = mc.level.getBlockEntity(packet.readPos());
-                if (tile instanceof TileChunkLoaderBase) {
-                    TileChunkLoaderBase chunkLoader = (TileChunkLoaderBase) tile;
+            case C_UPDATE_STATE -> {
+                if (mc.level.getBlockEntity(packet.readPos()) instanceof TileChunkLoaderBase chunkLoader) {
                     chunkLoader.readFromPacket(packet);
                 }
                 break;
             }
-            case C_OPEN_LOADER_GUI: {
-                TileEntity tile = mc.level.getBlockEntity(packet.readPos());
-                if (tile instanceof TileChunkLoader) {
-                    mc.setScreen(new GuiChunkLoader((TileChunkLoader) tile));
+            case C_OPEN_LOADER_GUI -> {
+                if (mc.level.getBlockEntity(packet.readPos()) instanceof TileChunkLoader tile) {
+                    mc.setScreen(new GuiChunkLoader(tile));
                 }
                 break;
             }
-            case C_ADD_GUI_WARNING: {
+            case C_ADD_GUI_WARNING -> {
                 if (mc.screen instanceof GuiChunkLoader) {
                     ((GuiChunkLoader) mc.screen).addWarning(packet.readTextComponent());
                 }
                 break;
             }
-
         }
     }
 

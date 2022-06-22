@@ -1,21 +1,25 @@
 package codechicken.chunkloader.init;
 
 import codechicken.lib.datagen.LootTableProvider;
+import net.covers1624.quack.util.CrashLock;
 import net.minecraft.data.DataGenerator;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.GatherDataEvent;
-
-import static codechicken.chunkloader.ChickenChunks.MOD_ID;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
 
 /**
  * Created by covers1624 on 7/10/20.
  */
-@Mod.EventBusSubscriber (modid = MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class DataGenerators {
 
-    @SubscribeEvent
-    public static void gatherDataGenerators(GatherDataEvent event) {
+    private static final CrashLock LOCK = new CrashLock("Already initialized.");
+
+    public static void init() {
+        LOCK.lock();
+
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(DataGenerators::gatherDataGenerators);
+    }
+
+    private static void gatherDataGenerators(GatherDataEvent event) {
         DataGenerator gen = event.getGenerator();
         gen.addProvider(new LootTables(gen));
     }
@@ -28,8 +32,8 @@ public class DataGenerators {
 
         @Override
         protected void registerTables() {
-            register(ModContent.blockChunkLoader, singleItem(ModContent.blockChunkLoader));
-            register(ModContent.blockSpotLoader, singleItem(ModContent.blockSpotLoader));
+            register(ChickenChunksModContent.CHUNK_LOADER_BLOCK.get(), singleItem(ChickenChunksModContent.CHUNK_LOADER_BLOCK.get()));
+            register(ChickenChunksModContent.SPOT_LOADER_BLOCK.get(), singleItem(ChickenChunksModContent.SPOT_LOADER_BLOCK.get()));
         }
 
         @Override
@@ -37,5 +41,4 @@ public class DataGenerators {
             return "ChickenChunks Block Loot";
         }
     }
-
 }

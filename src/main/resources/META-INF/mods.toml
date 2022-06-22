@@ -1,12 +1,12 @@
 modLoader="javafml"
-loaderVersion="[${forge_version},)"
+loaderVersion="[${lang_version},)"
 issueTrackerURL="https://github.com/TheCBProject/ChickenChunks"
 license="The MIT License (MIT)"
 
 [[mods]]
 	modId="chickenchunks"
 	displayName="ChickenChunks"
-	version="${version}"
+	version="${file.jarVersion}"
 
 	updateJSONURL="https://version-check.covers1624.net/check/?mod=ChickenChunks&mc=${mc_version}"
 	displayURL="https://www.curseforge.com/minecraft/mc-mods/chicken-chunks-1-8"
@@ -21,7 +21,7 @@ license="The MIT License (MIT)"
 [[dependencies.chickenchunks]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.16.5]"
+    versionRange="[1.18.2]"
     ordering="NONE"
     side="BOTH"
 [[dependencies.chickenchunks]]

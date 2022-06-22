@@ -1,9 +1,11 @@
 package codechicken.chunkloader.handler;
 
+import codechicken.lib.config.ConfigCategory;
+import codechicken.lib.config.ConfigFile;
 import codechicken.lib.config.ConfigTag;
-import codechicken.lib.config.StandardConfigFile;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import codechicken.lib.config.ConfigValue;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -11,13 +13,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import static codechicken.chunkloader.ChickenChunks.MOD_ID;
+
 /**
  * Created by covers1624 on 5/4/20.
  */
 public class ChickenChunksConfig {
 
-    private static ConfigTag config;
-    private static ConfigTag playerRestrictions;
+    private static ConfigCategory config;
+    private static ConfigCategory playerRestrictions;
     private static final Map<UUID, Restrictions> perPlayerRestrictions = new HashMap<>();
     private static boolean opsBypassRestrictions;
     private static boolean opsAccessAllLoaders;
@@ -27,58 +31,56 @@ public class ChickenChunksConfig {
     private static int globalChunksPerLoader;
 
     public static void load() {
-        config = new StandardConfigFile(Paths.get("./config/ChickenChunks.cfg")).load();
-        opsBypassRestrictions = config.getTag("opsBypassRestrictions")//
-                .setComment("If Players with OP permissions bypass chunk loading restrictions.")//
-                .setDefaultBoolean(false)//
+        config = new ConfigFile(MOD_ID)
+                .path(Paths.get("./config/ChickenChunks.cfg"))
+                .load();
+        opsBypassRestrictions = config.getValue("opsBypassRestrictions")
+                .setComment("If Players with OP permissions bypass chunk loading restrictions.")
+                .setDefaultBoolean(false)
                 .getBoolean();
-        opsAccessAllLoaders = config.getTag("opsAccessAllLoaders")//
-                .setComment("If Players with OP permissions can manage other users ChunkLoaders")//
-                .setDefaultBoolean(true)//
+        opsAccessAllLoaders = config.getValue("opsAccessAllLoaders")
+                .setComment("If Players with OP permissions can manage other users ChunkLoaders")
+                .setDefaultBoolean(true)
                 .getBoolean();
-        globalAllowOffline = config.getTag("allowOffline")//
-                .setComment("If chunks should stay loaded when a ChunkLoader's owner is offline.")//
-                .setDefaultBoolean(true)//
+        globalAllowOffline = config.getValue("allowOffline")
+                .setComment("If chunks should stay loaded when a ChunkLoader's owner is offline.")
+                .setDefaultBoolean(true)
                 .getBoolean();
-        globalOfflineTimeout = config.getTag("offlineTimeout")//
-                .setComment("How long in minutes ChickenChunks should wait after a Player logs out to unload their chunks. Only effective when allowOffline=false")//
-                .setDefaultInt(0)//
+        globalOfflineTimeout = config.getValue("offlineTimeout")
+                .setComment("How long in minutes ChickenChunks should wait after a Player logs out to unload their chunks. Only effective when allowOffline=false")
+                .setDefaultInt(0)
                 .getInt();
-        globalTotalAllowedChunks = config.getTag("totalAllowedChunks")//
-                .setComment("The number of chunks each player is allowed to load in total.")//
-                .setDefaultInt(5000)//
+        globalTotalAllowedChunks = config.getValue("totalAllowedChunks")
+                .setComment("The number of chunks each player is allowed to load in total.")
+                .setDefaultInt(5000)
                 .getInt();
-        globalChunksPerLoader = config.getTag("chunksPerLoader")//
-                .setComment("The number of chunks each ChunkLoader is allowed to load in total.")//
-                .setDefaultInt(400)//
+        globalChunksPerLoader = config.getValue("chunksPerLoader")
+                .setComment("The number of chunks each ChunkLoader is allowed to load in total.")
+                .setDefaultInt(400)
                 .getInt();
-        playerRestrictions = config.getTag("playerRestrictions")//
-                .setSyncToClient()//
+        playerRestrictions = config.getCategory("playerRestrictions")
                 .setComment("Specifies restrictions for each player, Use /chickenchunks instead.");
-        //TODO Re add this when the config system gets rewritten..
-        //ConfigSyncManager.registerSync(new ResourceLocation(MOD_ID, "player_restrictions"), playerRestrictions);
-        playerRestrictions.setSyncCallback((tag, syncType) -> {
+        playerRestrictions.onSync((tag, syncType) -> {
             perPlayerRestrictions.clear();
-            for (String uuidString : tag.getChildNames()) {
-                ConfigTag playerTag = tag.getTag(uuidString);
-                UUID uuid = UUID.fromString(uuidString);
-                perPlayerRestrictions.put(uuid, new Restrictions(playerTag));
+            for (ConfigTag child : tag.getChildren()) {
+                UUID uuid = UUID.fromString(child.getName());
+                perPlayerRestrictions.put(uuid, new Restrictions((ConfigCategory) child));
             }
         });
         config.save();
-        playerRestrictions.runSync();
+        playerRestrictions.forceSync();
     }
 
     public static boolean doesBypassRestrictions(MinecraftServer server, UUID playerUUID) {
-        ServerPlayerEntity player = server.getPlayerList().getPlayer(playerUUID);
-        if (player != null && server.getPlayerList().getOps().contains(player.getGameProfile())) {
+        ServerPlayer player = server.getPlayerList().getPlayer(playerUUID);
+        if (player != null && server.getPlayerList().getOps().get(player.getGameProfile()) != null) {
             return opsBypassRestrictions;
         }
         return false;
     }
 
-    public static boolean doesBypassLoaderAccess(ServerPlayerEntity player) {
-        if (player.getServer().getPlayerList().getOps().contains(player.getGameProfile())) {
+    public static boolean doesBypassLoaderAccess(ServerPlayer player) {
+        if (player.getServer().getPlayerList().getOps().get(player.getGameProfile()) != null) {
             return opsAccessAllLoaders;
         }
         return false;
@@ -86,7 +88,7 @@ public class ChickenChunksConfig {
 
     public static Restrictions getOrCreateRestrictions(UUID player) {
         return perPlayerRestrictions.computeIfAbsent(player, e -> {
-            ConfigTag tag = playerRestrictions.getTag(player.toString()).markDirty();
+            ConfigCategory tag = playerRestrictions.getCategory(player.toString());
             tag.save();
             return new Restrictions(tag);
         });
@@ -94,7 +96,7 @@ public class ChickenChunksConfig {
 
     public static void resetRestrictions(UUID player) {
         perPlayerRestrictions.remove(player);
-        playerRestrictions.deleteTag(player.toString());
+        playerRestrictions.delete(player.toString());
         playerRestrictions.save();
     }
 
@@ -111,21 +113,21 @@ public class ChickenChunksConfig {
         private Optional<Integer> totalAllowedChunks = Optional.empty();
         private Optional<Integer> chunksPerLoader = Optional.empty();
 
-        private ConfigTag tag;
+        private ConfigCategory tag;
 
         public Restrictions() {
         }
 
-        public Restrictions(ConfigTag tag) {
+        public Restrictions(ConfigCategory tag) {
             this.tag = tag;
-            allowOffline = Optional.ofNullable(tag.getTagIfPresent("allowOffline"))//
-                    .map(ConfigTag::getBoolean);
-            offlineTimeout = Optional.ofNullable(tag.getTagIfPresent("offlineTimeout"))//
-                    .map(ConfigTag::getInt);
-            totalAllowedChunks = Optional.ofNullable(tag.getTagIfPresent("totalAllowedChunks"))//
-                    .map(ConfigTag::getInt);
-            chunksPerLoader = Optional.ofNullable(tag.getTagIfPresent("chunksPerLoader"))//
-                    .map(ConfigTag::getInt);
+            allowOffline = Optional.ofNullable(tag.findValue("allowOffline"))
+                    .map(ConfigValue::getBoolean);
+            offlineTimeout = Optional.ofNullable(tag.findValue("offlineTimeout"))
+                    .map(ConfigValue::getInt);
+            totalAllowedChunks = Optional.ofNullable(tag.findValue("totalAllowedChunks"))
+                    .map(ConfigValue::getInt);
+            chunksPerLoader = Optional.ofNullable(tag.findValue("chunksPerLoader"))
+                    .map(ConfigValue::getInt);
         }
 
         public boolean canLoadOffline() {
@@ -145,47 +147,47 @@ public class ChickenChunksConfig {
         }
 
         public void setAllowOffline(boolean state) {
-            tag.getTag("allowOffline").setBoolean(state).save();
+            tag.getValue("allowOffline").setBoolean(state).save();
             allowOffline = Optional.of(state);
         }
 
         public void setOfflineTimeout(int num) {
-            tag.getTag("offlineTimeout").setInt(num).save();
+            tag.getValue("offlineTimeout").setInt(num).save();
             offlineTimeout = Optional.of(num);
         }
 
         public void setTotalAllowedChunks(int num) {
-            tag.getTag("totalAllowedChunks").setInt(num).save();
+            tag.getValue("totalAllowedChunks").setInt(num).save();
             totalAllowedChunks = Optional.of(num);
         }
 
         public void setChunksPerLoader(int num) {
-            tag.getTag("chunksPerLoader").setInt(num).save();
+            tag.getValue("chunksPerLoader").setInt(num).save();
             chunksPerLoader = Optional.of(num);
         }
 
         public void remAllowOffline() {
-            tag.deleteTag("allowOffline").save();
+            tag.delete("allowOffline").save();
             allowOffline = Optional.empty();
         }
 
         public void remOfflineTimeout() {
-            tag.deleteTag("offlineTimeout").save();
+            tag.delete("offlineTimeout").save();
             offlineTimeout = Optional.empty();
         }
 
         public void remTotalAllowedChunks() {
-            tag.deleteTag("totalAllowedChunks").save();
+            tag.delete("totalAllowedChunks").save();
             totalAllowedChunks = Optional.empty();
         }
 
         public void remChunksPerLoader() {
-            tag.deleteTag("chunksPerLoader").save();
+            tag.delete("chunksPerLoader").save();
             chunksPerLoader = Optional.empty();
         }
 
         public boolean isEmpty() {
-            return !allowOffline.isPresent() && !offlineTimeout.isPresent() && !totalAllowedChunks.isPresent() && !chunksPerLoader.isPresent();
+            return allowOffline.isEmpty() && offlineTimeout.isEmpty() && totalAllowedChunks.isEmpty() && chunksPerLoader.isEmpty();
         }
     }
 

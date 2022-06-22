@@ -7,46 +7,41 @@ import codechicken.lib.math.MathHelper;
 import codechicken.lib.render.CCModelLibrary;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.RenderUtils;
-import codechicken.lib.render.buffer.TransformingVertexBuilder;
+import codechicken.lib.render.buffer.TransformingVertexConsumer;
 import codechicken.lib.util.ClientUtils;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import codechicken.lib.vec.Rotation;
 import codechicken.lib.vec.Vector3;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.RenderState;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.ChunkPos;
-import org.lwjgl.opengl.GL11;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.ChunkPos;
 
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.Collection;
 
-import static codechicken.lib.util.SneakyUtils.none;
+public class TileChunkLoaderRenderer implements BlockEntityRenderer<TileChunkLoaderBase> {
 
-public class TileChunkLoaderRenderer extends TileEntityRenderer<TileChunkLoaderBase> {
-
-    public static final RenderType laserType = RenderType.create("lasers", DefaultVertexFormats.POSITION_COLOR, GL11.GL_QUADS, 256, RenderType.State.builder()//
-            .setTexturingState(new RenderState.TexturingState("disable_lighting", RenderSystem::disableLighting, none()))//
-            .setFogState(RenderState.NO_FOG)//
-            .createCompositeState(false)//
+    public static final RenderType laserType = RenderType.create("lasers", DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS, 256, RenderType.CompositeState.builder()
+            .setShaderState(RenderStateShard.ShaderStateShard.POSITION_COLOR_SHADER)
+            .createCompositeState(false)
     );
-    public static final RenderType pearlType = CCModelLibrary.getIcos4RenderType(new ResourceLocation("chickenchunks:textures/hedronmap.png"), false);
+    public static final RenderType pearlType = CCModelLibrary.getIcos4RenderType(new ResourceLocation("chickenchunks:textures/hedronmap.png"));
 
-    public TileChunkLoaderRenderer(TileEntityRendererDispatcher dispatcher) {
-        super(dispatcher);
+    public TileChunkLoaderRenderer(BlockEntityRendererProvider.Context ctx) {
     }
 
     @Override
-    public void render(TileChunkLoaderBase tile, float partialTicks, MatrixStack mStack, IRenderTypeBuffer getter, int packedLight, int packedOverlay) {
+    public void render(TileChunkLoaderBase tile, float partialTicks, PoseStack mStack, MultiBufferSource getter, int packedLight, int packedOverlay) {
         Matrix4 mat = new Matrix4(mStack);
         CCRenderState ccrs = CCRenderState.instance();
         ccrs.reset();
@@ -61,8 +56,7 @@ public class TileChunkLoaderRenderer extends TileEntityRenderer<TileChunkLoaderB
         updown = (float) Math.sin(updown * 3.141593);
         updown *= 0.2;
 
-        if (tile instanceof TileChunkLoader) {
-            TileChunkLoader ctile = (TileChunkLoader) tile;
+        if (tile instanceof TileChunkLoader ctile) {
             rot /= Math.pow(ctile.radius, 0.2);
             height = 0.9;
             size = 0.08;
@@ -82,7 +76,7 @@ public class TileChunkLoaderRenderer extends TileEntityRenderer<TileChunkLoaderB
         }
 
         if (renderInfo.showLasers) {
-            IVertexBuilder builder = getter.getBuffer(laserType);
+            VertexConsumer builder = getter.getBuffer(laserType);
             drawRays(builder, mat, rot, updown, tile.getBlockPos().getX(), tile.getBlockPos().getY(), tile.getBlockPos().getZ(), tile.getChunks());
         }
         rot = ClientUtils.getRenderTime() * active / 3F;
@@ -126,7 +120,7 @@ public class TileChunkLoaderRenderer extends TileEntityRenderer<TileChunkLoaderB
         return point.getX() >= Math.min(line.getX1(), line.getX2()) && point.getX() <= Math.max(line.getX1(), line.getX2()) && point.getY() >= Math.min(line.getY1(), line.getY2()) && point.getY() <= Math.max(line.getY1(), line.getY2());
     }
 
-    public void drawRays(IVertexBuilder builder, Matrix4 mat, double rot, double updown, int x, int y, int z, Collection<ChunkPos> chunkSet) {
+    public void drawRays(VertexConsumer builder, Matrix4 mat, double rot, double updown, int x, int y, int z, Collection<ChunkPos> chunkSet) {
         int cx = (x >> 4) << 4;
         int cz = (z >> 4) << 4;
 
@@ -201,7 +195,7 @@ public class TileChunkLoaderRenderer extends TileEntityRenderer<TileChunkLoaderB
         renderCuboid(builder, centerMat, new Cuboid6(-toCenter, -0.03, -0.03, 0, 0.03, 0.03), 0, 0.9F, 0, 1);
     }
 
-    private static void renderCuboid(IVertexBuilder builder, Matrix4 mat, Cuboid6 cuboid, float r, float g, float b, float a) {
-        RenderUtils.bufferCuboidSolid(new TransformingVertexBuilder(builder, mat), cuboid, r, g, b, a);
+    private static void renderCuboid(VertexConsumer builder, Matrix4 mat, Cuboid6 cuboid, float r, float g, float b, float a) {
+        RenderUtils.bufferCuboidSolid(new TransformingVertexConsumer(builder, mat), cuboid, r, g, b, a);
     }
 }
