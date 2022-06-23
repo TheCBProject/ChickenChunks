@@ -12,7 +12,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -24,17 +23,18 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.*;
+import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.common.world.ForgeChunkManager;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -44,16 +44,17 @@ import static net.covers1624.quack.util.SneakyUtils.unsafeCast;
 /**
  * Created by covers1624 on 5/4/20.
  */
-public class ChunkLoaderHandler implements IChunkLoaderHandler {
+public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable<CompoundTag> {
 
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final ResourceLocation KEY = new ResourceLocation(MOD_ID, "chunk_loaders");
     private static final boolean DEBUG = Boolean.getBoolean("chickenchunks.loading.debug");
 
     public static final Capability<IChunkLoaderHandler> HANDLER_CAPABILITY = CapabilityManager.get(new CapabilityToken<>() { });
-    private static final Storage STORAGE = new Storage();
 
     public static void init() {
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(ChunkLoaderHandler::onRegisterCaps);
+
         MinecraftForge.EVENT_BUS.addListener(ChunkLoaderHandler::onPlayerLogin);
         MinecraftForge.EVENT_BUS.addListener(ChunkLoaderHandler::onPlayerLoggedOut);
         MinecraftForge.EVENT_BUS.addListener(ChunkLoaderHandler::onWorldLoad);
@@ -116,17 +117,20 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
         if (world.dimension() != Level.OVERWORLD) {
             return;
         }
-        ChunkLoaderHandler handler = new ChunkLoaderHandler(world.getServer());
-        LazyOptional<ChunkLoaderHandler> opt = LazyOptional.of(() -> handler);
-        event.addCapability(KEY, new ICapabilitySerializable<>() {
+
+        event.addCapability(KEY, new ICapabilitySerializable<CompoundTag>() {
+
+            private final ChunkLoaderHandler handler = new ChunkLoaderHandler(world.getServer());
+            private final LazyOptional<ChunkLoaderHandler> opt = LazyOptional.of(() -> handler);
+
             @Override
-            public Tag serializeNBT() {
-                return STORAGE.writeNBT(handler);
+            public CompoundTag serializeNBT() {
+                return handler.serializeNBT();
             }
 
             @Override
-            public void deserializeNBT(Tag nbt) {
-                STORAGE.readNBT(handler, nbt);
+            public void deserializeNBT(CompoundTag tag) {
+                handler.deserializeNBT(tag);
             }
 
             @NotNull
@@ -162,6 +166,10 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
     @Override
     public void addChunkLoader(IChunkLoader loader) {
         Objects.requireNonNull(loader);
+        if (loader.getOwner() == null) {
+            LOGGER.error("ChunkLoader at {} has null owner. Not processing.", loader.pos());
+            return;
+        }
         Organiser organiser = getOrganiser(loader);
         if (canLoadChunks(loader, loader.getChunks())) {
             organiser.addChunkLoader(loader);
@@ -222,6 +230,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
             long lastSeen = loginTimes.getOrDefault(player, -1L);
             // If the user is allowed to load things offline, or their timeout hasn't expired yet.
             if (restrictions.canLoadOffline() || (lastSeen != -1 || (curr - lastSeen) / 60000L < timeout)) {
+                if (DEBUG) LOGGER.info("Adding {} organizers to revive list for {}", playerEntry.getValue().values().size(), player);
                 reviveList.addAll(playerEntry.getValue().values());
             }
         }
@@ -276,7 +285,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
                 activeTickets.remove(dim, pos);
             }
             if (DEBUG) {
-                logger.info("Loader {} Un-Forcing chunk: {}", loader.pos(), pos);
+                LOGGER.info("Loader {} Un-Forcing chunk: {}", loader.pos(), pos);
             }
         }
     }
@@ -287,7 +296,63 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
         ChunkTicket ticket = computeIfAbsent(activeTickets, dim, pos, () -> new ChunkTicket(world, pos));
         ticket.addLoader(loader);
         if (DEBUG) {
-            logger.info("Loader {} Forcing chunk: {}", loader.pos(), pos);
+            LOGGER.info("Loader {} Forcing chunk: {}", loader.pos(), pos);
+        }
+    }
+
+    @Override
+    public CompoundTag serializeNBT() {
+        CompoundTag tag = new CompoundTag();
+        ListTag playerList = new ListTag();
+        for (Map.Entry<UUID, Map<ResourceLocation, Organiser>> playerEntry : playerOrganisers.rowMap().entrySet()) {
+            CompoundTag playerTag = new CompoundTag();
+            playerTag.putUUID("player", playerEntry.getKey());
+            ListTag dimensions = new ListTag();
+            for (Map.Entry<ResourceLocation, Organiser> dimEntry : playerEntry.getValue().entrySet()) {
+                if (dimEntry.getValue().isEmpty()) continue; // Culling.
+
+                CompoundTag dimTag = new CompoundTag();
+                dimTag.putString("dimension", dimEntry.getKey().toString());
+                dimTag.put("organiser", dimEntry.getValue().write(new CompoundTag()));
+                dimensions.add(dimTag);
+            }
+            if (dimensions.isEmpty()) continue; // Culling.
+
+            playerTag.put("dimensions", dimensions);
+            playerList.add(playerTag);
+        }
+        tag.put("playerOrganisers", playerList);
+
+        ListTag loginList = new ListTag();
+        for (Object2LongMap.Entry<UUID> uuidEntry : loginTimes.object2LongEntrySet()) {
+            CompoundTag playerTag = new CompoundTag();
+            playerTag.putUUID("player", uuidEntry.getKey());
+            playerTag.putLong("time", uuidEntry.getLongValue());
+            loginList.add(playerTag);
+        }
+        tag.put("loginTimes", loginList);
+        return tag;
+    }
+
+    @Override
+    public void deserializeNBT(CompoundTag tag) {
+        ListTag playerList = tag.getList("playerOrganisers", 10);
+        for (int i = 0; i < playerList.size(); i++) {
+            CompoundTag playerTag = playerList.getCompound(i);
+            UUID player = playerTag.getUUID("player");
+            ListTag dimensions = playerTag.getList("dimensions", 10);
+            for (int j = 0; j < dimensions.size(); j++) {
+                CompoundTag dimTag = dimensions.getCompound(j);
+                ResourceLocation dim = new ResourceLocation(dimTag.getString("dimension"));
+                Organiser organiser = new Organiser(this, dim, player).read(dimTag.getCompound("organiser"));
+                playerOrganisers.put(player, dim, organiser);
+            }
+        }
+
+        ListTag loginList = tag.getList("times", 10);
+        for (int i = 0; i < loginList.size(); i++) {
+            CompoundTag playerTag = loginList.getCompound(i);
+            loginTimes.put(playerTag.getUUID("player"), playerTag.getLong("time"));
         }
     }
 
@@ -316,73 +381,6 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler {
         return (ChunkLoaderHandler) IChunkLoaderHandler.getCapability(world);
     }
     //endregion
-
-    private static class Storage {
-
-        @Nullable
-        public Tag writeNBT(IChunkLoaderHandler instance) {
-            if (!(instance instanceof ChunkLoaderHandler handler)) {
-                return null;
-            }
-
-            CompoundTag tag = new CompoundTag();
-            ListTag playerList = new ListTag();
-            for (Map.Entry<UUID, Map<ResourceLocation, Organiser>> playerEntry : handler.playerOrganisers.rowMap().entrySet()) {
-                CompoundTag playerTag = new CompoundTag();
-                playerTag.putUUID("player", playerEntry.getKey());
-                ListTag dimensions = new ListTag();
-                for (Map.Entry<ResourceLocation, Organiser> dimEntry : playerEntry.getValue().entrySet()) {
-                    if (dimEntry.getValue().isEmpty()) continue; // Culling.
-
-                    CompoundTag dimTag = new CompoundTag();
-                    dimTag.putString("dimension", dimEntry.getKey().toString());
-                    dimTag.put("organiser", dimEntry.getValue().write(new CompoundTag()));
-                    dimensions.add(dimTag);
-                }
-                if (dimensions.isEmpty()) continue; // Culling.
-
-                playerTag.put("dimensions", dimensions);
-                playerList.add(playerTag);
-            }
-            tag.put("playerOrganisers", playerList);
-
-            ListTag loginList = new ListTag();
-            for (Object2LongMap.Entry<UUID> uuidEntry : handler.loginTimes.object2LongEntrySet()) {
-                CompoundTag playerTag = new CompoundTag();
-                playerTag.putUUID("player", uuidEntry.getKey());
-                playerTag.putLong("time", uuidEntry.getLongValue());
-                loginList.add(playerTag);
-            }
-            tag.put("loginTimes", loginList);
-            return tag;
-        }
-
-        public void readNBT(IChunkLoaderHandler instance, Tag nbt) {
-            if (!(instance instanceof ChunkLoaderHandler handler)) {
-                return;
-            }
-            CompoundTag tag = (CompoundTag) nbt;
-
-            ListTag playerList = tag.getList("playerOrganisers", 10);
-            for (int i = 0; i < playerList.size(); i++) {
-                CompoundTag playerTag = playerList.getCompound(i);
-                UUID player = playerTag.getUUID("player");
-                ListTag dimensions = playerTag.getList("dimensions", 10);
-                for (int j = 0; j < dimensions.size(); j++) {
-                    CompoundTag dimTag = dimensions.getCompound(j);
-                    ResourceLocation dim = new ResourceLocation(dimTag.getString("dimension"));
-                    Organiser organiser = new Organiser(handler, dim, player).read(dimTag.getCompound("organiser"));
-                    handler.playerOrganisers.put(player, dim, organiser);
-                }
-            }
-
-            ListTag loginList = tag.getList("times", 10);
-            for (int i = 0; i < loginList.size(); i++) {
-                CompoundTag playerTag = loginList.getCompound(i);
-                handler.loginTimes.put(playerTag.getUUID("player"), playerTag.getLong("time"));
-            }
-        }
-    }
 
     private static <R, C, V> V computeIfAbsent(Table<R, C, V> table, R r, C c, Supplier<V> vFunc) {
         V val = table.get(r, c);

@@ -83,6 +83,7 @@ public class TileChunkLoader extends TileChunkLoaderBase {
 
     @Override
     public void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
         tag.putByte("radius", (byte) radius);
         tag.putByte("shape", (byte) shape.ordinal());
     }

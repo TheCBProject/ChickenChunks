@@ -32,6 +32,7 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
     @Nullable
     public Component ownerName;
     protected boolean loaded = false;
+    protected boolean unloaded = false;
     protected boolean powered = false;
     public boolean active = false;
 
@@ -73,6 +74,7 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
         if (!level.isClientSide && loaded && !powered) {
             activate();
         }
+        unloaded = false;
     }
 
     @Override
@@ -82,6 +84,7 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
         if (level.isClientSide) {
             renderInfo = new RenderInfo();
         }
+        unloaded = false;
     }
 
     public boolean isPowered() {
@@ -100,9 +103,15 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
     }
 
     @Override
+    public void onChunkUnloaded() {
+        super.onChunkUnloaded();
+        unloaded = true;
+    }
+
+    @Override
     public void setRemoved() {
         super.setRemoved();
-        if (!level.isClientSide) {
+        if (!level.isClientSide && !unloaded) {
             deactivate();
         }
     }
@@ -184,14 +193,15 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
 
     @Override
     public CompoundTag getUpdateTag() {
-        PacketCustom packet = new PacketCustom(NET_CHANNEL, 1);//Dummy Index.
-        writeToPacket(packet);
-        return packet.writeToNBT(super.getUpdateTag(), "data");
+        CompoundTag tag = saveWithoutMetadata();
+        tag.putBoolean("active", active);
+        return tag;
     }
 
     @Override
     public void handleUpdateTag(CompoundTag tag) {
-        readFromPacket(MCDataByteBuf.readFromNBT(tag, "data"));
+        super.handleUpdateTag(tag);
+        active = tag.getBoolean("active");
     }
 
     public void writeToPacket(MCDataOutput packet) {
