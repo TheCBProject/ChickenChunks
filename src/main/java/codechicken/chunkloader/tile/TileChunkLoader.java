@@ -9,7 +9,7 @@ import codechicken.lib.data.MCDataInput;
 import codechicken.lib.data.MCDataOutput;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.state.BlockState;
@@ -43,7 +43,7 @@ public class TileChunkLoader extends TileChunkLoaderBase {
         if (chunks.size() > restrictions.getChunksPerLoader()) {
             if (player != null) {
                 int more = chunks.size() - restrictions.getChunksPerLoader();
-                ChunkLoaderSPH.sendGuiWarning(player, new TranslatableComponent("chickenchunks.gui.morechunks", more));
+                ChunkLoaderSPH.sendGuiWarning(player, Component.translatable("chickenchunks.gui.morechunks", more));
             }
             return false;
         }

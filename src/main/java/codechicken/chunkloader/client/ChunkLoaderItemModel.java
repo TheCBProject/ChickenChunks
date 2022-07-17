@@ -1,5 +1,6 @@
 package codechicken.chunkloader.client;
 
+import codechicken.lib.model.PerspectiveModelState;
 import codechicken.lib.model.bakedmodels.WrappedItemModel;
 import codechicken.lib.render.CCModelLibrary;
 import codechicken.lib.render.CCRenderState;
@@ -58,7 +59,7 @@ public class ChunkLoaderItemModel extends WrappedItemModel implements IItemRende
     }
 
     @Override
-    public ModelState getModelTransform() {
+    public PerspectiveModelState getModelState() {
         return TransformUtils.DEFAULT_BLOCK;
     }
 

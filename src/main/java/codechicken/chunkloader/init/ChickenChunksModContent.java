@@ -26,7 +26,7 @@ public class ChickenChunksModContent {
     private static final CrashLock LOCK = new CrashLock("Already Initialized");
     private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);
-    private static final DeferredRegister<BlockEntityType<?>> TILES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITIES, MOD_ID);
+    private static final DeferredRegister<BlockEntityType<?>> TILES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MOD_ID);
 
     //region Blocks
     public static final RegistryObject<BlockChunkLoader> CHUNK_LOADER_BLOCK = BLOCKS.register("chunk_loader", BlockChunkLoader::new);

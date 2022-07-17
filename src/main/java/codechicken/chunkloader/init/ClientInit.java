@@ -28,10 +28,10 @@ public class ClientInit {
 
         //Pull our block models, and wrap them with a ChunkLoaderItemModel as our item model.
         modelHelper.registerCallback(e -> {
-            BakedModel loaderModel = e.getModelRegistry().get(new ModelResourceLocation(CHUNK_LOADER_BLOCK.getId(), ""));
-            BakedModel spotModel = e.getModelRegistry().get(new ModelResourceLocation(SPOT_LOADER_BLOCK.getId(), ""));
-            e.getModelRegistry().put(new ModelResourceLocation(CHUNK_LOADER_ITEM.getId(), "inventory"), new ChunkLoaderItemModel(loaderModel, false));
-            e.getModelRegistry().put(new ModelResourceLocation(SPOT_LOADER_TILE.getId(), "inventory"), new ChunkLoaderItemModel(spotModel, true));
+            BakedModel loaderModel = e.getModels().get(new ModelResourceLocation(CHUNK_LOADER_BLOCK.getId(), ""));
+            BakedModel spotModel = e.getModels().get(new ModelResourceLocation(SPOT_LOADER_BLOCK.getId(), ""));
+            e.getModels().put(new ModelResourceLocation(CHUNK_LOADER_ITEM.getId(), "inventory"), new ChunkLoaderItemModel(loaderModel, false));
+            e.getModels().put(new ModelResourceLocation(SPOT_LOADER_TILE.getId(), "inventory"), new ChunkLoaderItemModel(spotModel, true));
         });
     }
 

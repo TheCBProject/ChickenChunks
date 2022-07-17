@@ -4,10 +4,9 @@ import codechicken.chunkloader.handler.ChickenChunksConfig;
 import codechicken.chunkloader.tile.TileChunkLoader;
 import codechicken.chunkloader.tile.TileChunkLoaderBase;
 import codechicken.lib.packet.PacketCustom;
-import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -20,16 +19,9 @@ import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityTicker;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.world.phys.shapes.VoxelShape;
-import org.jetbrains.annotations.Nullable;
 
 import static codechicken.chunkloader.network.ChickenChunksNetwork.C_OPEN_LOADER_GUI;
 import static codechicken.chunkloader.network.ChickenChunksNetwork.NET_CHANNEL;
@@ -53,13 +45,13 @@ public abstract class BlockChunkLoaderBase extends BaseEntityBlock {
         if (!world.isClientSide) {
             TileChunkLoader tile = (TileChunkLoader) world.getBlockEntity(pos);
             if (tile.owner == null) {
-                player.sendMessage(new TranslatableComponent("chickenchunks.brokentile"), Util.NIL_UUID);
+                player.sendSystemMessage(Component.translatable("chickenchunks.brokentile"));
             } else if (tile.owner.equals(player.getUUID()) || ChickenChunksConfig.doesBypassLoaderAccess((ServerPlayer) player)) {
                 PacketCustom packet = new PacketCustom(NET_CHANNEL, C_OPEN_LOADER_GUI);
                 packet.writePos(pos);
                 packet.sendToPlayer((ServerPlayer) player);
             } else {
-                player.sendMessage(new TranslatableComponent("chickenchunks.accessdenied"), Util.NIL_UUID);
+                player.sendSystemMessage(Component.translatable("chickenchunks.accessdenied"));
             }
         }
         return InteractionResult.SUCCESS;

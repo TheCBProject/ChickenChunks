@@ -8,8 +8,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;
@@ -31,23 +29,23 @@ public class GuiChunkLoader extends Screen {
     private Component warningText;
 
     public GuiChunkLoader(TileChunkLoader tile) {
-        super(new TextComponent("DOOOOOOOT"));
+        super(Component.empty());
         this.tile = tile;
     }
 
     @Override
     public void init() {
-        addRenderableWidget(new Button(width / 2 - 20, height / 2 - 45, 20, 20, new TextComponent("+"), e -> ChunkLoaderCPH.sendShapeChange(tile, tile.shape, tile.radius + 1)));
-        addRenderableWidget(new Button(width / 2 - 80, height / 2 - 45, 20, 20, new TextComponent("-"), e -> ChunkLoaderCPH.sendShapeChange(tile, tile.shape, tile.radius - 1)));
-        addRenderableWidget(laserButton = new Button(width / 2 + 7, height / 2 - 60, 75, 20, new TextComponent("-"), e -> tile.renderInfo.showLasers = !tile.renderInfo.showLasers));
-        addRenderableWidget(shapeButton = new Button(width / 2 + 7, height / 2 - 37, 75, 20, new TextComponent("-"), e -> ChunkLoaderCPH.sendShapeChange(tile, lastButton == 1 ? tile.shape.prev() : tile.shape.next(), tile.radius)));
+        addRenderableWidget(new Button(width / 2 - 20, height / 2 - 45, 20, 20, Component.literal("+"), e -> ChunkLoaderCPH.sendShapeChange(tile, tile.shape, tile.radius + 1)));
+        addRenderableWidget(new Button(width / 2 - 80, height / 2 - 45, 20, 20, Component.literal("-"), e -> ChunkLoaderCPH.sendShapeChange(tile, tile.shape, tile.radius - 1)));
+        addRenderableWidget(laserButton = new Button(width / 2 + 7, height / 2 - 60, 75, 20, Component.literal("-"), e -> tile.renderInfo.showLasers = !tile.renderInfo.showLasers));
+        addRenderableWidget(shapeButton = new Button(width / 2 + 7, height / 2 - 37, 75, 20, Component.literal("-"), e -> ChunkLoaderCPH.sendShapeChange(tile, lastButton == 1 ? tile.shape.prev() : tile.shape.next(), tile.radius)));
         updateNames();
 
         super.init();
     }
 
     public void updateNames() {
-        laserButton.setMessage(new TranslatableComponent(tile.renderInfo.showLasers ? "chickenchunks.gui.hidelasers" : "chickenchunks.gui.showlasers"));
+        laserButton.setMessage(Component.translatable(tile.renderInfo.showLasers ? "chickenchunks.gui.hidelasers" : "chickenchunks.gui.showlasers"));
         shapeButton.setMessage(tile.shape.getTranslation());
         if (lastRadius != tile.radius || lastShape != tile.shape) {
             warningEnd = -1;
@@ -86,15 +84,15 @@ public class GuiChunkLoader extends Screen {
 
         super.render(mStack, p_render_1_, p_render_2_, p_render_3_);//buttons
 
-        drawCentered(mStack, new TranslatableComponent("chickenchunks.gui.name"), width / 2 - 40, height / 2 - 74, 0x303030);
+        drawCentered(mStack, Component.translatable("chickenchunks.gui.name"), width / 2 - 40, height / 2 - 74, 0x303030);
         if (tile.owner != null) {
             drawCentered(mStack, tile.ownerName, width / 2 + 44, height / 2 - 72, 0x801080);
         }
-        drawCentered(mStack, new TranslatableComponent("chickenchunks.gui.radius"), width / 2 - 40, height / 2 - 57, 0x404040);
-        drawCentered(mStack, new TextComponent("" + tile.radius), width / 2 - 40, height / 2 - 39, 0xFFFFFF);
+        drawCentered(mStack, Component.translatable("chickenchunks.gui.radius"), width / 2 - 40, height / 2 - 57, 0x404040);
+        drawCentered(mStack, Component.literal("" + tile.radius), width / 2 - 40, height / 2 - 39, 0xFFFFFF);
 
         int chunks = tile.countLoadedChunks();
-        drawCentered(mStack, new TranslatableComponent(chunks == 1 ? "chickenchunks.gui.chunk" : "chickenchunks.gui.chunks", chunks), width / 2 - 39, height / 2 - 21, 0x108000);
+        drawCentered(mStack, Component.translatable(chunks == 1 ? "chickenchunks.gui.chunk" : "chickenchunks.gui.chunks", chunks), width / 2 - 39, height / 2 - 21, 0x108000);
 
         if (warningText != null && warningEnd != -1) {
             float fade = (warningEnd - System.currentTimeMillis()) / 1000F;

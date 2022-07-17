@@ -29,7 +29,7 @@ import net.minecraftforge.common.world.ForgeChunkManager;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -73,7 +73,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
 
     //region Events
     private static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        Player player = event.getPlayer();
+        Player player = event.getEntity();
         if (player.level instanceof ServerLevel) {
             ChunkLoaderHandler handler = getHandler(player.level);
             handler.login(event);
@@ -81,15 +81,15 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
     }
 
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        Player player = event.getPlayer();
+        Player player = event.getEntity();
         if (player.level instanceof ServerLevel) {
             ChunkLoaderHandler handler = getHandler(player.level);
             handler.logout(event);
         }
     }
 
-    private static void onWorldLoad(WorldEvent.Load event) {
-        if (event.getWorld() instanceof ServerLevel world) {
+    private static void onWorldLoad(LevelEvent.Load event) {
+        if (event.getLevel() instanceof ServerLevel world) {
             if (world.dimension() == net.minecraft.world.level.Level.OVERWORLD) {
                 ChunkLoaderHandler handler = getHandler(world);
                 handler.onOverWorldLoad();
@@ -97,8 +97,8 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
         }
     }
 
-    private static void onWorldTick(TickEvent.WorldTickEvent event) {
-        if (event.world instanceof ServerLevel world) {
+    private static void onWorldTick(TickEvent.LevelTickEvent event) {
+        if (event.level instanceof ServerLevel world) {
             if (world.dimension() == Level.OVERWORLD) {
                 ChunkLoaderHandler handler = getHandler(world);
                 if (handler != null) {
@@ -209,12 +209,12 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
     }
 
     public void login(PlayerEvent.PlayerLoggedInEvent event) {
-        loginTimes.put(event.getPlayer().getUUID(), System.currentTimeMillis());
-        reviveList.addAll(playerOrganisers.row(event.getPlayer().getUUID()).values());
+        loginTimes.put(event.getEntity().getUUID(), System.currentTimeMillis());
+        reviveList.addAll(playerOrganisers.row(event.getEntity().getUUID()).values());
     }
 
     public void logout(PlayerEvent.PlayerLoggedOutEvent event) {
-        UUID player = event.getPlayer().getUUID();
+        UUID player = event.getEntity().getUUID();
         ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getRestrictions(player);
         if (!restrictions.canLoadOffline()) {
             deviveList.addAll(playerOrganisers.row(player).values());
@@ -236,10 +236,10 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
         }
     }
 
-    public void tick(TickEvent.WorldTickEvent event) {
+    public void tick(TickEvent.LevelTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             // Every minute.
-            if (event.world.getGameTime() % 1200 == 0) {
+            if (event.level.getGameTime() % 1200 == 0) {
                 long curr = System.currentTimeMillis();
                 // Update login times of players.
                 for (ServerPlayer player : server.getPlayerList().getPlayers()) {
