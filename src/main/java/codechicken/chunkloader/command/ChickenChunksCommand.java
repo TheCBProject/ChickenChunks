@@ -80,7 +80,7 @@ public class ChickenChunksCommand {
         Collection<GameProfile> profiles = GameProfileArgument.getGameProfiles(ctx, "players");
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.resetRestrictions(profile.getId());
-            src.sendSuccess(Component.translatable(RESTRICTIONS_RESET_FOR, profile.getName()), true);
+            src.sendSuccess(() -> Component.translatable(RESTRICTIONS_RESET_FOR, profile.getName()), true);
         }
         return profiles.size();
     }
@@ -92,7 +92,7 @@ public class ChickenChunksCommand {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             boolean state = !restrictions.canLoadOffline();
             restrictions.setAllowOffline(state);
-            src.sendSuccess(Component.translatable(state ? OFFLINE_ENABLE_FOR : OFFLINE_DISABLE_FOR, profile.getName()), true);
+            src.sendSuccess(() -> Component.translatable(state ? OFFLINE_ENABLE_FOR : OFFLINE_DISABLE_FOR, profile.getName()), true);
         }
         return profiles.size();
     }
@@ -111,7 +111,7 @@ public class ChickenChunksCommand {
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             restrictions.setAllowOffline(state);
-            src.sendSuccess(Component.translatable(state ? OFFLINE_ENABLE_FOR : OFFLINE_DISABLE_FOR, profile.getName()), true);
+            src.sendSuccess(() -> Component.translatable(state ? OFFLINE_ENABLE_FOR : OFFLINE_DISABLE_FOR, profile.getName()), true);
         }
         return profiles.size();
     }
@@ -122,7 +122,7 @@ public class ChickenChunksCommand {
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             restrictions.remAllowOffline();
-            src.sendSuccess(Component.translatable(OFFLINE_RESET_FOR, profile.getName()), true);
+            src.sendSuccess(() -> Component.translatable(OFFLINE_RESET_FOR, profile.getName()), true);
         }
         return profiles.size();
     }
@@ -134,7 +134,7 @@ public class ChickenChunksCommand {
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             restrictions.setOfflineTimeout(timeout);
-            src.sendSuccess(Component.translatable(TIMEOUT_SET_FOR, profile.getName(), timeout), true);
+            src.sendSuccess(() -> Component.translatable(TIMEOUT_SET_FOR, profile.getName(), timeout), true);
         }
         return profiles.size();
     }
@@ -145,7 +145,7 @@ public class ChickenChunksCommand {
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             restrictions.remOfflineTimeout();
-            src.sendSuccess(Component.translatable(TIMEOUT_RESET_FOR, profile.getName()), true);
+            src.sendSuccess(() -> Component.translatable(TIMEOUT_RESET_FOR, profile.getName()), true);
         }
         return profiles.size();
     }
@@ -157,7 +157,7 @@ public class ChickenChunksCommand {
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             restrictions.setTotalAllowedChunks(chunks);
-            src.sendSuccess(Component.translatable(ALLOWED_CHUNKS_SET_FOR, profile.getName(), chunks), true);
+            src.sendSuccess(() -> Component.translatable(ALLOWED_CHUNKS_SET_FOR, profile.getName(), chunks), true);
         }
         return profiles.size();
     }
@@ -168,7 +168,7 @@ public class ChickenChunksCommand {
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             restrictions.remTotalAllowedChunks();
-            src.sendSuccess(Component.translatable(ALLOWED_CHUNKS_RESET_FOR, profile.getName()), true);
+            src.sendSuccess(() -> Component.translatable(ALLOWED_CHUNKS_RESET_FOR, profile.getName()), true);
         }
         return profiles.size();
     }
@@ -180,7 +180,7 @@ public class ChickenChunksCommand {
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             restrictions.setChunksPerLoader(chunks);
-            src.sendSuccess(Component.translatable(CHUNKS_PER_LOADER_SET_FOR, profile.getName(), chunks), true);
+            src.sendSuccess(() -> Component.translatable(CHUNKS_PER_LOADER_SET_FOR, profile.getName(), chunks), true);
         }
         return profiles.size();
     }
@@ -191,7 +191,7 @@ public class ChickenChunksCommand {
         for (GameProfile profile : profiles) {
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
             restrictions.remChunksPerLoader();
-            src.sendSuccess(Component.translatable(CHUNKS_PER_LOADER_RESET_FOR, profile.getName()), true);
+            src.sendSuccess(() -> Component.translatable(CHUNKS_PER_LOADER_RESET_FOR, profile.getName()), true);
         }
         return profiles.size();
     }

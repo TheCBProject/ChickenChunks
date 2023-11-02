@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelState;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -31,7 +32,7 @@ public class ChunkLoaderItemModel extends WrappedItemModel implements IItemRende
     }
 
     @Override
-    public void renderItem(ItemStack stack, ItemTransforms.TransformType transformType, PoseStack mStack, MultiBufferSource getter, int packedLight, int packedOverlay) {
+    public void renderItem(ItemStack stack, ItemDisplayContext displayContext, PoseStack mStack, MultiBufferSource getter, int packedLight, int packedOverlay) {
         renderWrapped(stack, mStack, getter, packedLight, packedOverlay, false);
 
         double rot = ClientUtils.getRenderTime() / 6F;

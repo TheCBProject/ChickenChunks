@@ -18,7 +18,7 @@ public class ChunkLoaderSPH implements IServerPacketHandler {
     public void handlePacket(PacketCustom packet, ServerPlayer sender, ServerGamePacketListenerImpl handler) {
         switch (packet.getType()) {
             case S_SET_SHAPE: {
-                handleChunkLoaderChangePacket(sender.level, sender, packet);
+                handleChunkLoaderChangePacket(sender.level(), sender, packet);
                 break;
             }
         }

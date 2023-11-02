@@ -25,18 +25,17 @@ public class ClientInit {
         LOCK.lock();
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         bus.addListener(ClientInit::onRegisterRenderers);
-
-        //Pull our block models, and wrap them with a ChunkLoaderItemModel as our item model.
-        modelHelper.registerCallback(e -> {
-            BakedModel loaderModel = e.getModels().get(new ModelResourceLocation(CHUNK_LOADER_BLOCK.getId(), ""));
-            BakedModel spotModel = e.getModels().get(new ModelResourceLocation(SPOT_LOADER_BLOCK.getId(), ""));
-            e.getModels().put(new ModelResourceLocation(CHUNK_LOADER_ITEM.getId(), "inventory"), new ChunkLoaderItemModel(loaderModel, false));
-            e.getModels().put(new ModelResourceLocation(SPOT_LOADER_TILE.getId(), "inventory"), new ChunkLoaderItemModel(spotModel, true));
-        });
     }
 
     private static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
         BlockEntityRenderers.register(ChickenChunksModContent.CHUNK_LOADER_TILE.get(), TileChunkLoaderRenderer::new);
         BlockEntityRenderers.register(ChickenChunksModContent.SPOT_LOADER_TILE.get(), TileChunkLoaderRenderer::new);
+    }
+    
+    private static void onClientSetupEvent(FMLClientSetupEvent event) {
+        BakedModel loaderModel = modelHelper.getModels().get(new ModelResourceLocation(CHUNK_LOADER_BLOCK.getId(), ""));
+        BakedModel spotModel = modelHelper.getModels().get(new ModelResourceLocation(SPOT_LOADER_BLOCK.getId(), ""));
+        modelHelper.register(new ModelResourceLocation(CHUNK_LOADER_ITEM.getId(), "inventory"), new ChunkLoaderItemModel(loaderModel, false));
+        modelHelper.register(new ModelResourceLocation(SPOT_LOADER_TILE.getId(), "inventory"), new ChunkLoaderItemModel(spotModel, true));
     }
 }

@@ -7,9 +7,11 @@ import codechicken.chunkloader.tile.TileSpotLoader;
 import net.covers1624.quack.util.CrashLock;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
@@ -34,7 +36,7 @@ public class ChickenChunksModContent {
     //endregion
 
     //region Items
-    private static final Item.Properties itemProps = new Item.Properties().tab(CreativeModeTab.TAB_MISC);
+    private static final Item.Properties itemProps = new Item.Properties();
     public static final RegistryObject<BlockItem> CHUNK_LOADER_ITEM = ITEMS.register("chunk_loader", () -> new BlockItem(CHUNK_LOADER_BLOCK.get(), itemProps));
     public static final RegistryObject<BlockItem> SPOT_LOADER_ITEM = ITEMS.register("spot_loader", () -> new BlockItem(SPOT_LOADER_BLOCK.get(), itemProps));
     //endregion
@@ -54,5 +56,13 @@ public class ChickenChunksModContent {
         BLOCKS.register(bus);
         ITEMS.register(bus);
         TILES.register(bus);
+        bus.addListener(ChickenChunksModContent::onCreativeTabBuild);
+    }
+    
+    private static void onCreativeTabBuild(BuildCreativeModeTabContentsEvent event) {
+        if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
+            event.accept(CHUNK_LOADER_BLOCK);
+            event.accept(SPOT_LOADER_BLOCK);
+        }
     }
 }

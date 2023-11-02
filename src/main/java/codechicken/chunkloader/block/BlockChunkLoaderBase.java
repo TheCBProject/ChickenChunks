@@ -20,7 +20,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.BlockHitResult;
 
 import static codechicken.chunkloader.network.ChickenChunksNetwork.C_OPEN_LOADER_GUI;
@@ -29,7 +28,7 @@ import static codechicken.chunkloader.network.ChickenChunksNetwork.NET_CHANNEL;
 public abstract class BlockChunkLoaderBase extends BaseEntityBlock {
 
     public BlockChunkLoaderBase() {
-        super(Block.Properties.of(Material.STONE)
+        super(Block.Properties.of()
                 .strength(20F, 100F)
                 .sound(SoundType.STONE)
         );

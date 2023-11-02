@@ -10,6 +10,7 @@ import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceKey;
@@ -74,16 +75,16 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
     //region Events
     private static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
-        if (player.level instanceof ServerLevel) {
-            ChunkLoaderHandler handler = getHandler(player.level);
+        if (player.level() instanceof ServerLevel) {
+            ChunkLoaderHandler handler = getHandler(player.level());
             handler.login(event);
         }
     }
 
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         Player player = event.getEntity();
-        if (player.level instanceof ServerLevel) {
-            ChunkLoaderHandler handler = getHandler(player.level);
+        if (player.level() instanceof ServerLevel) {
+            ChunkLoaderHandler handler = getHandler(player.level());
             handler.logout(event);
         }
     }
@@ -264,7 +265,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
 
             // Handle devive / revive list.
             for (Organiser organiser : reviveList) {
-                ResourceKey<Level> key = ResourceKey.create(Registry.DIMENSION_REGISTRY, organiser.dim);
+                ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, organiser.dim);
                 ServerLevel world = server.getLevel(key);
                 if (world != null) {
                     organiser.revive(world);
@@ -291,7 +292,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
     }
 
     public void addChunk(IChunkLoader loader, ResourceLocation dim, ChunkPos pos) {
-        ResourceKey<Level> key = ResourceKey.create(Registry.DIMENSION_REGISTRY, dim);
+        ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, dim);
         ServerLevel world = server.getLevel(key);
         ChunkTicket ticket = computeIfAbsent(activeTickets, dim, pos, () -> new ChunkTicket(world, pos));
         ticket.addLoader(loader);
