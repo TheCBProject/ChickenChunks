@@ -1,0 +1,42 @@
+{
+  "elements": [
+    {
+      "faces": {
+        "down": {
+          "texture": "#bottom"
+        },
+        "east": {
+          "texture": "#side"
+        },
+        "north": {
+          "texture": "#side"
+        },
+        "south": {
+          "texture": "#side"
+        },
+        "up": {
+          "texture": "#top"
+        },
+        "west": {
+          "texture": "#side"
+        }
+      },
+      "from": [
+        4,
+        0,
+        4
+      ],
+      "to": [
+        12,
+        7,
+        12
+      ]
+    }
+  ],
+  "textures": {
+    "bottom": "chickenchunks:block/spot/bottom",
+    "particle": "chickenchunks:block/spot/side",
+    "side": "chickenchunks:block/spot/side",
+    "top": "chickenchunks:block/spot/top"
+  }
+}

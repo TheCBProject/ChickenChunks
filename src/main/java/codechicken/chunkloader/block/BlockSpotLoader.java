@@ -44,6 +44,9 @@ public class BlockSpotLoader extends BlockChunkLoaderBase {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> actual) {
-        return level.isClientSide ? null : createTickerHelper(actual, ChickenChunksModContent.SPOT_LOADER_TILE.get(), (a, b, c, d) -> d.tickServer());
+        if (level.isClientSide) {
+            return createTickerHelper(actual, ChickenChunksModContent.SPOT_LOADER_TILE.get(), (a, b, c, d) -> d.tickClient());
+        }
+        return createTickerHelper(actual, ChickenChunksModContent.SPOT_LOADER_TILE.get(), (a, b, c, d) -> d.tickServer());
     }
 }

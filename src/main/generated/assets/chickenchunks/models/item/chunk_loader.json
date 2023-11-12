@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "childModel": "chickenchunks:block/chunk_loader",
+  "isSpotLoader": false,
+  "loader": "chickenchunks:chunk_loader"
+}
