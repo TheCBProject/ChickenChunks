@@ -110,7 +110,7 @@ public class GuiChunkLoader extends Screen {
     }
 
     private void drawCentered(GuiGraphics graphics, Component s, int x, int y, int colour) {
-    	graphics.drawString(font, s.getVisualOrderText(), x - font.width(s) / 2, y, colour);
+    	graphics.drawString(font, s.getVisualOrderText(), x - font.width(s) / 2, y, colour, false);
     }
 
     @Override
