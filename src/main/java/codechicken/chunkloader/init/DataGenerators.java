@@ -54,18 +54,13 @@ public class DataGenerators {
     private static class LootTables extends LootTableProvider.BlockLootProvider {
 
         protected LootTables(PackOutput output) {
-            super(output);
+            super(output, MOD_ID);
         }
 
         @Override
         protected void registerTables() {
             register(ChickenChunksModContent.CHUNK_LOADER_BLOCK.get(), singleItem(ChickenChunksModContent.CHUNK_LOADER_BLOCK.get()));
             register(ChickenChunksModContent.SPOT_LOADER_BLOCK.get(), singleItem(ChickenChunksModContent.SPOT_LOADER_BLOCK.get()));
-        }
-
-        @Override
-        public String getName() {
-            return "ChickenChunks Block Loot";
         }
     }
 
@@ -141,11 +136,6 @@ public class DataGenerators {
                     .customLoader(ChunkLoaderItemModelLoaderBuilder::new)
                     .childModel("chickenchunks:block/spot_loader")
                     .spotLoader(true);
-        }
-
-        @Override
-        public String getName() {
-            return "ChickenChunks: Item models";
         }
     }
 
