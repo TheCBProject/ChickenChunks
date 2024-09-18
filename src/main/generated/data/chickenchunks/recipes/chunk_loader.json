@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "E": {
+      "item": "minecraft:enchanting_table"
+    },
+    "G": {
+      "tag": "forge:ingots/gold"
+    },
+    "P": {
+      "tag": "forge:ender_pearls"
+    }
+  },
+  "pattern": [
+    " P ",
+    "GGG",
+    "GEG"
+  ],
+  "result": {
+    "item": "chickenchunks:chunk_loader"
+  }
+}

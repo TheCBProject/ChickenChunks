@@ -15,11 +15,11 @@ public enum ChunkLoaderShape {
 
     private final String name;
     private static final ChunkLoaderShape[] VALUES = values();
-    private static final ChunkLoaderShape[] NEXT_LOOKUP = Arrays.stream(VALUES)//
-            .map(e -> VALUES[(e.ordinal() + 1) % VALUES.length])//
+    private static final ChunkLoaderShape[] NEXT_LOOKUP = Arrays.stream(VALUES)
+            .map(e -> VALUES[(e.ordinal() + 1) % VALUES.length])
             .toArray(ChunkLoaderShape[]::new);
-    private static final ChunkLoaderShape[] PREV_LOOKUP = Arrays.stream(VALUES)//
-            .map(e -> VALUES[Math.floorMod((e.ordinal() - 1), VALUES.length)])//
+    private static final ChunkLoaderShape[] PREV_LOOKUP = Arrays.stream(VALUES)
+            .map(e -> VALUES[Math.floorMod((e.ordinal() - 1), VALUES.length)])
             .toArray(ChunkLoaderShape[]::new);
 
     ChunkLoaderShape(String s) {

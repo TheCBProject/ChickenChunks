@@ -3,27 +3,35 @@ package codechicken.chunkloader.init;
 import codechicken.chunkloader.block.BlockChunkLoader;
 import codechicken.chunkloader.block.BlockSpotLoader;
 import codechicken.lib.datagen.ItemModelProvider;
-import codechicken.lib.datagen.LootTableProvider;
+import codechicken.lib.datagen.NoValidationBLockLootSubProvider;
+import codechicken.lib.datagen.recipe.RecipeProvider;
 import com.google.gson.JsonObject;
 import net.covers1624.quack.util.CrashLock;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
+import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.client.model.generators.BlockStateProvider;
-import net.minecraftforge.client.model.generators.ModelFile;
-import net.minecraftforge.common.data.BlockTagsProvider;
-import net.minecraftforge.common.data.ExistingFileHelper;
-import net.minecraftforge.data.event.GatherDataEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
+import net.neoforged.neoforge.client.model.generators.ModelFile;
+import net.neoforged.neoforge.common.Tags;
+import net.neoforged.neoforge.common.data.BlockTagsProvider;
+import net.neoforged.neoforge.common.data.ExistingFileHelper;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static codechicken.chunkloader.ChickenChunks.MOD_ID;
+import static codechicken.chunkloader.init.ChickenChunksModContent.*;
 
 /**
  * Created by covers1624 on 7/10/20.
@@ -32,10 +40,10 @@ public class DataGenerators {
 
     private static final CrashLock LOCK = new CrashLock("Already initialized.");
 
-    public static void init() {
+    public static void init(IEventBus modBus) {
         LOCK.lock();
 
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(DataGenerators::gatherDataGenerators);
+        modBus.addListener(DataGenerators::gatherDataGenerators);
     }
 
     private static void gatherDataGenerators(GatherDataEvent event) {
@@ -46,21 +54,38 @@ public class DataGenerators {
 
         gen.addProvider(event.includeServer(), new LootTables(output));
         gen.addProvider(event.includeServer(), new BlockTags(output, lookupProvider, files));
+        gen.addProvider(event.includeServer(), new Recipes(output));
 
         gen.addProvider(event.includeClient(), new BlockStates(output, files));
         gen.addProvider(event.includeClient(), new ItemModels(output, files));
     }
 
-    private static class LootTables extends LootTableProvider.BlockLootProvider {
+    private static class LootTables extends LootTableProvider {
 
-        protected LootTables(PackOutput output) {
-            super(output, MOD_ID);
+        public LootTables(PackOutput output) {
+            super(
+                    output,
+                    Set.of(),
+                    List.of(
+                            new SubProviderEntry(BlockLoot::new, LootContextParamSets.BLOCK)
+                    )
+            );
+        }
+    }
+
+    private static class BlockLoot extends NoValidationBLockLootSubProvider {
+
+        public BlockLoot() {
+            super(Set.of(
+                    CHUNK_LOADER_ITEM.get(),
+                    SPOT_LOADER_ITEM.get()
+            ));
         }
 
         @Override
-        protected void registerTables() {
-            register(ChickenChunksModContent.CHUNK_LOADER_BLOCK.get(), singleItem(ChickenChunksModContent.CHUNK_LOADER_BLOCK.get()));
-            register(ChickenChunksModContent.SPOT_LOADER_BLOCK.get(), singleItem(ChickenChunksModContent.SPOT_LOADER_BLOCK.get()));
+        protected void generate() {
+            dropSelf(CHUNK_LOADER_BLOCK.get());
+            dropSelf(SPOT_LOADER_BLOCK.get());
         }
     }
 
@@ -73,8 +98,33 @@ public class DataGenerators {
         @Override
         protected void addTags(HolderLookup.Provider provider) {
             tag(net.minecraft.tags.BlockTags.MINEABLE_WITH_PICKAXE)
-                    .add(ChickenChunksModContent.CHUNK_LOADER_BLOCK.get())
-                    .add(ChickenChunksModContent.SPOT_LOADER_BLOCK.get());
+                    .add(CHUNK_LOADER_BLOCK.get())
+                    .add(SPOT_LOADER_BLOCK.get());
+        }
+    }
+
+    private static class Recipes extends RecipeProvider {
+
+        public Recipes(PackOutput output) {
+            super(output, MOD_ID);
+        }
+
+        @Override
+        protected void registerRecipes() {
+            shapedRecipe(CHUNK_LOADER_ITEM.get())
+                    .key('P', Tags.Items.ENDER_PEARLS)
+                    .key('G', Tags.Items.INGOTS_GOLD)
+                    .key('E', Items.ENCHANTING_TABLE)
+                    .patternLine(" P ")
+                    .patternLine("GGG")
+                    .patternLine("GEG");
+
+            shapedRecipe(SPOT_LOADER_ITEM.get())
+                    .key('P', Tags.Items.ENDER_PEARLS)
+                    .key('C', CHUNK_LOADER_ITEM)
+                    .patternLine("PPP")
+                    .patternLine("PCP")
+                    .patternLine("PPP");
         }
     }
 
@@ -87,11 +137,11 @@ public class DataGenerators {
         @Override
         protected void registerStatesAndModels() {
             simpleBlock(
-                    ChickenChunksModContent.CHUNK_LOADER_BLOCK.get(),
+                    CHUNK_LOADER_BLOCK.get(),
                     chunkLoader("chunk_loader", "full", BlockChunkLoader.SHAPE)
             );
             simpleBlock(
-                    ChickenChunksModContent.SPOT_LOADER_BLOCK.get(),
+                    SPOT_LOADER_BLOCK.get(),
                     chunkLoader("spot_loader", "spot", BlockSpotLoader.SHAPE)
             );
         }
@@ -125,13 +175,13 @@ public class DataGenerators {
 
         @Override
         protected void registerModels() {
-            generated(ChickenChunksModContent.CHUNK_LOADER_ITEM.get())
+            generated(CHUNK_LOADER_ITEM.get())
                     .noTexture()
                     .customLoader(ChunkLoaderItemModelLoaderBuilder::new)
                     .childModel("chickenchunks:block/chunk_loader")
                     .spotLoader(false);
 
-            generated(ChickenChunksModContent.SPOT_LOADER_ITEM.get())
+            generated(SPOT_LOADER_ITEM.get())
                     .noTexture()
                     .customLoader(ChunkLoaderItemModelLoaderBuilder::new)
                     .childModel("chickenchunks:block/spot_loader")
@@ -168,4 +218,5 @@ public class DataGenerators {
             return json;
         }
     }
+
 }

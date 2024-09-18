@@ -8,8 +8,6 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
-import net.minecraft.core.Direction;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -21,130 +19,100 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.capabilities.*;
-import net.minecraftforge.common.util.INBTSerializable;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.common.world.ForgeChunkManager;
-import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.world.chunk.RegisterTicketControllersEvent;
+import net.neoforged.neoforge.common.world.chunk.TicketController;
+import net.neoforged.neoforge.event.TickEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Supplier;
 
 import static codechicken.chunkloader.ChickenChunks.MOD_ID;
-import static net.covers1624.quack.util.SneakyUtils.unsafeCast;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Created by covers1624 on 5/4/20.
  */
-public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable<CompoundTag> {
+public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ResourceLocation KEY = new ResourceLocation(MOD_ID, "chunk_loaders");
     private static final boolean DEBUG = Boolean.getBoolean("chickenchunks.loading.debug");
 
-    public static final Capability<IChunkLoaderHandler> HANDLER_CAPABILITY = CapabilityManager.get(new CapabilityToken<>() { });
+    public static final TicketController CONTROLLER = new TicketController(
+            new ResourceLocation(MOD_ID, "chunk_loaders"),
+            (level, ticketHelper) -> {
+                // On load, nuke everything. We manually re-register tickets.
+                ticketHelper.getBlockTickets().keySet().forEach(ticketHelper::removeAllTickets);
+                ticketHelper.getEntityTickets().keySet().forEach(ticketHelper::removeAllTickets);
+            }
+    );
 
-    public static void init() {
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(ChunkLoaderHandler::onRegisterCaps);
+    public static void init(IEventBus modBus) {
+        modBus.addListener(RegisterTicketControllersEvent.class, e -> e.register(CONTROLLER));
 
-        MinecraftForge.EVENT_BUS.addListener(ChunkLoaderHandler::onPlayerLogin);
-        MinecraftForge.EVENT_BUS.addListener(ChunkLoaderHandler::onPlayerLoggedOut);
-        MinecraftForge.EVENT_BUS.addListener(ChunkLoaderHandler::onWorldLoad);
-        MinecraftForge.EVENT_BUS.addListener(ChunkLoaderHandler::onWorldTick);
-        MinecraftForge.EVENT_BUS.addGenericListener(Level.class, ChunkLoaderHandler::attachCapabilities);
-        ForgeChunkManager.setForcedChunkLoadingCallback(MOD_ID, (world, ticketHelper) -> {
-            // On load, nuke everything. We manually re-register tickets.
-            ticketHelper.getBlockTickets().keySet().forEach(ticketHelper::removeAllTickets);
-            ticketHelper.getEntityTickets().keySet().forEach(ticketHelper::removeAllTickets);
-        });
+        NeoForge.EVENT_BUS.addListener(ChunkLoaderHandler::onPlayerLogin);
+        NeoForge.EVENT_BUS.addListener(ChunkLoaderHandler::onPlayerLoggedOut);
+        NeoForge.EVENT_BUS.addListener(ChunkLoaderHandler::onWorldLoad);
+        NeoForge.EVENT_BUS.addListener(ChunkLoaderHandler::onWorldTick);
     }
 
-    private static void onRegisterCaps(RegisterCapabilitiesEvent event) {
-        event.register(IChunkLoaderHandler.class);
+    private static @Nullable ChunkLoaderHandler instance;
+
+    public static @Nullable IChunkLoaderHandler instance() {
+        return instance;
     }
 
     //region Events
     private static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
         if (player.level() instanceof ServerLevel) {
-            ChunkLoaderHandler handler = getHandler(player.level());
-            handler.login(event);
+            getInstance().login(event);
         }
     }
 
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         Player player = event.getEntity();
         if (player.level() instanceof ServerLevel) {
-            ChunkLoaderHandler handler = getHandler(player.level());
-            handler.logout(event);
+            getInstance().logout(event);
         }
     }
 
     private static void onWorldLoad(LevelEvent.Load event) {
-        if (event.getLevel() instanceof ServerLevel world) {
-            if (world.dimension() == net.minecraft.world.level.Level.OVERWORLD) {
-                ChunkLoaderHandler handler = getHandler(world);
-                handler.onOverWorldLoad();
-            }
+        if (!(event.getLevel() instanceof ServerLevel level)) return;
+        if (!level.dimension().equals(Level.OVERWORLD)) return;
+
+        if (instance != null) {
+            throw new RuntimeException("Tried to re-init the overworld?");
         }
+
+        instance = level.getDataStorage().computeIfAbsent(
+                new Factory<>(
+                        () -> new ChunkLoaderHandler(level.getServer()),
+                        t -> new ChunkLoaderHandler(level.getServer(), t)
+                ),
+                MOD_ID
+        );
+
+        getInstance().onOverWorldLoad();
     }
 
     private static void onWorldTick(TickEvent.LevelTickEvent event) {
         if (event.level instanceof ServerLevel world) {
             if (world.dimension() == Level.OVERWORLD) {
-                ChunkLoaderHandler handler = getHandler(world);
-                if (handler != null) {
-                    handler.tick(event);
+                if (instance != null) {
+                    instance.tick(event);
                 }
             }
         }
     }
-
-    //Attach our IChunkLoaderHandler capability to the overworld.
-    private static void attachCapabilities(AttachCapabilitiesEvent<Level> event) {
-        if (event.getObject().isClientSide) {
-            return;
-        }
-        ServerLevel world = (ServerLevel) event.getObject();
-        if (world.dimension() != Level.OVERWORLD) {
-            return;
-        }
-
-        event.addCapability(KEY, new ICapabilitySerializable<CompoundTag>() {
-
-            private final ChunkLoaderHandler handler = new ChunkLoaderHandler(world.getServer());
-            private final LazyOptional<ChunkLoaderHandler> opt = LazyOptional.of(() -> handler);
-
-            @Override
-            public CompoundTag serializeNBT() {
-                return handler.serializeNBT();
-            }
-
-            @Override
-            public void deserializeNBT(CompoundTag tag) {
-                handler.deserializeNBT(tag);
-            }
-
-            @NotNull
-            @Override
-            public <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @org.jetbrains.annotations.Nullable Direction side) {
-                if (cap == HANDLER_CAPABILITY) {
-                    return unsafeCast(opt);
-                }
-                return LazyOptional.empty();
-            }
-        });
-    }
-    //endregion
 
     private final MinecraftServer server;
 
@@ -160,13 +128,18 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
     // When, in Millis was the player last seen online.
     private final Object2LongMap<UUID> loginTimes = new Object2LongOpenHashMap<>();
 
+    protected ChunkLoaderHandler(MinecraftServer server, CompoundTag tag) {
+        this(server);
+        load(tag);
+    }
+
     protected ChunkLoaderHandler(MinecraftServer server) {
         this.server = server;
     }
 
     @Override
     public void addChunkLoader(IChunkLoader loader) {
-        Objects.requireNonNull(loader);
+        requireNonNull(loader);
         if (loader.getOwner() == null) {
             LOGGER.error("ChunkLoader at {} has null owner. Not processing.", loader.pos());
             return;
@@ -181,15 +154,15 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
 
     @Override
     public void removeChunkLoader(IChunkLoader loader) {
-        Objects.requireNonNull(loader);
+        requireNonNull(loader);
         Organiser organiser = getOrganiser(loader);
         organiser.remChunkLoader(loader);
     }
 
     @Override
     public boolean canLoadChunks(IChunkLoader loader, Set<ChunkPos> newChunks) {
-        Objects.requireNonNull(loader);
-        UUID player = Objects.requireNonNull(loader.getOwner());
+        requireNonNull(loader);
+        UUID player = requireNonNull(loader.getOwner());
         ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getRestrictions(player);
         int totalLoaded = getLoadedChunkCount(player);//How many the player is currently loading.
 
@@ -204,7 +177,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
 
     @Override
     public void updateLoader(IChunkLoader loader) {
-        Objects.requireNonNull(loader);
+        requireNonNull(loader);
         Organiser organiser = getOrganiser(loader);
         organiser.updateLoader(loader);
     }
@@ -293,7 +266,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
 
     public void addChunk(IChunkLoader loader, ResourceLocation dim, ChunkPos pos) {
         ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, dim);
-        ServerLevel world = server.getLevel(key);
+        ServerLevel world = requireNonNull(server.getLevel(key));
         ChunkTicket ticket = computeIfAbsent(activeTickets, dim, pos, () -> new ChunkTicket(world, pos));
         ticket.addLoader(loader);
         if (DEBUG) {
@@ -302,8 +275,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
     }
 
     @Override
-    public CompoundTag serializeNBT() {
-        CompoundTag tag = new CompoundTag();
+    public CompoundTag save(CompoundTag tag) {
         ListTag playerList = new ListTag();
         for (Map.Entry<UUID, Map<ResourceLocation, Organiser>> playerEntry : playerOrganisers.rowMap().entrySet()) {
             CompoundTag playerTag = new CompoundTag();
@@ -335,8 +307,7 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
         return tag;
     }
 
-    @Override
-    public void deserializeNBT(CompoundTag tag) {
+    private void load(CompoundTag tag) {
         ListTag playerList = tag.getList("playerOrganisers", 10);
         for (int i = 0; i < playerList.size(); i++) {
             CompoundTag playerTag = playerList.getCompound(i);
@@ -357,6 +328,11 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
         }
     }
 
+    @Override
+    public boolean isDirty() {
+        return true;
+    }
+
     //region Utility methods.
     public int getLoadedChunkCount(UUID player) {
         return playerOrganisers.row(player).values().stream()
@@ -365,8 +341,8 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
     }
 
     public Organiser getOrganiser(IChunkLoader loader) {
-        Objects.requireNonNull(loader);
-        UUID player = Objects.requireNonNull(loader.getOwner());
+        requireNonNull(loader);
+        UUID player = requireNonNull(loader.getOwner());
         return getOrganiser(loader.world().dimension(), player);
     }
 
@@ -378,8 +354,8 @@ public class ChunkLoaderHandler implements IChunkLoaderHandler, INBTSerializable
         return computeIfAbsent(playerOrganisers, player, dim, () -> new Organiser(this, dim, player));
     }
 
-    private static ChunkLoaderHandler getHandler(LevelAccessor world) {
-        return (ChunkLoaderHandler) IChunkLoaderHandler.getCapability(world);
+    private static ChunkLoaderHandler getInstance() {
+        return (ChunkLoaderHandler) IChunkLoaderHandler.instance();
     }
     //endregion
 

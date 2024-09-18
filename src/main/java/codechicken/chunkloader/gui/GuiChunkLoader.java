@@ -4,20 +4,17 @@ import codechicken.chunkloader.api.ChunkLoaderShape;
 import codechicken.chunkloader.network.ChunkLoaderCPH;
 import codechicken.chunkloader.tile.TileChunkLoader;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class GuiChunkLoader extends Screen {
 
-    public Button laserButton;
-    public Button shapeButton;
+    public @Nullable Button laserButton;
+    public @Nullable Button shapeButton;
     public TileChunkLoader tile;
 
     private int lastRadius = -1;
@@ -47,6 +44,9 @@ public class GuiChunkLoader extends Screen {
     }
 
     public void updateNames() {
+        assert laserButton != null;
+        assert shapeButton != null;
+        assert tile.renderInfo != null;
         laserButton.setMessage(Component.translatable(tile.renderInfo.showLasers ? "chickenchunks.gui.hidelasers" : "chickenchunks.gui.showlasers"));
         shapeButton.setMessage(tile.shape.getTranslation());
         if (lastRadius != tile.radius || lastShape != tile.shape) {
@@ -76,19 +76,20 @@ public class GuiChunkLoader extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int p_render_1_, int p_render_2_, float p_render_3_) {
-    	ResourceLocation texture = new ResourceLocation("chickenchunks:textures/gui/gui_small.png");
-        renderBackground(graphics);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        ResourceLocation texture = new ResourceLocation("chickenchunks:textures/gui/gui_small.png");
+        renderBackground(graphics, mouseX, mouseY, partialTicks);
         RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
         RenderSystem.setShaderTexture(0, texture);
         int posx = width / 2 - 88;
         int posy = height / 2 - 83;
         graphics.blit(texture, posx, posy, 0, 0, 176, 166);
 
-        super.render(graphics, p_render_1_, p_render_2_, p_render_3_);//buttons
+        super.render(graphics, mouseX, mouseY, partialTicks);//buttons
 
         drawCentered(graphics, Component.translatable("chickenchunks.gui.name"), width / 2 - 40, height / 2 - 74, 0x303030);
         if (tile.owner != null) {
+            assert tile.ownerName != null;
             drawCentered(graphics, tile.ownerName, width / 2 + 44, height / 2 - 72, 0x801080);
         }
         drawCentered(graphics, Component.translatable("chickenchunks.gui.radius"), width / 2 - 40, height / 2 - 57, 0x404040);
@@ -110,7 +111,7 @@ public class GuiChunkLoader extends Screen {
     }
 
     private void drawCentered(GuiGraphics graphics, Component s, int x, int y, int colour) {
-    	graphics.drawString(font, s.getVisualOrderText(), x - font.width(s) / 2, y, colour, false);
+        graphics.drawString(font, s.getVisualOrderText(), x - font.width(s) / 2, y, colour, false);
     }
 
     @Override

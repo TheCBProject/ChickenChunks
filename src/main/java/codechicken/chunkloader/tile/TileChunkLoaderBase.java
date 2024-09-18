@@ -3,10 +3,8 @@ package codechicken.chunkloader.tile;
 import codechicken.chunkloader.api.IChunkLoader;
 import codechicken.chunkloader.api.IChunkLoaderHandler;
 import codechicken.chunkloader.network.ChunkLoaderSPH;
-import codechicken.lib.data.MCDataByteBuf;
 import codechicken.lib.data.MCDataInput;
 import codechicken.lib.data.MCDataOutput;
-import codechicken.lib.packet.PacketCustom;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -23,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-import static codechicken.chunkloader.network.ChickenChunksNetwork.NET_CHANNEL;
+import static java.util.Objects.requireNonNull;
 
 public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkLoader {
 
@@ -71,6 +69,7 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
     @Override
     public void onLoad() {
         super.onLoad();
+        assert level != null;
         if (!level.isClientSide && loaded && !powered) {
             activate();
         }
@@ -81,6 +80,7 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
     public void clearRemoved() {
         super.clearRemoved();
 
+        assert level != null;
         if (level.isClientSide) {
             renderInfo = new RenderInfo();
         }
@@ -89,6 +89,7 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
 
     public boolean isPowered() {
         for (Direction face : Direction.BY_3D_DATA) {
+            assert level != null;
             boolean isPowered = isPoweringTo(level, getBlockPos().relative(face), face);
             if (isPowered) {
                 return true;
@@ -111,6 +112,7 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
     @Override
     public void setRemoved() {
         super.setRemoved();
+        assert level != null;
         if (!level.isClientSide && !unloaded) {
             deactivate();
         }
@@ -129,13 +131,14 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
     }
 
     @Override
+    @Nullable
     public UUID getOwner() {
         return owner;
     }
 
     @Override
     public Level world() {
-        return level;
+        return requireNonNull(level);
     }
 
     @Override
@@ -150,7 +153,7 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
         }
         loaded = true;
         active = false;
-        IChunkLoaderHandler.getCapability(level).removeChunkLoader(this);
+        IChunkLoaderHandler.instance().removeChunkLoader(this);
         ChunkLoaderSPH.sendStateUpdate(this);
     }
 
@@ -160,7 +163,7 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
         }
         loaded = true;
         active = true;
-        IChunkLoaderHandler.getCapability(level).addChunkLoader(this);
+        IChunkLoaderHandler.instance().addChunkLoader(this);
         ChunkLoaderSPH.sendStateUpdate(this);
     }
 
@@ -187,11 +190,6 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
     }
 
     @Override
-    public AABB getRenderBoundingBox() {
-        return INFINITE_EXTENT_AABB;
-    }
-
-    @Override
     public CompoundTag getUpdateTag() {
         CompoundTag tag = saveWithoutMetadata();
         tag.putBoolean("active", active);
@@ -209,6 +207,7 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
         packet.writeBoolean(owner != null);
         if (owner != null) {
             packet.writeUUID(owner);
+            assert ownerName != null;
             packet.writeTextComponent(ownerName);
         }
     }

@@ -24,6 +24,8 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.phys.AABB;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
@@ -68,6 +70,7 @@ public class TileChunkLoaderRenderer implements BlockEntityRenderer<TileChunkLoa
         }
 
         TileChunkLoaderBase.RenderInfo renderInfo = tile.renderInfo;
+        assert renderInfo != null;
         double active = (renderInfo.activationCounter) / 20D;
         if (tile.active && renderInfo.activationCounter < 20) {
             active += partialTicks / 20D;
@@ -88,7 +91,12 @@ public class TileChunkLoaderRenderer implements BlockEntityRenderer<TileChunkLoa
         ccrs.reset();
     }
 
-    public Point2D.Double findIntersection(Line2D line1, Line2D line2) {
+    @Override
+    public AABB getRenderBoundingBox(TileChunkLoaderBase blockEntity) {
+        return INFINITE_EXTENT_AABB;
+    }
+
+    public @Nullable Point2D.Double findIntersection(Line2D line1, Line2D line2) {
         // calculate differences
         double xD1 = line1.getX2() - line1.getX1();
         double yD1 = line1.getY2() - line1.getY1();
@@ -101,8 +109,7 @@ public class TileChunkLoaderRenderer implements BlockEntityRenderer<TileChunkLoa
         // find intersection Pt between two lines
         Point2D.Double pt = new Point2D.Double(0, 0);
         double div = yD2 * xD1 - xD2 * yD1;
-        if (div == 0)//lines are parallel
-        {
+        if (div == 0) { //lines are parallel
             return null;
         }
         double ua = (xD2 * yD3 - yD2 * xD3) / div;

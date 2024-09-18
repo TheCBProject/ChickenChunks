@@ -15,7 +15,7 @@ import static codechicken.chunkloader.network.ChickenChunksNetwork.*;
 public class ChunkLoaderSPH implements IServerPacketHandler {
 
     @Override
-    public void handlePacket(PacketCustom packet, ServerPlayer sender, ServerGamePacketListenerImpl handler) {
+    public void handlePacket(PacketCustom packet, ServerPlayer sender) {
         switch (packet.getType()) {
             case S_SET_SHAPE: {
                 handleChunkLoaderChangePacket(sender.level(), sender, packet);

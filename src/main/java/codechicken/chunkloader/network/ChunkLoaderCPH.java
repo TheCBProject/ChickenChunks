@@ -7,23 +7,23 @@ import codechicken.chunkloader.tile.TileChunkLoaderBase;
 import codechicken.lib.packet.ICustomPacketHandler.IClientPacketHandler;
 import codechicken.lib.packet.PacketCustom;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientPacketListener;
 
 import static codechicken.chunkloader.network.ChickenChunksNetwork.*;
+import static java.util.Objects.requireNonNull;
 
 public class ChunkLoaderCPH implements IClientPacketHandler {
 
     @Override
-    public void handlePacket(PacketCustom packet, Minecraft mc, ClientPacketListener handler) {
+    public void handlePacket(PacketCustom packet, Minecraft mc) {
         switch (packet.getType()) {
             case C_UPDATE_STATE -> {
-                if (mc.level.getBlockEntity(packet.readPos()) instanceof TileChunkLoaderBase chunkLoader) {
+                if (requireNonNull(mc.level).getBlockEntity(packet.readPos()) instanceof TileChunkLoaderBase chunkLoader) {
                     chunkLoader.readFromPacket(packet);
                 }
                 break;
             }
             case C_OPEN_LOADER_GUI -> {
-                if (mc.level.getBlockEntity(packet.readPos()) instanceof TileChunkLoader tile) {
+                if (requireNonNull(mc.level).getBlockEntity(packet.readPos()) instanceof TileChunkLoader tile) {
                     mc.setScreen(new GuiChunkLoader(tile));
                 }
                 break;

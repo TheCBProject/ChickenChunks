@@ -1,11 +1,9 @@
 package codechicken.chunkloader.handler;
 
-import codechicken.lib.config.ConfigCategory;
-import codechicken.lib.config.ConfigFile;
-import codechicken.lib.config.ConfigTag;
-import codechicken.lib.config.ConfigValue;
+import codechicken.lib.config.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -14,14 +12,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static codechicken.chunkloader.ChickenChunks.MOD_ID;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Created by covers1624 on 5/4/20.
  */
 public class ChickenChunksConfig {
 
-    private static ConfigCategory config;
-    private static ConfigCategory playerRestrictions;
+    private static @Nullable ConfigCategory playerRestrictions;
     private static final Map<UUID, Restrictions> perPlayerRestrictions = new HashMap<>();
     private static boolean opsBypassRestrictions;
     private static boolean opsAccessAllLoaders;
@@ -31,7 +29,7 @@ public class ChickenChunksConfig {
     private static int globalChunksPerLoader;
 
     public static void load() {
-        config = new ConfigFile(MOD_ID)
+        ConfigCategory config = new ConfigFile(MOD_ID)
                 .path(Paths.get("./config/ChickenChunks.cfg"))
                 .load();
         opsBypassRestrictions = config.getValue("opsBypassRestrictions")
@@ -80,7 +78,7 @@ public class ChickenChunksConfig {
     }
 
     public static boolean doesBypassLoaderAccess(ServerPlayer player) {
-        if (player.getServer().getPlayerList().getOps().get(player.getGameProfile()) != null) {
+        if (requireNonNull(player.getServer()).getPlayerList().getOps().get(player.getGameProfile()) != null) {
             return opsAccessAllLoaders;
         }
         return false;
@@ -88,7 +86,7 @@ public class ChickenChunksConfig {
 
     public static Restrictions getOrCreateRestrictions(UUID player) {
         return perPlayerRestrictions.computeIfAbsent(player, e -> {
-            ConfigCategory tag = playerRestrictions.getCategory(player.toString());
+            ConfigCategory tag = requireNonNull(playerRestrictions).getCategory(player.toString());
             tag.save();
             return new Restrictions(tag);
         });
@@ -96,6 +94,7 @@ public class ChickenChunksConfig {
 
     public static void resetRestrictions(UUID player) {
         perPlayerRestrictions.remove(player);
+        requireNonNull(playerRestrictions);
         playerRestrictions.delete(player.toString());
         playerRestrictions.save();
     }
@@ -106,17 +105,14 @@ public class ChickenChunksConfig {
 
     public static class Restrictions {
 
-        public static final Restrictions EMPTY = new Restrictions();
+        public static final Restrictions EMPTY = new Restrictions(new ConfigCategoryImpl("", null));
 
-        private Optional<Boolean> allowOffline = Optional.empty();
-        private Optional<Integer> offlineTimeout = Optional.empty();
-        private Optional<Integer> totalAllowedChunks = Optional.empty();
-        private Optional<Integer> chunksPerLoader = Optional.empty();
+        private Optional<Boolean> allowOffline;
+        private Optional<Integer> offlineTimeout;
+        private Optional<Integer> totalAllowedChunks;
+        private Optional<Integer> chunksPerLoader;
 
-        private ConfigCategory tag;
-
-        public Restrictions() {
-        }
+        private final ConfigCategory tag;
 
         public Restrictions(ConfigCategory tag) {
             this.tag = tag;

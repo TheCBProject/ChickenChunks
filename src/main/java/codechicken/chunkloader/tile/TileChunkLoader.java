@@ -13,6 +13,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
 
@@ -29,8 +30,9 @@ public class TileChunkLoader extends TileChunkLoaderBase {
         return setShapeAndRadius(null, newShape, newRadius);
     }
 
-    public boolean setShapeAndRadius(ServerPlayer player, ChunkLoaderShape newShape, int newRadius) {
+    public boolean setShapeAndRadius(@Nullable ServerPlayer player, ChunkLoaderShape newShape, int newRadius) {
         if (owner == null || newRadius < 0 || newRadius > 255) return false;
+        assert level != null;
 
         if (level.isClientSide) {
             radius = newRadius;
@@ -55,7 +57,7 @@ public class TileChunkLoader extends TileChunkLoaderBase {
             ChunkLoaderSPH.sendStateUpdate(this);
             return true;
         }
-        IChunkLoaderHandler handler = IChunkLoaderHandler.getCapability(level);
+        IChunkLoaderHandler handler = IChunkLoaderHandler.instance();
         if (handler.canLoadChunks(this, chunks)) {
             radius = newRadius;
             shape = newShape;

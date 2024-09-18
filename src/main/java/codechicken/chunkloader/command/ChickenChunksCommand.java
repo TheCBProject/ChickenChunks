@@ -9,8 +9,8 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.GameProfileArgument;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -40,7 +40,7 @@ public class ChickenChunksCommand {
     private static final String CHUNKS_PER_LOADER_RESET_FOR = MOD_ID + ":commands.restrictions.player.chunks_per_loader.reset";
 
     public static void init() {
-        MinecraftForge.EVENT_BUS.addListener(ChickenChunksCommand::onRegisterCommands);
+        NeoForge.EVENT_BUS.addListener(ChickenChunksCommand::onRegisterCommands);
     }
 
     private static void onRegisterCommands(RegisterCommandsEvent event) {

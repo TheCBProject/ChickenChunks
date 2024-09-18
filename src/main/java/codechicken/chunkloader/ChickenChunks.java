@@ -7,32 +7,29 @@ import codechicken.chunkloader.init.ClientInit;
 import codechicken.chunkloader.init.DataGenerators;
 import codechicken.chunkloader.network.ChickenChunksNetwork;
 import codechicken.chunkloader.world.ChunkLoaderHandler;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.loading.FMLEnvironment;
 
 @Mod (ChickenChunks.MOD_ID)
 public class ChickenChunks {
 
-    public static Logger logger = LogManager.getLogger("ChickenChunks");
-
     public static final String MOD_ID = "chickenchunks";
 
-    public ChickenChunks() {
+    public ChickenChunks(IEventBus modBus) {
         ChickenChunksConfig.load();
 
-        ChickenChunksModContent.init();
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientInit::init);
+        ChickenChunksModContent.init(modBus);
 
-        FMLJavaModLoadingContext.get().getModEventBus().register(this);
+        if (FMLEnvironment.dist.isClient()) {
+            ClientInit.init(modBus);
+        }
+
         ChickenChunksCommand.init();
-        ChickenChunksNetwork.init();
+        ChickenChunksNetwork.init(modBus);
 
-        ChunkLoaderHandler.init();
+        ChunkLoaderHandler.init(modBus);
 
-        DataGenerators.init();
+        DataGenerators.init(modBus);
     }
 }
