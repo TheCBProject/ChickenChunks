@@ -61,6 +61,7 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
         NeoForge.EVENT_BUS.addListener(ChunkLoaderHandler::onPlayerLogin);
         NeoForge.EVENT_BUS.addListener(ChunkLoaderHandler::onPlayerLoggedOut);
         NeoForge.EVENT_BUS.addListener(ChunkLoaderHandler::onWorldLoad);
+        NeoForge.EVENT_BUS.addListener(ChunkLoaderHandler::onWorldUnload);
         NeoForge.EVENT_BUS.addListener(ChunkLoaderHandler::onWorldTick);
     }
 
@@ -102,6 +103,14 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
         );
 
         getInstance().onOverWorldLoad();
+    }
+
+    private static void onWorldUnload(LevelEvent.Unload event) {
+        if (!(event.getLevel() instanceof ServerLevel level)) return;
+
+        if (!level.dimension().equals(Level.OVERWORLD)) return;
+
+        instance = null;
     }
 
     private static void onWorldTick(TickEvent.LevelTickEvent event) {
