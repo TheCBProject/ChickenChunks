@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -24,9 +25,9 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.world.chunk.RegisterTicketControllersEvent;
 import net.neoforged.neoforge.common.world.chunk.TicketController;
-import net.neoforged.neoforge.event.TickEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -43,11 +44,10 @@ import static java.util.Objects.requireNonNull;
 public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ResourceLocation KEY = new ResourceLocation(MOD_ID, "chunk_loaders");
     private static final boolean DEBUG = Boolean.getBoolean("chickenchunks.loading.debug");
 
     public static final TicketController CONTROLLER = new TicketController(
-            new ResourceLocation(MOD_ID, "chunk_loaders"),
+            ResourceLocation.fromNamespaceAndPath(MOD_ID, "chunk_loaders"),
             (level, ticketHelper) -> {
                 // On load, nuke everything. We manually re-register tickets.
                 ticketHelper.getBlockTickets().keySet().forEach(ticketHelper::removeAllTickets);
@@ -97,7 +97,7 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
         instance = level.getDataStorage().computeIfAbsent(
                 new Factory<>(
                         () -> new ChunkLoaderHandler(level.getServer()),
-                        t -> new ChunkLoaderHandler(level.getServer(), t)
+                        (t, r) -> new ChunkLoaderHandler(level.getServer(), t)
                 ),
                 MOD_ID
         );
@@ -113,9 +113,9 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
         instance = null;
     }
 
-    private static void onWorldTick(TickEvent.LevelTickEvent event) {
-        if (event.level instanceof ServerLevel world) {
-            if (world.dimension() == Level.OVERWORLD) {
+    private static void onWorldTick(LevelTickEvent.Post event) {
+        if (event.getLevel() instanceof ServerLevel level) {
+            if (level.dimension() == Level.OVERWORLD) {
                 if (instance != null) {
                     instance.tick(event);
                 }
@@ -219,46 +219,44 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
         }
     }
 
-    public void tick(TickEvent.LevelTickEvent event) {
-        if (event.phase == TickEvent.Phase.END) {
-            // Every minute.
-            if (event.level.getGameTime() % 1200 == 0) {
-                long curr = System.currentTimeMillis();
-                // Update login times of players.
-                for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                    loginTimes.put(player.getUUID(), curr);
-                }
-                // Queue their Organisers for unload if needed.
-                for (Map.Entry<UUID, Map<ResourceLocation, Organiser>> playerEntry : playerOrganisers.rowMap().entrySet()) {
-                    UUID player = playerEntry.getKey();
-                    ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getRestrictions(player);
-                    if (!restrictions.canLoadOffline()) {
-                        int timeout = restrictions.getOfflineTimeout();
-                        long lastSeen = loginTimes.getOrDefault(player, -1L);
-                        if (lastSeen != curr && (timeout == 0 || lastSeen == -1 || (curr - lastSeen) / 60000L < timeout)) {
-                            deviveList.addAll(playerEntry.getValue().values());
-                        }
+    public void tick(LevelTickEvent.Post event) {
+        // Every minute.
+        if (event.getLevel().getGameTime() % 1200 == 0) {
+            long curr = System.currentTimeMillis();
+            // Update login times of players.
+            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                loginTimes.put(player.getUUID(), curr);
+            }
+            // Queue their Organisers for unload if needed.
+            for (Map.Entry<UUID, Map<ResourceLocation, Organiser>> playerEntry : playerOrganisers.rowMap().entrySet()) {
+                UUID player = playerEntry.getKey();
+                ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getRestrictions(player);
+                if (!restrictions.canLoadOffline()) {
+                    int timeout = restrictions.getOfflineTimeout();
+                    long lastSeen = loginTimes.getOrDefault(player, -1L);
+                    if (lastSeen != curr && (timeout == 0 || lastSeen == -1 || (curr - lastSeen) / 60000L < timeout)) {
+                        deviveList.addAll(playerEntry.getValue().values());
                     }
                 }
             }
-
-            // Tick each organizer, it may want to load/unload things.
-            playerOrganisers.values().forEach(Organiser::onTickEnd);
-
-            // Handle devive / revive list.
-            for (Organiser organiser : reviveList) {
-                ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, organiser.dim);
-                ServerLevel world = server.getLevel(key);
-                if (world != null) {
-                    organiser.revive(world);
-                }
-            }
-            reviveList.clear();
-            for (Organiser organiser : deviveList) {
-                organiser.devive();
-            }
-            deviveList.clear();
         }
+
+        // Tick each organizer, it may want to load/unload things.
+        playerOrganisers.values().forEach(Organiser::onTickEnd);
+
+        // Handle devive / revive list.
+        for (Organiser organiser : reviveList) {
+            ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, organiser.dim);
+            ServerLevel world = server.getLevel(key);
+            if (world != null) {
+                organiser.revive(world);
+            }
+        }
+        reviveList.clear();
+        for (Organiser organiser : deviveList) {
+            organiser.devive();
+        }
+        deviveList.clear();
     }
 
     public void remChunk(IChunkLoader loader, ResourceLocation dim, ChunkPos pos) {
@@ -284,7 +282,7 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         ListTag playerList = new ListTag();
         for (Map.Entry<UUID, Map<ResourceLocation, Organiser>> playerEntry : playerOrganisers.rowMap().entrySet()) {
             CompoundTag playerTag = new CompoundTag();
@@ -324,7 +322,7 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
             ListTag dimensions = playerTag.getList("dimensions", 10);
             for (int j = 0; j < dimensions.size(); j++) {
                 CompoundTag dimTag = dimensions.getCompound(j);
-                ResourceLocation dim = new ResourceLocation(dimTag.getString("dimension"));
+                ResourceLocation dim = ResourceLocation.parse(dimTag.getString("dimension"));
                 Organiser organiser = new Organiser(this, dim, player).read(dimTag.getCompound("organiser"));
                 playerOrganisers.put(player, dim, organiser);
             }

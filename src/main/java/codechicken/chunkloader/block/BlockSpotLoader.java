@@ -36,11 +36,6 @@ public class BlockSpotLoader extends BlockChunkLoaderBase {
         return SHAPE;
     }
 
-    @Override
-    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
-        return InteractionResult.PASS;
-    }
-
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> actual) {

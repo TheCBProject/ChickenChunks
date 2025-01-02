@@ -49,10 +49,10 @@ public class ChunkLoaderItemModel implements IGeometryLoader<ChunkLoaderItemMode
     public record Geometry(String childModel, boolean spotLoader) implements IUnbakedGeometry<Geometry> {
 
         @Override
-        public BakedModel bake(IGeometryBakingContext context, ModelBaker baker, Function<Material, TextureAtlasSprite> spriteGetter, ModelState modelState, ItemOverrides overrides, ResourceLocation modelLocation) {
+        public BakedModel bake(IGeometryBakingContext context, ModelBaker baker, Function<Material, TextureAtlasSprite> spriteGetter, ModelState modelState, ItemOverrides overrides) {
             return new Model(
-                    Objects.requireNonNull(baker.getModel(new ResourceLocation(childModel))
-                            .bake(baker, spriteGetter, modelState, modelLocation)),
+                    Objects.requireNonNull(baker.getModel(ResourceLocation.parse(childModel))
+                            .bake(baker, spriteGetter, modelState)),
                     spotLoader
             );
         }

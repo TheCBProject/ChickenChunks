@@ -11,6 +11,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
+import static codechicken.chunkloader.ChickenChunks.MOD_ID;
+
 public class GuiChunkLoader extends Screen {
 
     public @Nullable Button laserButton;
@@ -76,17 +78,18 @@ public class GuiChunkLoader extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        ResourceLocation texture = new ResourceLocation("chickenchunks:textures/gui/gui_small.png");
-        renderBackground(graphics, mouseX, mouseY, partialTicks);
+    protected void renderMenuBackground(GuiGraphics graphics) {
+        ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/gui_small.png");
         RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
         RenderSystem.setShaderTexture(0, texture);
         int posx = width / 2 - 88;
         int posy = height / 2 - 83;
         graphics.blit(texture, posx, posy, 0, 0, 176, 166);
+    }
 
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         super.render(graphics, mouseX, mouseY, partialTicks);//buttons
-
         drawCentered(graphics, Component.translatable("chickenchunks.gui.name"), width / 2 - 40, height / 2 - 74, 0x303030);
         if (tile.owner != null) {
             assert tile.ownerName != null;

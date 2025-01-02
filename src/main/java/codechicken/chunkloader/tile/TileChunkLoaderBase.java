@@ -7,6 +7,7 @@ import codechicken.lib.data.MCDataInput;
 import codechicken.lib.data.MCDataOutput;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.LivingEntity;
@@ -42,23 +43,23 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
     }
 
     @Override
-    public void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
+    public void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
         tag.putBoolean("powered", powered);
         if (owner != null) {
             assert ownerName != null;
 
             tag.putUUID("owner", owner);
-            tag.putString("owner_name", Component.Serializer.toJson(ownerName));
+            tag.putString("owner_name", Component.Serializer.toJson(ownerName, registries));
         }
     }
 
     @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
+    public void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
         if (tag.contains("owner")) {
             owner = tag.getUUID("owner");
-            ownerName = Component.Serializer.fromJson(tag.getString("owner_name"));
+            ownerName = Component.Serializer.fromJson(tag.getString("owner_name"), registries);
         }
         if (tag.contains("powered")) {
             powered = tag.getBoolean("powered");
@@ -100,7 +101,7 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
 
     public static boolean isPoweringTo(Level world, BlockPos pos, Direction side) {
         BlockState state = world.getBlockState(pos);
-        return state.getBlock().getSignal(state, world, pos, side) > 0;
+        return state.getSignal(world, pos, side) > 0;
     }
 
     @Override
@@ -190,15 +191,15 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
     }
 
     @Override
-    public CompoundTag getUpdateTag() {
-        CompoundTag tag = saveWithoutMetadata();
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        CompoundTag tag = saveWithoutMetadata(registries);
         tag.putBoolean("active", active);
         return tag;
     }
 
     @Override
-    public void handleUpdateTag(CompoundTag tag) {
-        super.handleUpdateTag(tag);
+    public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider registries) {
+        super.handleUpdateTag(tag, registries);
         active = tag.getBoolean("active");
     }
 

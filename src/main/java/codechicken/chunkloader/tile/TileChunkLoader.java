@@ -8,6 +8,7 @@ import codechicken.chunkloader.network.ChunkLoaderSPH;
 import codechicken.lib.data.MCDataInput;
 import codechicken.lib.data.MCDataOutput;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -84,15 +85,15 @@ public class TileChunkLoader extends TileChunkLoaderBase {
     }
 
     @Override
-    public void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
+    public void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
         tag.putByte("radius", (byte) radius);
         tag.putByte("shape", (byte) shape.ordinal());
     }
 
     @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
+    public void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
         radius = tag.getByte("radius");
         shape = ChunkLoaderShape.values()[tag.getByte("shape")];
     }

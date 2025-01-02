@@ -5,12 +5,14 @@ import codechicken.lib.packet.PacketCustomChannel;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 
+import static codechicken.chunkloader.ChickenChunks.MOD_ID;
+
 /**
  * Created by covers1624 on 1/11/19.
  */
 public class ChickenChunksNetwork {
 
-    public static final ResourceLocation NET_CHANNEL = new ResourceLocation("chickenchunks:network");
+    public static final ResourceLocation NET_CHANNEL = ResourceLocation.fromNamespaceAndPath(MOD_ID, "network");
     public static final PacketCustomChannel channel = new PacketCustomChannel(NET_CHANNEL)
             .versioned(ChickenChunks.container().getModInfo().getVersion().toString())
             .client(() -> ChunkLoaderCPH::new)

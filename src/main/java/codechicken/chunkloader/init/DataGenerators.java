@@ -52,9 +52,9 @@ public class DataGenerators {
         ExistingFileHelper files = event.getExistingFileHelper();
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
 
-        gen.addProvider(event.includeServer(), new LootTables(output));
+        gen.addProvider(event.includeServer(), new LootTables(output, lookupProvider));
         gen.addProvider(event.includeServer(), new BlockTags(output, lookupProvider, files));
-        gen.addProvider(event.includeServer(), new Recipes(output));
+        gen.addProvider(event.includeServer(), new Recipes(lookupProvider, output));
 
         gen.addProvider(event.includeClient(), new BlockStates(output, files));
         gen.addProvider(event.includeClient(), new ItemModels(output, files));
@@ -62,24 +62,25 @@ public class DataGenerators {
 
     private static class LootTables extends LootTableProvider {
 
-        public LootTables(PackOutput output) {
+        public LootTables(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider) {
             super(
                     output,
                     Set.of(),
                     List.of(
                             new SubProviderEntry(BlockLoot::new, LootContextParamSets.BLOCK)
-                    )
+                    ),
+                    lookupProvider
             );
         }
     }
 
     private static class BlockLoot extends NoValidationBLockLootSubProvider {
 
-        public BlockLoot() {
+        public BlockLoot(HolderLookup.Provider registries) {
             super(Set.of(
                     CHUNK_LOADER_ITEM.get(),
                     SPOT_LOADER_ITEM.get()
-            ));
+            ), registries);
         }
 
         @Override
@@ -105,8 +106,8 @@ public class DataGenerators {
 
     private static class Recipes extends RecipeProvider {
 
-        public Recipes(PackOutput output) {
-            super(output, MOD_ID);
+        public Recipes(CompletableFuture<HolderLookup.Provider> lookupProvider, PackOutput output) {
+            super(lookupProvider, output, MOD_ID);
         }
 
         @Override
@@ -195,7 +196,7 @@ public class DataGenerators {
         private boolean isSpotLoader;
 
         public ChunkLoaderItemModelLoaderBuilder(ItemModelProvider.SimpleItemModelBuilder parent) {
-            super(new ResourceLocation(MOD_ID, "chunk_loader"), parent);
+            super(ResourceLocation.fromNamespaceAndPath(MOD_ID, "chunk_loader"), parent);
         }
 
         public ChunkLoaderItemModelLoaderBuilder childModel(String childModel) {

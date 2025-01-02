@@ -27,6 +27,6 @@ public class ClientInit {
     }
 
     private static void onRegisterGeometryLoaders(ModelEvent.RegisterGeometryLoaders event) {
-        event.register(new ResourceLocation(MOD_ID, "chunk_loader"), new ChunkLoaderItemModel());
+        event.register(ResourceLocation.fromNamespaceAndPath(MOD_ID, "chunk_loader"), new ChunkLoaderItemModel());
     }
 }

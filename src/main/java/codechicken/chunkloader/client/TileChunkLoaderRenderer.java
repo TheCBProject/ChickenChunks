@@ -31,13 +31,15 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.Collection;
 
+import static codechicken.chunkloader.ChickenChunks.MOD_ID;
+
 public class TileChunkLoaderRenderer implements BlockEntityRenderer<TileChunkLoaderBase> {
 
     public static final RenderType laserType = RenderType.create("lasers", DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS, 256, RenderType.CompositeState.builder()
             .setShaderState(RenderStateShard.ShaderStateShard.POSITION_COLOR_SHADER)
             .createCompositeState(false)
     );
-    public static final RenderType pearlType = CCModelLibrary.getIcos4RenderType(new ResourceLocation("chickenchunks:textures/hedronmap.png"));
+    public static final RenderType pearlType = CCModelLibrary.getIcos4RenderType(ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/hedronmap.png"));
 
     public TileChunkLoaderRenderer(BlockEntityRendererProvider.Context ctx) {
     }
@@ -93,7 +95,7 @@ public class TileChunkLoaderRenderer implements BlockEntityRenderer<TileChunkLoa
 
     @Override
     public AABB getRenderBoundingBox(TileChunkLoaderBase blockEntity) {
-        return INFINITE_EXTENT_AABB;
+        return AABB.INFINITE;
     }
 
     public @Nullable Point2D.Double findIntersection(Line2D line1, Line2D line2) {

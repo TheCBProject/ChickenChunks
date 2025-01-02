@@ -40,7 +40,7 @@ public class ChunkLoaderCPH implements IClientPacketHandler {
     public static void sendShapeChange(TileChunkLoader tile, ChunkLoaderShape shape, int radius) {
         if (radius < 0 || radius > 255) return;
 
-        PacketCustom packet = new PacketCustom(ChickenChunksNetwork.NET_CHANNEL, S_SET_SHAPE);
+        PacketCustom packet = new PacketCustom(ChickenChunksNetwork.NET_CHANNEL, S_SET_SHAPE, tile.getLevel().registryAccess());
         packet.writePos(tile.getBlockPos());
         packet.writeEnum(shape);
         packet.writeShort(radius);

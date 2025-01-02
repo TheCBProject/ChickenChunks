@@ -32,14 +32,14 @@ public class ChunkLoaderSPH implements IServerPacketHandler {
 
     public static void sendStateUpdate(TileChunkLoaderBase tile) {
         if (tile.world().isClientSide) return;
-        PacketCustom packet = new PacketCustom(NET_CHANNEL, C_UPDATE_STATE);
+        PacketCustom packet = new PacketCustom(NET_CHANNEL, C_UPDATE_STATE, tile.getLevel().registryAccess());
         packet.writePos(tile.getBlockPos());
         tile.writeToPacket(packet);
         packet.sendToChunk(tile);
     }
 
     public static void sendGuiWarning(ServerPlayer player, Component component) {
-        PacketCustom packet = new PacketCustom(NET_CHANNEL, C_ADD_GUI_WARNING);
+        PacketCustom packet = new PacketCustom(NET_CHANNEL, C_ADD_GUI_WARNING, player.registryAccess());
         packet.writeTextComponent(component);
         packet.sendToPlayer(player);
     }

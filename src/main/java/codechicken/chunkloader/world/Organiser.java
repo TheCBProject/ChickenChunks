@@ -7,7 +7,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -51,12 +50,12 @@ public class Organiser {
 
     public CompoundTag write(CompoundTag tag) {
         tag.put("dormantLoaders", dormantLoaders.stream()
-                .map(NbtUtils::writeBlockPos)
+                .map(Organiser::writeBlockPos)
                 .collect(Collectors.toCollection(ListTag::new))
         );
         tag.put("loaders", forcedChunksByLoader.keySet().stream()
                 .map(IChunkLoader::pos)
-                .map(NbtUtils::writeBlockPos)
+                .map(Organiser::writeBlockPos)
                 .collect(Collectors.toCollection(ListTag::new))
         );
         return tag;
@@ -65,11 +64,11 @@ public class Organiser {
     public Organiser read(CompoundTag tag) {
         tag.getList("dormantLoaders", 10).stream()
                 .map(e -> (CompoundTag) e)
-                .map(NbtUtils::readBlockPos)
+                .map(Organiser::readBlockPos)
                 .forEach(dormantLoaders::add);
         tag.getList("loaders", 10).stream()
                 .map(e -> (CompoundTag) e)
-                .map(NbtUtils::readBlockPos)
+                .map(Organiser::readBlockPos)
                 .forEach(dormantLoaders::add);
         dormant = true;
         return this;
@@ -209,5 +208,17 @@ public class Organiser {
             });
             return map.isEmpty();
         });
+    }
+
+    private static BlockPos readBlockPos(CompoundTag p_129240_) {
+        return new BlockPos(p_129240_.getInt("X"), p_129240_.getInt("Y"), p_129240_.getInt("Z"));
+    }
+
+    private static CompoundTag writeBlockPos(BlockPos p_129225_) {
+        CompoundTag compoundtag = new CompoundTag();
+        compoundtag.putInt("X", p_129225_.getX());
+        compoundtag.putInt("Y", p_129225_.getY());
+        compoundtag.putInt("Z", p_129225_.getZ());
+        return compoundtag;
     }
 }

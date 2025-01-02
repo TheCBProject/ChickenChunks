@@ -9,7 +9,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -44,20 +46,20 @@ public class BlockChunkLoader extends BlockChunkLoaderBase {
     }
 
     @Override
-    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
+    public ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level world, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
         if (!world.isClientSide) {
-            if (!(world.getBlockEntity(pos) instanceof TileChunkLoader tile)) return InteractionResult.PASS;
+            if (!(world.getBlockEntity(pos) instanceof TileChunkLoader tile)) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
             if (tile.owner == null) {
                 player.sendSystemMessage(Component.translatable("chickenchunks.brokentile"));
             } else if (tile.owner.equals(player.getUUID()) || ChickenChunksConfig.doesBypassLoaderAccess((ServerPlayer) player)) {
-                PacketCustom packet = new PacketCustom(NET_CHANNEL, C_OPEN_LOADER_GUI);
+                PacketCustom packet = new PacketCustom(NET_CHANNEL, C_OPEN_LOADER_GUI, world.registryAccess());
                 packet.writePos(pos);
                 packet.sendToPlayer((ServerPlayer) player);
             } else {
                 player.sendSystemMessage(Component.translatable("chickenchunks.accessdenied"));
             }
         }
-        return InteractionResult.SUCCESS;
+        return ItemInteractionResult.SUCCESS;
     }
 
     @Nullable
