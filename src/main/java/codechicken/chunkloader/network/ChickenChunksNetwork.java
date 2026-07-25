@@ -1,9 +1,20 @@
 package codechicken.chunkloader.network;
 
-import codechicken.chunkloader.ChickenChunks;
-import codechicken.lib.packet.PacketCustomChannel;
-import net.minecraft.resources.ResourceLocation;
+import codechicken.chunkloader.api.ChunkLoaderShape;
+import codechicken.chunkloader.gui.GuiChunkLoader;
+import codechicken.chunkloader.tile.TileChunkLoader;
+import codechicken.chunkloader.tile.TileChunkLoaderBase;
+import codechicken.lib.packet.StreamNetworkChannel;
+import codechicken.lib.packet.StreamNetworkChannel.ClientPacketHandle;
+import codechicken.lib.packet.StreamNetworkChannel.ServerPacketHandle;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import static codechicken.chunkloader.ChickenChunks.MOD_ID;
 
@@ -12,21 +23,64 @@ import static codechicken.chunkloader.ChickenChunks.MOD_ID;
  */
 public class ChickenChunksNetwork {
 
-    public static final ResourceLocation NET_CHANNEL = ResourceLocation.fromNamespaceAndPath(MOD_ID, "network");
-    public static final PacketCustomChannel channel = new PacketCustomChannel(NET_CHANNEL)
-            .versioned(ChickenChunks.container().getModInfo().getVersion().toString())
-            .client(() -> ChunkLoaderCPH::new)
-            .server(() -> ChunkLoaderSPH::new);
+    public static final StreamNetworkChannel CHANNEL = new StreamNetworkChannel(MOD_ID);
 
-    //Client handled.
-    public static final int C_OPEN_LOADER_GUI = 1;
-    public static final int C_UPDATE_STATE = 2;
-    public static final int C_ADD_GUI_WARNING = 3;
+    public static final ClientPacketHandle OPEN_LOADER_GUI = CHANNEL.playToClient("open_loader", ChickenChunksNetwork::handleOpenLoaderGui);
+    public static final ClientPacketHandle TILE_UPDATE = CHANNEL.playToClient("tile_update", ChickenChunksNetwork::handleTileUpdate);
+    public static final ClientPacketHandle ADD_GUI_WARNING = CHANNEL.playToClient("gui_warning", ChickenChunksNetwork::handleAddGuiWarning);
 
-    //Server handled.
-    public static final int S_SET_SHAPE = 1;
+    public static final ServerPacketHandle SET_SHAPE = CHANNEL.playToServer("set_shape", ChickenChunksNetwork::handleSetShape);
 
-    public static void init(IEventBus modBus) {
-        channel.init(modBus);
+    public static void init(IEventBus modBus, ModContainer container) {
+        CHANNEL.init(modBus, container);
+    }
+
+    private static void handleOpenLoaderGui(RegistryFriendlyByteBuf packet, IPayloadContext ctx) {
+        if (ctx.player().level().getBlockEntity(packet.readBlockPos()) instanceof TileChunkLoader tile) {
+            Minecraft.getInstance().setScreen(new GuiChunkLoader(tile));
+        }
+    }
+
+    public static void sendTileUpdate(TileChunkLoaderBase tile) {
+        if (tile.world().isClientSide()) return;
+
+        var packet = TILE_UPDATE.toClient(tile);
+        packet.writeBlockPos(tile.getBlockPos());
+        tile.writeToPacket(packet);
+        packet.sendToChunk(tile);
+    }
+
+    private static void handleTileUpdate(RegistryFriendlyByteBuf packet, IPayloadContext ctx) {
+        if (ctx.player().level().getBlockEntity(packet.readBlockPos()) instanceof TileChunkLoaderBase chunkLoader) {
+            chunkLoader.readFromPacket(packet);
+        }
+    }
+
+    public static void sendAddGuiWarning(ServerPlayer player, Component component) {
+        var packet = ADD_GUI_WARNING.toClient(player);
+        packet.cc$writeWithRegistryCodec(ComponentSerialization.STREAM_CODEC, component);
+        packet.sendToPlayer(player);
+    }
+
+    private static void handleAddGuiWarning(RegistryFriendlyByteBuf packet, IPayloadContext ctx) {
+        if (Minecraft.getInstance().screen instanceof GuiChunkLoader gui) {
+            gui.addWarning(packet.cc$readWithRegistryCodec(ComponentSerialization.STREAM_CODEC));
+        }
+    }
+
+    public static void sendSetShape(TileChunkLoader tile, ChunkLoaderShape shape, int radius) {
+        if (radius < 0 || radius > 255) return;
+
+        var packet = SET_SHAPE.toServer();
+        packet.writeBlockPos(tile.getBlockPos());
+        packet.writeEnum(shape);
+        packet.writeShort(radius);
+        packet.sendToServer();
+    }
+
+    private static void handleSetShape(RegistryFriendlyByteBuf packet, IPayloadContext ctx) {
+        if (ctx.player().level().getBlockEntity(packet.readBlockPos()) instanceof TileChunkLoader tile) {
+            tile.setShapeAndRadius((ServerPlayer) ctx.player(), packet.readEnum(ChunkLoaderShape.class), packet.readShort());
+        }
     }
 }

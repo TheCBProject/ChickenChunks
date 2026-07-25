@@ -1,0 +1,20 @@
+{
+  "model": {
+    "type": "minecraft:composite",
+    "models": [
+      {
+        "type": "minecraft:model",
+        "model": "chickenchunks:block/chunk_loader"
+      },
+      {
+        "type": "minecraft:special",
+        "base": "chickenchunks:block/chunk_loader",
+        "model": {
+          "type": "chickenchunks:pearl",
+          "height": 0.9,
+          "size": 0.08
+        }
+      }
+    ]
+  }
+}

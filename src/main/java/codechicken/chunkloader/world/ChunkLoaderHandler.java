@@ -6,21 +6,27 @@ import codechicken.chunkloader.handler.ChickenChunksConfig;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
+import com.mojang.serialization.DataResult;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.world.chunk.RegisterTicketControllersEvent;
@@ -47,12 +53,33 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
     private static final boolean DEBUG = Boolean.getBoolean("chickenchunks.loading.debug");
 
     public static final TicketController CONTROLLER = new TicketController(
-            ResourceLocation.fromNamespaceAndPath(MOD_ID, "chunk_loaders"),
+            Identifier.fromNamespaceAndPath(MOD_ID, "chunk_loaders"),
             (level, ticketHelper) -> {
                 // On load, nuke everything. We manually re-register tickets.
                 ticketHelper.getBlockTickets().keySet().forEach(ticketHelper::removeAllTickets);
                 ticketHelper.getEntityTickets().keySet().forEach(ticketHelper::removeAllTickets);
             }
+    );
+
+    private static final SavedDataType<ChunkLoaderHandler> TYPE = new SavedDataType<>(
+            MOD_ID,
+            ctx -> new ChunkLoaderHandler(ctx.getServer()),
+            ctx -> CompoundTag.CODEC.flatXmap(tag -> {
+                var server = ctx.getServer();
+                var handler = new ChunkLoaderHandler(server);
+                var reporter = new ProblemReporter.Collector();
+                handler.load(TagValueInput.create(reporter, server.registryAccess(), tag));
+
+                if (reporter.isEmpty()) return DataResult.success(handler);
+                return DataResult.error(() -> "Failed to deserialize: " + reporter.getReport());
+            }, handler -> {
+                var reporter = new ProblemReporter.Collector();
+                var output = TagValueOutput.createWithContext(reporter, handler.server.registryAccess());
+                handler.save(output);
+
+                if (reporter.isEmpty()) return DataResult.success(output.buildResult());
+                return DataResult.error(() -> "Failed to serialize: " + reporter.getReport());
+            })
     );
 
     public static void init(IEventBus modBus) {
@@ -94,14 +121,7 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
             throw new RuntimeException("Tried to re-init the overworld?");
         }
 
-        instance = level.getDataStorage().computeIfAbsent(
-                new Factory<>(
-                        () -> new ChunkLoaderHandler(level.getServer()),
-                        (t, r) -> new ChunkLoaderHandler(level.getServer(), t)
-                ),
-                MOD_ID
-        );
-
+        instance = level.getDataStorage().computeIfAbsent(TYPE);
         getInstance().onOverWorldLoad();
     }
 
@@ -126,21 +146,16 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
     private final MinecraftServer server;
 
     // <Player, DimensionType, Organiser> / For each player, their per dimension Organiser instance.
-    private final Table<UUID, ResourceLocation, Organiser> playerOrganisers = HashBasedTable.create();
+    private final Table<UUID, Identifier, Organiser> playerOrganisers = HashBasedTable.create();
 
     // <DimensionType, Chunk, ChunkTicket> / Each dimensions, ChunkTicket instances per chunk.
-    private final Table<ResourceLocation, ChunkPos, ChunkTicket> activeTickets = HashBasedTable.create();
+    private final Table<Identifier, ChunkPos, ChunkTicket> activeTickets = HashBasedTable.create();
     private final List<Organiser> deviveList = new LinkedList<>();
 
     private final List<Organiser> reviveList = new LinkedList<>();
 
     // When, in Millis was the player last seen online.
     private final Object2LongMap<UUID> loginTimes = new Object2LongOpenHashMap<>();
-
-    protected ChunkLoaderHandler(MinecraftServer server, CompoundTag tag) {
-        this(server);
-        load(tag);
-    }
 
     protected ChunkLoaderHandler(MinecraftServer server) {
         this.server = server;
@@ -205,7 +220,7 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
     }
 
     private void onOverWorldLoad() {
-        for (Map.Entry<UUID, Map<ResourceLocation, Organiser>> playerEntry : playerOrganisers.rowMap().entrySet()) {
+        for (Map.Entry<UUID, Map<Identifier, Organiser>> playerEntry : playerOrganisers.rowMap().entrySet()) {
             long curr = System.currentTimeMillis();
             UUID player = playerEntry.getKey();
             ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getRestrictions(player);
@@ -213,7 +228,7 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
             long lastSeen = loginTimes.getOrDefault(player, -1L);
             // If the user is allowed to load things offline, or their timeout hasn't expired yet.
             if (restrictions.canLoadOffline() || (lastSeen != -1 || (curr - lastSeen) / 60000L < timeout)) {
-                if (DEBUG) LOGGER.info("Adding {} organizers to revive list for {}", playerEntry.getValue().values().size(), player);
+                if (DEBUG) LOGGER.info("Adding {} organizers to revive list for {}", playerEntry.getValue().size(), player);
                 reviveList.addAll(playerEntry.getValue().values());
             }
         }
@@ -228,7 +243,7 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
                 loginTimes.put(player.getUUID(), curr);
             }
             // Queue their Organisers for unload if needed.
-            for (Map.Entry<UUID, Map<ResourceLocation, Organiser>> playerEntry : playerOrganisers.rowMap().entrySet()) {
+            for (Map.Entry<UUID, Map<Identifier, Organiser>> playerEntry : playerOrganisers.rowMap().entrySet()) {
                 UUID player = playerEntry.getKey();
                 ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getRestrictions(player);
                 if (!restrictions.canLoadOffline()) {
@@ -259,7 +274,7 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
         deviveList.clear();
     }
 
-    public void remChunk(IChunkLoader loader, ResourceLocation dim, ChunkPos pos) {
+    public void remChunk(IChunkLoader loader, Identifier dim, ChunkPos pos) {
         ChunkTicket ticket = activeTickets.get(dim, pos);
         if (ticket != null) {
             if (ticket.remLoader(loader)) {
@@ -271,7 +286,7 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
         }
     }
 
-    public void addChunk(IChunkLoader loader, ResourceLocation dim, ChunkPos pos) {
+    public void addChunk(IChunkLoader loader, Identifier dim, ChunkPos pos) {
         ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, dim);
         ServerLevel world = requireNonNull(server.getLevel(key));
         ChunkTicket ticket = computeIfAbsent(activeTickets, dim, pos, () -> new ChunkTicket(world, pos));
@@ -281,57 +296,52 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
         }
     }
 
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
-        ListTag playerList = new ListTag();
-        for (Map.Entry<UUID, Map<ResourceLocation, Organiser>> playerEntry : playerOrganisers.rowMap().entrySet()) {
-            CompoundTag playerTag = new CompoundTag();
-            playerTag.putUUID("player", playerEntry.getKey());
-            ListTag dimensions = new ListTag();
-            for (Map.Entry<ResourceLocation, Organiser> dimEntry : playerEntry.getValue().entrySet()) {
-                if (dimEntry.getValue().isEmpty()) continue; // Culling.
+    private void save(ValueOutput output) {
+        var playerList = output.childrenList("playerOrganisers");
+        for (var playerEntry : playerOrganisers.rowMap().entrySet()) {
+            var playerTag = playerList.addChild();
+            playerTag.store("player", UUIDUtil.CODEC, playerEntry.getKey());
 
-                CompoundTag dimTag = new CompoundTag();
-                dimTag.putString("dimension", dimEntry.getKey().toString());
-                dimTag.put("organiser", dimEntry.getValue().write(new CompoundTag()));
-                dimensions.add(dimTag);
+            var dimMap = playerEntry.getValue();
+            if (dimMap.isEmpty()) continue;
+
+            var dimensions = playerTag.childrenList("dimensions");
+            for (var dimEntry : dimMap.entrySet()) {
+                if (dimEntry.getValue().isEmpty()) continue;
+
+                var dimTag = dimensions.addChild();
+                dimTag.store("dimension", Identifier.CODEC, dimEntry.getKey());
+                dimEntry.getValue().save(dimTag.child("organiser"));
             }
-            if (dimensions.isEmpty()) continue; // Culling.
-
-            playerTag.put("dimensions", dimensions);
-            playerList.add(playerTag);
         }
-        tag.put("playerOrganisers", playerList);
 
-        ListTag loginList = new ListTag();
-        for (Object2LongMap.Entry<UUID> uuidEntry : loginTimes.object2LongEntrySet()) {
-            CompoundTag playerTag = new CompoundTag();
-            playerTag.putUUID("player", uuidEntry.getKey());
+        var loginList = output.childrenList("loginTimes");
+        for (var uuidEntry : loginTimes.object2LongEntrySet()) {
+            var playerTag = loginList.addChild();
+            playerTag.store("player", UUIDUtil.CODEC, uuidEntry.getKey());
             playerTag.putLong("time", uuidEntry.getLongValue());
-            loginList.add(playerTag);
         }
-        tag.put("loginTimes", loginList);
-        return tag;
     }
 
-    private void load(CompoundTag tag) {
-        ListTag playerList = tag.getList("playerOrganisers", 10);
-        for (int i = 0; i < playerList.size(); i++) {
-            CompoundTag playerTag = playerList.getCompound(i);
-            UUID player = playerTag.getUUID("player");
-            ListTag dimensions = playerTag.getList("dimensions", 10);
-            for (int j = 0; j < dimensions.size(); j++) {
-                CompoundTag dimTag = dimensions.getCompound(j);
-                ResourceLocation dim = ResourceLocation.parse(dimTag.getString("dimension"));
-                Organiser organiser = new Organiser(this, dim, player).read(dimTag.getCompound("organiser"));
+    private void load(ValueInput input) {
+        var playerList = input.childrenListOrEmpty("playerOrganisers");
+        for (var playerTag : playerList) {
+            var player = playerTag.read("player", UUIDUtil.CODEC).orElseThrow();
+            var dimensions = playerTag.childrenListOrEmpty("dimensions");
+            for (var dimTag : dimensions) {
+                var dim = dimTag.read("dimension", Identifier.CODEC).orElseThrow();
+                Organiser organiser = new Organiser(this, dim, player);
+                organiser.load(input.childOrEmpty("organiser"));
                 playerOrganisers.put(player, dim, organiser);
             }
         }
 
-        ListTag loginList = tag.getList("times", 10);
-        for (int i = 0; i < loginList.size(); i++) {
-            CompoundTag playerTag = loginList.getCompound(i);
-            loginTimes.put(playerTag.getUUID("player"), playerTag.getLong("time"));
+        var loginList = input.childrenListOrEmpty("loginTimes");
+        for (var playerTag : loginList) {
+            loginTimes.put(
+                    playerTag.read("player", UUIDUtil.CODEC).orElseThrow(),
+                    playerTag.getLongOr("time", 0)
+            );
         }
     }
 
@@ -354,10 +364,10 @@ public class ChunkLoaderHandler extends SavedData implements IChunkLoaderHandler
     }
 
     public Organiser getOrganiser(ResourceKey<Level> dim, UUID player) {
-        return getOrganiser(dim.location(), player);
+        return getOrganiser(dim.identifier(), player);
     }
 
-    public Organiser getOrganiser(ResourceLocation dim, UUID player) {
+    public Organiser getOrganiser(Identifier dim, UUID player) {
         return computeIfAbsent(playerOrganisers, player, dim, () -> new Organiser(this, dim, player));
     }
 

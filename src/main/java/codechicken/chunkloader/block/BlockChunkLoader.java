@@ -2,14 +2,13 @@ package codechicken.chunkloader.block;
 
 import codechicken.chunkloader.handler.ChickenChunksConfig;
 import codechicken.chunkloader.init.ChickenChunksModContent;
+import codechicken.chunkloader.network.ChickenChunksNetwork;
 import codechicken.chunkloader.tile.TileChunkLoader;
-import codechicken.lib.packet.PacketCustom;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
@@ -24,15 +23,16 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-import static codechicken.chunkloader.network.ChickenChunksNetwork.C_OPEN_LOADER_GUI;
-import static codechicken.chunkloader.network.ChickenChunksNetwork.NET_CHANNEL;
-
 /**
  * Created by covers1624 on 11/4/22.
  */
 public class BlockChunkLoader extends BlockChunkLoaderBase {
 
     public static final VoxelShape SHAPE = Shapes.box(0, 0, 0, 1, 0.75F, 1);
+
+    public BlockChunkLoader(Properties props) {
+        super(props);
+    }
 
     @Nullable
     @Override
@@ -46,26 +46,27 @@ public class BlockChunkLoader extends BlockChunkLoaderBase {
     }
 
     @Override
-    public ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level world, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
-        if (!world.isClientSide) {
-            if (!(world.getBlockEntity(pos) instanceof TileChunkLoader tile)) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-            if (tile.owner == null) {
-                player.sendSystemMessage(Component.translatable("chickenchunks.brokentile"));
-            } else if (tile.owner.equals(player.getUUID()) || ChickenChunksConfig.doesBypassLoaderAccess((ServerPlayer) player)) {
-                PacketCustom packet = new PacketCustom(NET_CHANNEL, C_OPEN_LOADER_GUI, world.registryAccess());
-                packet.writePos(pos);
-                packet.sendToPlayer((ServerPlayer) player);
-            } else {
-                player.sendSystemMessage(Component.translatable("chickenchunks.accessdenied"));
-            }
+    public InteractionResult useItemOn(ItemStack stack, BlockState state, Level world, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
+        if (world.isClientSide() || !(player instanceof ServerPlayer sPlayer)) return InteractionResult.SUCCESS;
+
+        if (!(world.getBlockEntity(pos) instanceof TileChunkLoader tile)) return InteractionResult.TRY_WITH_EMPTY_HAND;
+
+        if (tile.owner == null) {
+            sPlayer.sendSystemMessage(Component.translatable("chickenchunks.brokentile"));
+        } else if (tile.owner.equals(player.getUUID()) || ChickenChunksConfig.doesBypassLoaderAccess(sPlayer)) {
+            var packet = ChickenChunksNetwork.OPEN_LOADER_GUI.toClient(sPlayer);
+            packet.writeBlockPos(pos);
+            packet.sendToPlayer(sPlayer);
+        } else {
+            sPlayer.sendSystemMessage(Component.translatable("chickenchunks.accessdenied"));
         }
-        return ItemInteractionResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> actual) {
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             return createTickerHelper(actual, ChickenChunksModContent.CHUNK_LOADER_TILE.get(), (a, b, c, d) -> d.tickClient());
         }
         return createTickerHelper(actual, ChickenChunksModContent.CHUNK_LOADER_TILE.get(), (a, b, c, d) -> d.tickServer());

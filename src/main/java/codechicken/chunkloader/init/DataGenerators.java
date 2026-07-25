@@ -1,32 +1,26 @@
 package codechicken.chunkloader.init;
 
-import codechicken.chunkloader.block.BlockChunkLoader;
-import codechicken.chunkloader.block.BlockSpotLoader;
-import codechicken.lib.datagen.ItemModelProvider;
+import codechicken.chunkloader.client.ChunkLoaderPearlItemRenderer;
 import codechicken.lib.datagen.NoValidationBLockLootSubProvider;
 import codechicken.lib.datagen.recipe.RecipeProvider;
-import com.google.gson.JsonObject;
 import net.covers1624.quack.util.CrashLock;
+import net.minecraft.client.data.models.BlockModelGenerators;
+import net.minecraft.client.data.models.ItemModelGenerators;
+import net.minecraft.client.data.models.ModelProvider;
+import net.minecraft.client.data.models.model.ItemModelUtils;
+import net.minecraft.client.data.models.model.ModelLocationUtils;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.loot.LootTableProvider;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
-import net.neoforged.neoforge.client.model.generators.ModelFile;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.data.BlockTagsProvider;
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -43,21 +37,16 @@ public class DataGenerators {
     public static void init(IEventBus modBus) {
         LOCK.lock();
 
-        modBus.addListener(DataGenerators::gatherDataGenerators);
+        if (FMLEnvironment.getDist().isClient()) {
+            modBus.addListener(DataGenerators::gatherDataGenerators);
+        }
     }
 
-    private static void gatherDataGenerators(GatherDataEvent event) {
-        DataGenerator gen = event.getGenerator();
-        PackOutput output = gen.getPackOutput();
-        ExistingFileHelper files = event.getExistingFileHelper();
-        CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
-
-        gen.addProvider(event.includeServer(), new LootTables(output, lookupProvider));
-        gen.addProvider(event.includeServer(), new BlockTags(output, lookupProvider, files));
-        gen.addProvider(event.includeServer(), new Recipes(lookupProvider, output));
-
-        gen.addProvider(event.includeClient(), new BlockStates(output, files));
-        gen.addProvider(event.includeClient(), new ItemModels(output, files));
+    private static void gatherDataGenerators(GatherDataEvent.Client event) {
+        event.createProvider(LootTables::new);
+        event.createProvider(BlockTags::new);
+        event.createProvider(Recipes::new);
+        event.createProvider(Models::new);
     }
 
     private static class LootTables extends LootTableProvider {
@@ -92,8 +81,8 @@ public class DataGenerators {
 
     private static class BlockTags extends BlockTagsProvider {
 
-        public BlockTags(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, @Nullable ExistingFileHelper existingFileHelper) {
-            super(output, lookupProvider, MOD_ID, existingFileHelper);
+        public BlockTags(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider) {
+            super(output, lookupProvider, MOD_ID);
         }
 
         @Override
@@ -106,8 +95,8 @@ public class DataGenerators {
 
     private static class Recipes extends RecipeProvider {
 
-        public Recipes(CompletableFuture<HolderLookup.Provider> lookupProvider, PackOutput output) {
-            super(lookupProvider, output, MOD_ID);
+        public Recipes(PackOutput output, CompletableFuture<HolderLookup.Provider> recipes) {
+            super(output, recipes, MOD_ID);
         }
 
         @Override
@@ -129,95 +118,37 @@ public class DataGenerators {
         }
     }
 
-    private static class BlockStates extends BlockStateProvider {
+    private static class Models extends ModelProvider {
 
-        public BlockStates(PackOutput output, ExistingFileHelper exFileHelper) {
-            super(output, MOD_ID, exFileHelper);
+        public Models(PackOutput output) {
+            super(output, MOD_ID);
+
         }
 
         @Override
-        protected void registerStatesAndModels() {
-            simpleBlock(
-                    CHUNK_LOADER_BLOCK.get(),
-                    chunkLoader("chunk_loader", "full", BlockChunkLoader.SHAPE)
+        protected void registerModels(BlockModelGenerators blockModels, ItemModelGenerators itemModels) {
+            blockModels.createNonTemplateModelBlock(CHUNK_LOADER_BLOCK.get());
+            blockModels.createNonTemplateModelBlock(SPOT_LOADER_BLOCK.get());
+            itemModels.itemModelOutput.accept(
+                    CHUNK_LOADER_ITEM.get(),
+                    ItemModelUtils.composite(
+                            ItemModelUtils.plainModel(ModelLocationUtils.getModelLocation(CHUNK_LOADER_BLOCK.get())),
+                            ItemModelUtils.specialModel(
+                                    ModelLocationUtils.getModelLocation(CHUNK_LOADER_BLOCK.get()),
+                                    new ChunkLoaderPearlItemRenderer.Unbaked(0.9, 0.08)
+                            )
+                    )
             );
-            simpleBlock(
-                    SPOT_LOADER_BLOCK.get(),
-                    chunkLoader("spot_loader", "spot", BlockSpotLoader.SHAPE)
+            itemModels.itemModelOutput.accept(
+                    SPOT_LOADER_ITEM.get(),
+                    ItemModelUtils.composite(
+                            ItemModelUtils.plainModel(ModelLocationUtils.getModelLocation(SPOT_LOADER_BLOCK.get())),
+                            ItemModelUtils.specialModel(
+                                    ModelLocationUtils.getModelLocation(SPOT_LOADER_BLOCK.get()),
+                                    new ChunkLoaderPearlItemRenderer.Unbaked(0.55, 0.05)
+                            )
+                    )
             );
         }
-
-        private ModelFile chunkLoader(String name, String texturePrefix, VoxelShape shape) {
-            AABB box = shape.bounds();
-            return models().getBuilder(name)
-                    .texture("particle", modLoc("block/" + texturePrefix + "/side"))
-                    .texture("top", modLoc("block/" + texturePrefix + "/top"))
-                    .texture("side", modLoc("block/" + texturePrefix + "/side"))
-                    .texture("bottom", modLoc("block/" + texturePrefix + "/bottom"))
-                    .element()
-                    .from((float) box.minX * 16F, (float) box.minY * 16F, (float) box.minZ * 16F)
-                    .to((float) box.maxX * 16F, (float) box.maxY * 16F, (float) box.maxZ * 16F)
-                    .allFaces((dir, builder) -> {
-                        switch (dir) {
-                            case NORTH, EAST, SOUTH, WEST -> builder.texture("#side");
-                            case UP -> builder.texture("#top");
-                            case DOWN -> builder.texture("#bottom");
-                        }
-                    })
-                    .end();
-        }
     }
-
-    private static class ItemModels extends ItemModelProvider {
-
-        public ItemModels(PackOutput output, ExistingFileHelper existingFileHelper) {
-            super(output, MOD_ID, existingFileHelper);
-        }
-
-        @Override
-        protected void registerModels() {
-            generated(CHUNK_LOADER_ITEM.get())
-                    .noTexture()
-                    .customLoader(ChunkLoaderItemModelLoaderBuilder::new)
-                    .childModel("chickenchunks:block/chunk_loader")
-                    .spotLoader(false);
-
-            generated(SPOT_LOADER_ITEM.get())
-                    .noTexture()
-                    .customLoader(ChunkLoaderItemModelLoaderBuilder::new)
-                    .childModel("chickenchunks:block/spot_loader")
-                    .spotLoader(true);
-        }
-    }
-
-    private static class ChunkLoaderItemModelLoaderBuilder extends ItemModelProvider.CustomLoaderBuilder {
-
-        private @Nullable String childModel;
-        private boolean isSpotLoader;
-
-        public ChunkLoaderItemModelLoaderBuilder(ItemModelProvider.SimpleItemModelBuilder parent) {
-            super(ResourceLocation.fromNamespaceAndPath(MOD_ID, "chunk_loader"), parent);
-        }
-
-        public ChunkLoaderItemModelLoaderBuilder childModel(String childModel) {
-            this.childModel = childModel;
-            return this;
-        }
-
-        public ChunkLoaderItemModelLoaderBuilder spotLoader(boolean isSpotLoader) {
-            this.isSpotLoader = isSpotLoader;
-            return this;
-        }
-
-        @Override
-        protected JsonObject toJson(JsonObject json) {
-            super.toJson(json);
-
-            json.addProperty("childModel", Objects.requireNonNull(childModel));
-            json.addProperty("isSpotLoader", isSpotLoader);
-
-            return json;
-        }
-    }
-
 }

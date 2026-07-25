@@ -5,7 +5,7 @@ import codechicken.chunkloader.tile.TileChunkLoaderBase;
 import codechicken.chunkloader.tile.TileSpotLoader;
 import codechicken.lib.math.MathHelper;
 import codechicken.lib.render.CCModelLibrary;
-import codechicken.lib.render.CCRenderState;
+import codechicken.lib.render.CCRenderPipelines;
 import codechicken.lib.render.RenderUtils;
 import codechicken.lib.render.buffer.TransformingVertexConsumer;
 import codechicken.lib.util.ClientUtils;
@@ -13,84 +13,47 @@ import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import codechicken.lib.vec.Rotation;
 import codechicken.lib.vec.Vector3;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderStateShard;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
+import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.state.CameraRenderState;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.Collection;
+import java.util.Set;
 
 import static codechicken.chunkloader.ChickenChunks.MOD_ID;
+import static java.util.Objects.requireNonNull;
 
-public class TileChunkLoaderRenderer implements BlockEntityRenderer<TileChunkLoaderBase> {
+public class TileChunkLoaderRenderer implements BlockEntityRenderer<TileChunkLoaderBase, TileChunkLoaderRenderer.RenderState> {
 
-    public static final RenderType laserType = RenderType.create("lasers", DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS, 256, RenderType.CompositeState.builder()
-            .setShaderState(RenderStateShard.ShaderStateShard.POSITION_COLOR_SHADER)
-            .createCompositeState(false)
+    private static final RenderType laserType = RenderType.create(
+            MOD_ID + ":lasers",
+            RenderSetup.builder(CCRenderPipelines.POSITION_COLOR)
+                    .sortOnUpload()
+                    .createRenderSetup()
     );
-    public static final RenderType pearlType = CCModelLibrary.getIcos4RenderType(ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/hedronmap.png"));
+    public static final RenderType pearlType = CCModelLibrary.getIcos4RenderType(Identifier.fromNamespaceAndPath(MOD_ID, "textures/hedronmap.png"));
 
     public TileChunkLoaderRenderer(BlockEntityRendererProvider.Context ctx) {
     }
 
     @Override
-    public void render(TileChunkLoaderBase tile, float partialTicks, PoseStack mStack, MultiBufferSource getter, int packedLight, int packedOverlay) {
-        Matrix4 mat = new Matrix4(mStack);
-        CCRenderState ccrs = CCRenderState.instance();
-        ccrs.reset();
-        ccrs.brightness = packedOverlay;
-        ccrs.overlay = packedOverlay;
-
-        double rot = ClientUtils.getRenderTime() * 2;
-        double height;
-        double size;
-        double updown = (ClientUtils.getRenderTime() % 50) / 25F;
-
-        updown = (float) Math.sin(updown * 3.141593);
-        updown *= 0.2;
-
-        if (tile instanceof TileChunkLoader ctile) {
-            rot /= Math.pow(ctile.radius, 0.2);
-            height = 0.9;
-            size = 0.08;
-        } else if (tile instanceof TileSpotLoader) {
-            height = 0.5;
-            size = 0.05;
-        } else {
-            return;
-        }
-
-        TileChunkLoaderBase.RenderInfo renderInfo = tile.renderInfo;
-        assert renderInfo != null;
-        double active = (renderInfo.activationCounter) / 20D;
-        if (tile.active && renderInfo.activationCounter < 20) {
-            active += partialTicks / 20D;
-        } else if (!tile.active && renderInfo.activationCounter > 0) {
-            active -= partialTicks / 20D;
-        }
-
-        if (renderInfo.showLasers) {
-            VertexConsumer builder = getter.getBuffer(laserType);
-            drawRays(builder, mat, rot, updown, tile.getBlockPos().getX(), tile.getBlockPos().getY(), tile.getBlockPos().getZ(), tile.getChunks());
-        }
-        rot = ClientUtils.getRenderTime() * active / 3F;
-
-        Matrix4 pearlMat = RenderUtils.getMatrix(mat, new Vector3(0.5, height + (updown + 0.3) * active, 0.5), new Rotation(rot, Vector3.Y_POS), size);
-        ccrs.brightness = 15728880;
-        ccrs.bind(pearlType, getter);
-        CCModelLibrary.icosahedron4.render(ccrs, pearlMat);
-        ccrs.reset();
+    public RenderState createRenderState() {
+        return new RenderState();
     }
 
     @Override
@@ -98,7 +61,65 @@ public class TileChunkLoaderRenderer implements BlockEntityRenderer<TileChunkLoa
         return AABB.INFINITE;
     }
 
-    public @Nullable Point2D.Double findIntersection(Line2D line1, Line2D line2) {
+    @Override
+    public void extractRenderState(TileChunkLoaderBase tile, RenderState state, float partialTick, Vec3 cameraPosition, @Nullable ModelFeatureRenderer.CrumblingOverlay breakProgress) {
+        BlockEntityRenderer.super.extractRenderState(tile, state, partialTick, cameraPosition, breakProgress);
+
+        if (tile instanceof TileChunkLoader ctile) {
+            state.speedDivisor = Math.pow(ctile.radius, 0.2);
+            state.pearlOrigin = 0.9;
+            state.pearlSize = 0.08;
+        } else if (tile instanceof TileSpotLoader) {
+            state.pearlOrigin = 0.5;
+            state.pearlSize = 0.05;
+        } else {
+            return;
+        }
+
+        var renderInfo = requireNonNull(tile.renderInfo);
+        state.activeAnim = (renderInfo.activationCounter) / 20D;
+        if (state.active && renderInfo.activationCounter < 20) {
+            state.activeAnim += partialTick / 20D;
+        } else if (!tile.active && renderInfo.activationCounter > 0) {
+            state.activeAnim -= partialTick / 20D;
+        }
+
+        state.showLasers = renderInfo.showLasers;
+        state.chunks = tile.getChunks();
+    }
+
+    @Override
+    public void submit(RenderState state, PoseStack pose, SubmitNodeCollector collector, CameraRenderState cameraRenderState) {
+        doSubmit(state, pose, collector);
+    }
+
+    public static void doSubmit(RenderState state, PoseStack pose, SubmitNodeCollector collector) {
+
+        double rot = (ClientUtils.getRenderTime() * 2) / state.speedDivisor;
+        double updown = ((float) Math.sin(((ClientUtils.getRenderTime() % 50) / 25F) * 3.141593)) * 0.2;
+
+        if (state.showLasers) {
+            collector.submitCustomGeometry(pose, laserType, (p, builder) -> {
+                drawRays(builder, new Matrix4(p), rot, updown, state.blockPos.getX(), state.blockPos.getY(), state.blockPos.getZ(), state.chunks);
+            });
+        }
+
+        collector.cc$submitCCRS(pose, pearlType, (mat, ccrs) -> {
+            ccrs.brightness = 15728880;
+            ccrs.overlay = state.overlayCoords;
+
+            CCModelLibrary.icosahedron4.render(
+                    ccrs,
+                    RenderUtils.getMatrix(mat,
+                            new Vector3(0.5, state.pearlOrigin + (updown + 0.3) * state.activeAnim, 0.5),
+                            new Rotation(ClientUtils.getRenderTime() * state.activeAnim / 3F, Vector3.Y_POS),
+                            state.pearlSize
+                    )
+            );
+        });
+    }
+
+    public static @Nullable Point2D.Double findIntersection(Line2D line1, Line2D line2) {
         // calculate differences
         double xD1 = line1.getX2() - line1.getX1();
         double yD1 = line1.getY2() - line1.getY1();
@@ -125,11 +146,14 @@ public class TileChunkLoaderRenderer implements BlockEntityRenderer<TileChunkLoa
         return null;
     }
 
-    public boolean ptOnLineInSegment(Point2D point, Line2D line) {
-        return point.getX() >= Math.min(line.getX1(), line.getX2()) && point.getX() <= Math.max(line.getX1(), line.getX2()) && point.getY() >= Math.min(line.getY1(), line.getY2()) && point.getY() <= Math.max(line.getY1(), line.getY2());
+    public static boolean ptOnLineInSegment(Point2D point, Line2D line) {
+        return point.getX() >= Math.min(line.getX1(), line.getX2())
+               && point.getX() <= Math.max(line.getX1(), line.getX2())
+               && point.getY() >= Math.min(line.getY1(), line.getY2())
+               && point.getY() <= Math.max(line.getY1(), line.getY2());
     }
 
-    public void drawRays(VertexConsumer builder, Matrix4 mat, double rot, double updown, int x, int y, int z, Collection<ChunkPos> chunkSet) {
+    public static void drawRays(VertexConsumer builder, Matrix4 mat, double rot, double updown, int x, int y, int z, Collection<ChunkPos> chunkSet) {
         int cx = (x >> 4) << 4;
         int cz = (z >> 4) << 4;
 
@@ -206,5 +230,19 @@ public class TileChunkLoaderRenderer implements BlockEntityRenderer<TileChunkLoa
 
     private static void renderCuboid(VertexConsumer builder, Matrix4 mat, Cuboid6 cuboid, float r, float g, float b, float a) {
         RenderUtils.bufferCuboidSolid(new TransformingVertexConsumer(builder, mat), cuboid, r, g, b, a);
+    }
+
+    public static class RenderState extends BlockEntityRenderState {
+
+        public int overlayCoords = OverlayTexture.NO_OVERLAY;
+
+        public double speedDivisor;
+        public double pearlOrigin;
+        public double pearlSize;
+
+        public boolean active;
+        public boolean showLasers;
+        public double activeAnim;
+        public Set<ChunkPos> chunks = Set.of();
     }
 }

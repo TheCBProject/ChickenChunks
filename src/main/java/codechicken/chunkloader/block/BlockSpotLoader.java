@@ -25,6 +25,10 @@ public class BlockSpotLoader extends BlockChunkLoaderBase {
 
     public static final VoxelShape SHAPE = Shapes.box(0.25F, 0, 0.25F, 0.75F, 0.4375F, 0.75F);
 
+    public BlockSpotLoader(Properties props) {
+        super(props);
+    }
+
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos p_153215_, BlockState p_153216_) {
@@ -39,7 +43,7 @@ public class BlockSpotLoader extends BlockChunkLoaderBase {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> actual) {
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             return createTickerHelper(actual, ChickenChunksModContent.SPOT_LOADER_TILE.get(), (a, b, c, d) -> d.tickClient());
         }
         return createTickerHelper(actual, ChickenChunksModContent.SPOT_LOADER_TILE.get(), (a, b, c, d) -> d.tickServer());

@@ -4,16 +4,16 @@ import codechicken.chunkloader.api.IChunkLoader;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.covers1624.quack.collection.FastStream;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Created by covers1624 on 11/5/20.
@@ -32,13 +32,13 @@ public class Organiser {
     public final List<IChunkLoader> pendingLoaders = new LinkedList<>();
 
     private final ChunkLoaderHandler handler;
-    public final ResourceLocation dim;
+    public final Identifier dim;
     public final UUID player;
 
     public boolean reviving;
     public boolean dormant = false;
 
-    public Organiser(ChunkLoaderHandler handler, ResourceLocation dim, UUID player) {
+    public Organiser(ChunkLoaderHandler handler, Identifier dim, UUID player) {
         this.handler = handler;
         this.dim = dim;
         this.player = player;
@@ -48,28 +48,18 @@ public class Organiser {
         return dormantLoaders.isEmpty() && forcedChunksByLoader.isEmpty();
     }
 
-    public CompoundTag write(CompoundTag tag) {
-        tag.put("dormantLoaders", dormantLoaders.stream()
-                .map(Organiser::writeBlockPos)
-                .collect(Collectors.toCollection(ListTag::new))
-        );
-        tag.put("loaders", forcedChunksByLoader.keySet().stream()
+    public void save(ValueOutput output) {
+        output.store("dormantLoaders", BlockPos.CODEC.listOf(), List.copyOf(dormantLoaders));
+        output.store("loaders", BlockPos.CODEC.listOf(), FastStream.of(forcedChunksByLoader.keySet())
                 .map(IChunkLoader::pos)
-                .map(Organiser::writeBlockPos)
-                .collect(Collectors.toCollection(ListTag::new))
+                .toList()
         );
-        return tag;
     }
 
-    public Organiser read(CompoundTag tag) {
-        tag.getList("dormantLoaders", 10).stream()
-                .map(e -> (CompoundTag) e)
-                .map(Organiser::readBlockPos)
-                .forEach(dormantLoaders::add);
-        tag.getList("loaders", 10).stream()
-                .map(e -> (CompoundTag) e)
-                .map(Organiser::readBlockPos)
-                .forEach(dormantLoaders::add);
+    public Organiser load(ValueInput input) {
+        input.read("dormantLoaders", BlockPos.CODEC.listOf()).ifPresent(dormantLoaders::addAll);
+        // Active loaders explicitly become dormant on load.
+        input.read("loaders", BlockPos.CODEC.listOf()).ifPresent(dormantLoaders::addAll);
         dormant = true;
         return this;
     }
@@ -208,17 +198,5 @@ public class Organiser {
             });
             return map.isEmpty();
         });
-    }
-
-    private static BlockPos readBlockPos(CompoundTag p_129240_) {
-        return new BlockPos(p_129240_.getInt("X"), p_129240_.getInt("Y"), p_129240_.getInt("Z"));
-    }
-
-    private static CompoundTag writeBlockPos(BlockPos p_129225_) {
-        CompoundTag compoundtag = new CompoundTag();
-        compoundtag.putInt("X", p_129225_.getX());
-        compoundtag.putInt("Y", p_129225_.getY());
-        compoundtag.putInt("Z", p_129225_.getZ());
-        return compoundtag;
     }
 }

@@ -2,15 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "E": {
-      "item": "minecraft:enchanting_table"
-    },
-    "G": {
-      "tag": "c:ingots/gold"
-    },
-    "P": {
-      "tag": "c:ender_pearls"
-    }
+    "E": "minecraft:enchanting_table",
+    "G": "#c:ingots/gold",
+    "P": "#c:ender_pearls"
   },
   "pattern": [
     " P ",

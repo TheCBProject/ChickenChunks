@@ -2,14 +2,18 @@ package codechicken.chunkloader.tile;
 
 import codechicken.chunkloader.api.IChunkLoader;
 import codechicken.chunkloader.api.IChunkLoaderHandler;
-import codechicken.chunkloader.network.ChunkLoaderSPH;
+import codechicken.chunkloader.network.ChickenChunksNetwork;
 import codechicken.lib.data.MCDataInput;
 import codechicken.lib.data.MCDataOutput;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
@@ -17,7 +21,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
@@ -43,27 +48,23 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
     }
 
     @Override
-    public void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        tag.putBoolean("powered", powered);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        output.putBoolean("powered", powered);
         if (owner != null) {
             assert ownerName != null;
 
-            tag.putUUID("owner", owner);
-            tag.putString("owner_name", Component.Serializer.toJson(ownerName, registries));
+            output.store("owner", UUIDUtil.CODEC, owner);
+            output.store("owner_name", ComponentSerialization.CODEC, ownerName);
         }
     }
 
     @Override
-    public void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        if (tag.contains("owner")) {
-            owner = tag.getUUID("owner");
-            ownerName = Component.Serializer.fromJson(tag.getString("owner_name"), registries);
-        }
-        if (tag.contains("powered")) {
-            powered = tag.getBoolean("powered");
-        }
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        powered = input.getBooleanOr("powered", false);
+        input.read("owner", UUIDUtil.CODEC).ifPresent(e -> owner = e);
+        input.read("owner_name", ComponentSerialization.CODEC).ifPresent(e -> ownerName = e);
         loaded = true;
     }
 
@@ -71,7 +72,7 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
     public void onLoad() {
         super.onLoad();
         assert level != null;
-        if (!level.isClientSide && loaded && !powered) {
+        if (!level.isClientSide() && loaded && !powered) {
             activate();
         }
         unloaded = false;
@@ -82,7 +83,7 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
         super.clearRemoved();
 
         assert level != null;
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             renderInfo = new RenderInfo();
         }
         unloaded = false;
@@ -114,7 +115,7 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
     public void setRemoved() {
         super.setRemoved();
         assert level != null;
-        if (!level.isClientSide && !unloaded) {
+        if (!level.isClientSide() && !unloaded) {
             deactivate();
         }
     }
@@ -155,7 +156,7 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
         loaded = true;
         active = false;
         IChunkLoaderHandler.instance().removeChunkLoader(this);
-        ChunkLoaderSPH.sendStateUpdate(this);
+        ChickenChunksNetwork.sendTileUpdate(this);
     }
 
     public void activate() {
@@ -165,7 +166,7 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
         loaded = true;
         active = true;
         IChunkLoaderHandler.instance().addChunkLoader(this);
-        ChunkLoaderSPH.sendStateUpdate(this);
+        ChickenChunksNetwork.sendTileUpdate(this);
     }
 
     @Override
@@ -198,26 +199,26 @@ public abstract class TileChunkLoaderBase extends BlockEntity implements IChunkL
     }
 
     @Override
-    public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider registries) {
-        super.handleUpdateTag(tag, registries);
-        active = tag.getBoolean("active");
+    public void handleUpdateTag(ValueInput input) {
+        super.handleUpdateTag(input);
+        active = input.getBooleanOr("active", false);
     }
 
-    public void writeToPacket(MCDataOutput packet) {
+    public void writeToPacket(RegistryFriendlyByteBuf packet) {
         packet.writeBoolean(active);
         packet.writeBoolean(owner != null);
         if (owner != null) {
             packet.writeUUID(owner);
             assert ownerName != null;
-            packet.writeTextComponent(ownerName);
+            packet.cc$writeWithRegistryCodec(ComponentSerialization.STREAM_CODEC, ownerName);
         }
     }
 
-    public void readFromPacket(MCDataInput packet) {
+    public void readFromPacket(RegistryFriendlyByteBuf packet) {
         active = packet.readBoolean();
         if (packet.readBoolean()) {
             owner = packet.readUUID();
-            ownerName = packet.readTextComponent();
+            ownerName = packet.cc$readWithRegistryCodec(ComponentSerialization.STREAM_CODEC);
         }
     }
 

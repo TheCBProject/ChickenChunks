@@ -1,14 +1,16 @@
 package codechicken.chunkloader.gui;
 
 import codechicken.chunkloader.api.ChunkLoaderShape;
-import codechicken.chunkloader.network.ChunkLoaderCPH;
+import codechicken.chunkloader.network.ChickenChunksNetwork;
 import codechicken.chunkloader.tile.TileChunkLoader;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.MouseButtonInfo;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 import static codechicken.chunkloader.ChickenChunks.MOD_ID;
@@ -36,10 +38,15 @@ public class GuiChunkLoader extends Screen {
 
     @Override
     public void init() {
-        addRenderableWidget(Button.builder(Component.literal("+"), e -> ChunkLoaderCPH.sendShapeChange(tile, tile.shape, tile.radius + 1)).bounds(width / 2 - 20, height / 2 - 45, 20, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("-"), e -> ChunkLoaderCPH.sendShapeChange(tile, tile.shape, tile.radius - 1)).bounds(width / 2 - 80, height / 2 - 45, 20, 20).build());
+        addRenderableWidget(Button.builder(Component.literal("+"), e -> ChickenChunksNetwork.sendSetShape(tile, tile.shape, tile.radius + 1)).bounds(width / 2 - 20, height / 2 - 45, 20, 20).build());
+        addRenderableWidget(Button.builder(Component.literal("-"), e -> ChickenChunksNetwork.sendSetShape(tile, tile.shape, tile.radius - 1)).bounds(width / 2 - 80, height / 2 - 45, 20, 20).build());
         addRenderableWidget(laserButton = Button.builder(Component.literal("-"), e -> tile.renderInfo.showLasers = !tile.renderInfo.showLasers).bounds(width / 2 + 7, height / 2 - 60, 75, 20).build());
-        addRenderableWidget(shapeButton = Button.builder(Component.literal("-"), e -> ChunkLoaderCPH.sendShapeChange(tile, lastButton == 1 ? tile.shape.prev() : tile.shape.next(), tile.radius)).bounds(width / 2 + 7, height / 2 - 37, 75, 20).build());
+        // TODO we can use a custom Button instance here which allows both left and right-clicks, the action can consume the 'was left/right'
+        //      We can then nuke the lastButton and flipping in the onClicked method.
+        addRenderableWidget(shapeButton = Button.builder(Component.literal("-"), e -> {
+            ChunkLoaderShape shape = lastButton == 1 ? tile.shape.prev() : tile.shape.next();
+            ChickenChunksNetwork.sendSetShape(tile, shape, tile.radius);
+        }).bounds(width / 2 + 7, height / 2 - 37, 75, 20).build());
         updateNames();
 
         super.init();
@@ -79,27 +86,25 @@ public class GuiChunkLoader extends Screen {
 
     @Override
     protected void renderMenuBackground(GuiGraphics graphics) {
-        ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/gui_small.png");
-        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-        RenderSystem.setShaderTexture(0, texture);
+        Identifier texture = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/gui_small.png");
         int posx = width / 2 - 88;
         int posy = height / 2 - 83;
-        graphics.blit(texture, posx, posy, 0, 0, 176, 166);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, texture, posx, posy, 0, 0, 176, 166, 256, 256);
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         super.render(graphics, mouseX, mouseY, partialTicks);//buttons
-        drawCentered(graphics, Component.translatable("chickenchunks.gui.name"), width / 2 - 40, height / 2 - 74, 0x303030);
+        drawCentered(graphics, Component.translatable("chickenchunks.gui.name"), width / 2 - 40, height / 2 - 74, 0xFF303030);
         if (tile.owner != null) {
             assert tile.ownerName != null;
-            drawCentered(graphics, tile.ownerName, width / 2 + 44, height / 2 - 72, 0x801080);
+            drawCentered(graphics, tile.ownerName, width / 2 + 44, height / 2 - 72, 0xFF801080);
         }
-        drawCentered(graphics, Component.translatable("chickenchunks.gui.radius"), width / 2 - 40, height / 2 - 57, 0x404040);
-        drawCentered(graphics, Component.literal("" + tile.radius), width / 2 - 40, height / 2 - 39, 0xFFFFFF);
+        drawCentered(graphics, Component.translatable("chickenchunks.gui.radius"), width / 2 - 40, height / 2 - 57, 0xFF404040);
+        drawCentered(graphics, Component.literal("" + tile.radius), width / 2 - 40, height / 2 - 39, 0xFFFFFFFF);
 
         int chunks = tile.countLoadedChunks();
-        drawCentered(graphics, Component.translatable(chunks == 1 ? "chickenchunks.gui.chunk" : "chickenchunks.gui.chunks", chunks), width / 2 - 39, height / 2 - 21, 0x108000);
+        drawCentered(graphics, Component.translatable(chunks == 1 ? "chickenchunks.gui.chunk" : "chickenchunks.gui.chunks", chunks), width / 2 - 39, height / 2 - 21, 0xFF108000);
 
         if (warningText != null && warningEnd != -1) {
             float fade = (warningEnd - System.currentTimeMillis()) / 1000F;
@@ -118,12 +123,15 @@ public class GuiChunkLoader extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double x, double y, int button) {
-        lastButton = button;
-        if (button == 1) {
-            button = 0;
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDouble) {
+        // Store the last _real_ button click.
+        lastButton = event.button();
+        if (event.button() == 1) {
+            // Flip right-click to a left-click.
+            // This ensures that left and right click activates the buttons.
+            event = new MouseButtonEvent(event.x(), event.y(), new MouseButtonInfo(0, event.modifiers()));
         }
-        return super.mouseClicked(x, y, button);
+        return super.mouseClicked(event, isDouble);
     }
 
     @Override

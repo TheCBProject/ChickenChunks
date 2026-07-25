@@ -1,13 +1,13 @@
 package codechicken.chunkloader.init;
 
-import codechicken.chunkloader.client.ChunkLoaderItemModel;
+import codechicken.chunkloader.client.ChunkLoaderPearlItemRenderer;
 import codechicken.chunkloader.client.TileChunkLoaderRenderer;
 import net.covers1624.quack.util.CrashLock;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
-import net.neoforged.neoforge.client.event.ModelEvent;
+import net.neoforged.neoforge.client.event.RegisterSpecialModelRendererEvent;
 
 import static codechicken.chunkloader.ChickenChunks.MOD_ID;
 
@@ -18,7 +18,7 @@ public class ClientInit {
     public static void init(IEventBus modBus) {
         LOCK.lock();
         modBus.addListener(ClientInit::onRegisterRenderers);
-        modBus.addListener(ClientInit::onRegisterGeometryLoaders);
+        modBus.addListener(ClientInit::onRegisterSpecialModelRenderers);
     }
 
     private static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
@@ -26,7 +26,7 @@ public class ClientInit {
         BlockEntityRenderers.register(ChickenChunksModContent.SPOT_LOADER_TILE.get(), TileChunkLoaderRenderer::new);
     }
 
-    private static void onRegisterGeometryLoaders(ModelEvent.RegisterGeometryLoaders event) {
-        event.register(ResourceLocation.fromNamespaceAndPath(MOD_ID, "chunk_loader"), new ChunkLoaderItemModel());
+    private static void onRegisterSpecialModelRenderers(RegisterSpecialModelRendererEvent event) {
+        event.register(Identifier.fromNamespaceAndPath(MOD_ID, "pearl"), ChunkLoaderPearlItemRenderer.Unbaked.MAP_CODEC);
     }
 }

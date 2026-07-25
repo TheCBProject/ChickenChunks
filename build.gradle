@@ -4,7 +4,7 @@ plugins {
     id 'java'
     id 'maven-publish'
     id 'signing'
-    id 'net.neoforged.gradle.userdev' version '7.0.165'
+    id 'net.neoforged.moddev' version '2.0.141'
 }
 
 java {
@@ -27,31 +27,45 @@ version = "${mc_version}-${mod_version}"
 println "Starting build of ${base.archivesName.get()}, Version: ${mod_version}"
 println "Using NeoForge: ${forge_version}, for Minecraft: ${mc_version}"
 
-minecraft {
-    accessTransformers.file file("src/main/resources/META-INF/accesstransformer.cfg")
-}
+neoForge {
+    enable {
+        version = forge_version
+        enabledSourceSets += sourceSets.test
+    }
 
-runs {
-    client {
-        workingDirectory file('run')
+    accessTransformers {
+        publish file("src/main/resources/META-INF/accesstransformer.cfg")
     }
-    server {
-        workingDirectory file('run')
+
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+        }
+        data {
+            data()
+            programArguments.addAll '--mod', 'chickenchunks', '--all', '--output', file("src/main/generated").absolutePath, '--existing', file("src/main/resources").absolutePath
+        }
     }
-    data {
-        workingDirectory file('run')
-        arguments.addAll '--mod', 'chickenchunks', '--all', '--output', file("src/main/generated").absolutePath, '--existing', file("src/main/resources").absolutePath
+
+    mods {
+        chickenchunks {
+            sourceSet sourceSets.main
+        }
     }
 }
 
 repositories {
     mavenLocal()
-    maven { url = "https://chickenbones.net/maven" }
+    maven { url = "https://maven.covers1624.net/" }
 }
 
 dependencies {
-    implementation "net.neoforged:neoforge:${forge_version}"
     implementation "io.codechicken:CodeChickenLib:${mc_version}-${ccl_version}"
+    accessTransformers "io.codechicken:CodeChickenLib:${mc_version}-${ccl_version}"
+    interfaceInjectionData "io.codechicken:CodeChickenLib:${mc_version}-${ccl_version}"
 }
 
 processResources {

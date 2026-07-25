@@ -71,14 +71,14 @@ public class ChickenChunksConfig {
 
     public static boolean doesBypassRestrictions(MinecraftServer server, UUID playerUUID) {
         ServerPlayer player = server.getPlayerList().getPlayer(playerUUID);
-        if (player != null && server.getPlayerList().getOps().get(player.getGameProfile()) != null) {
+        if (player != null && server.getPlayerList().getOps().get(player.nameAndId()) != null) {
             return opsBypassRestrictions;
         }
         return false;
     }
 
     public static boolean doesBypassLoaderAccess(ServerPlayer player) {
-        if (requireNonNull(player.getServer()).getPlayerList().getOps().get(player.getGameProfile()) != null) {
+        if (requireNonNull(player.level().getServer()).getPlayerList().getOps().get(player.nameAndId()) != null) {
             return opsAccessAllLoaders;
         }
         return false;

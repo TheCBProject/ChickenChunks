@@ -10,6 +10,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
@@ -24,27 +25,36 @@ import static codechicken.chunkloader.ChickenChunks.MOD_ID;
 public class ChickenChunksModContent {
 
     private static final CrashLock LOCK = new CrashLock("Already Initialized");
-    private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(Registries.BLOCK, MOD_ID);
-    private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(Registries.ITEM, MOD_ID);
+    private static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MOD_ID);
+    private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MOD_ID);
     private static final DeferredRegister<BlockEntityType<?>> TILES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MOD_ID);
 
     //region Blocks
-    public static final DeferredHolder<Block, BlockChunkLoader> CHUNK_LOADER_BLOCK = BLOCKS.register("chunk_loader", BlockChunkLoader::new);
-    public static final DeferredHolder<Block, BlockSpotLoader> SPOT_LOADER_BLOCK = BLOCKS.register("spot_loader", BlockSpotLoader::new);
+    public static final DeferredHolder<Block, BlockChunkLoader> CHUNK_LOADER_BLOCK = BLOCKS.registerBlock(
+            "chunk_loader",
+            BlockChunkLoader::new,
+            e -> e.strength(20F, 100F)
+                    .sound(SoundType.STONE)
+    );
+    public static final DeferredHolder<Block, BlockSpotLoader> SPOT_LOADER_BLOCK = BLOCKS.registerBlock(
+            "spot_loader",
+            BlockSpotLoader::new,
+            e -> e.strength(20F, 100F)
+                    .sound(SoundType.STONE)
+    );
     //endregion
 
     //region Items
-    private static final Item.Properties itemProps = new Item.Properties();
-    public static final DeferredHolder<Item, BlockItem> CHUNK_LOADER_ITEM = ITEMS.register("chunk_loader", () -> new BlockItem(CHUNK_LOADER_BLOCK.get(), itemProps));
-    public static final DeferredHolder<Item, BlockItem> SPOT_LOADER_ITEM = ITEMS.register("spot_loader", () -> new BlockItem(SPOT_LOADER_BLOCK.get(), itemProps));
+    public static final DeferredHolder<Item, BlockItem> CHUNK_LOADER_ITEM = ITEMS.registerItem("chunk_loader", e -> new BlockItem(CHUNK_LOADER_BLOCK.get(), e));
+    public static final DeferredHolder<Item, BlockItem> SPOT_LOADER_ITEM = ITEMS.registerItem("spot_loader", e -> new BlockItem(SPOT_LOADER_BLOCK.get(), e));
     //endregion
 
     //region TileTypes
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileChunkLoader>> CHUNK_LOADER_TILE = TILES.register("chunk_loader", () ->
-            BlockEntityType.Builder.of(TileChunkLoader::new, CHUNK_LOADER_BLOCK.get()).build(null)
+            new BlockEntityType<>(TileChunkLoader::new, CHUNK_LOADER_BLOCK.get())
     );
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileSpotLoader>> SPOT_LOADER_TILE = TILES.register("spot_loader", () ->
-            BlockEntityType.Builder.of(TileSpotLoader::new, SPOT_LOADER_BLOCK.get()).build(null)
+            new BlockEntityType<>(TileSpotLoader::new, SPOT_LOADER_BLOCK.get())
     );
     //endregion
 

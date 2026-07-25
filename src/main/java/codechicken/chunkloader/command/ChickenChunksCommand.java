@@ -7,6 +7,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.GameProfileArgument;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.common.NeoForge;
@@ -46,7 +47,7 @@ public class ChickenChunksCommand {
     private static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         dispatcher.register(literal("chickenchunks")
-                .requires(e -> e.hasPermission(4))
+                .requires(Commands.hasPermission(Commands.LEVEL_ADMINS))
                 .then(literal("restrict")
                         .then(literal("player")
                                 .then(argument("players", GameProfileArgument.gameProfile())
@@ -77,24 +78,24 @@ public class ChickenChunksCommand {
 
     private static int resetRestrictions(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack src = ctx.getSource();
-        Collection<GameProfile> profiles = GameProfileArgument.getGameProfiles(ctx, "players");
-        for (GameProfile profile : profiles) {
-            ChickenChunksConfig.resetRestrictions(profile.getId());
-            src.sendSuccess(() -> Component.translatable(RESTRICTIONS_RESET_FOR, profile.getName()), true);
+        var namesAndIds = GameProfileArgument.getGameProfiles(ctx, "players");
+        for (var nameAndId : namesAndIds) {
+            ChickenChunksConfig.resetRestrictions(nameAndId.id());
+            src.sendSuccess(() -> Component.translatable(RESTRICTIONS_RESET_FOR, nameAndId.name()), true);
         }
-        return profiles.size();
+        return namesAndIds.size();
     }
 
     private static int toggleOfflineFor(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack src = ctx.getSource();
-        Collection<GameProfile> profiles = GameProfileArgument.getGameProfiles(ctx, "players");
-        for (GameProfile profile : profiles) {
-            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
+        var namesAndIds = GameProfileArgument.getGameProfiles(ctx, "players");
+        for (var nameAndId : namesAndIds) {
+            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(nameAndId.id());
             boolean state = !restrictions.canLoadOffline();
             restrictions.setAllowOffline(state);
-            src.sendSuccess(() -> Component.translatable(state ? OFFLINE_ENABLE_FOR : OFFLINE_DISABLE_FOR, profile.getName()), true);
+            src.sendSuccess(() -> Component.translatable(state ? OFFLINE_ENABLE_FOR : OFFLINE_DISABLE_FOR, nameAndId.name()), true);
         }
-        return profiles.size();
+        return namesAndIds.size();
     }
 
     private static int enableOfflineFor(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -107,93 +108,93 @@ public class ChickenChunksCommand {
 
     private static int setOfflineFor(CommandContext<CommandSourceStack> ctx, boolean state) throws CommandSyntaxException {
         CommandSourceStack src = ctx.getSource();
-        Collection<GameProfile> profiles = GameProfileArgument.getGameProfiles(ctx, "players");
-        for (GameProfile profile : profiles) {
-            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
+        var namesAndIds = GameProfileArgument.getGameProfiles(ctx, "players");
+        for (var nameAndId : namesAndIds) {
+            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(nameAndId.id());
             restrictions.setAllowOffline(state);
-            src.sendSuccess(() -> Component.translatable(state ? OFFLINE_ENABLE_FOR : OFFLINE_DISABLE_FOR, profile.getName()), true);
+            src.sendSuccess(() -> Component.translatable(state ? OFFLINE_ENABLE_FOR : OFFLINE_DISABLE_FOR, nameAndId.name()), true);
         }
-        return profiles.size();
+        return namesAndIds.size();
     }
 
     private static int resetOfflineFor(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack src = ctx.getSource();
-        Collection<GameProfile> profiles = GameProfileArgument.getGameProfiles(ctx, "players");
-        for (GameProfile profile : profiles) {
-            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
+        var namesAndIds = GameProfileArgument.getGameProfiles(ctx, "players");
+        for (var nameAndId : namesAndIds) {
+            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(nameAndId.id());
             restrictions.remAllowOffline();
-            src.sendSuccess(() -> Component.translatable(OFFLINE_RESET_FOR, profile.getName()), true);
+            src.sendSuccess(() -> Component.translatable(OFFLINE_RESET_FOR, nameAndId.name()), true);
         }
-        return profiles.size();
+        return namesAndIds.size();
     }
 
     public static int setTimeoutFor(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack src = ctx.getSource();
-        Collection<GameProfile> profiles = GameProfileArgument.getGameProfiles(ctx, "players");
+        var namesAndIds = GameProfileArgument.getGameProfiles(ctx, "players");
         int timeout = IntegerArgumentType.getInteger(ctx, "timeout");
-        for (GameProfile profile : profiles) {
-            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
+        for (var nameAndId : namesAndIds) {
+            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(nameAndId.id());
             restrictions.setOfflineTimeout(timeout);
-            src.sendSuccess(() -> Component.translatable(TIMEOUT_SET_FOR, profile.getName(), timeout), true);
+            src.sendSuccess(() -> Component.translatable(TIMEOUT_SET_FOR, nameAndId.name(), timeout), true);
         }
-        return profiles.size();
+        return namesAndIds.size();
     }
 
     private static int resetTimeoutFor(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack src = ctx.getSource();
-        Collection<GameProfile> profiles = GameProfileArgument.getGameProfiles(ctx, "players");
-        for (GameProfile profile : profiles) {
-            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
+        var namesAndIds = GameProfileArgument.getGameProfiles(ctx, "players");
+        for (var nameAndId : namesAndIds) {
+            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(nameAndId.id());
             restrictions.remOfflineTimeout();
-            src.sendSuccess(() -> Component.translatable(TIMEOUT_RESET_FOR, profile.getName()), true);
+            src.sendSuccess(() -> Component.translatable(TIMEOUT_RESET_FOR, nameAndId.name()), true);
         }
-        return profiles.size();
+        return namesAndIds.size();
     }
 
     public static int setAllowedChunksFor(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack src = ctx.getSource();
-        Collection<GameProfile> profiles = GameProfileArgument.getGameProfiles(ctx, "players");
+        var namesAndIds = GameProfileArgument.getGameProfiles(ctx, "players");
         int chunks = IntegerArgumentType.getInteger(ctx, "allowed_chunks");
-        for (GameProfile profile : profiles) {
-            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
+        for (var nameAndId : namesAndIds) {
+            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(nameAndId.id());
             restrictions.setTotalAllowedChunks(chunks);
-            src.sendSuccess(() -> Component.translatable(ALLOWED_CHUNKS_SET_FOR, profile.getName(), chunks), true);
+            src.sendSuccess(() -> Component.translatable(ALLOWED_CHUNKS_SET_FOR, nameAndId.name(), chunks), true);
         }
-        return profiles.size();
+        return namesAndIds.size();
     }
 
     private static int resetAllowedChunksFor(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack src = ctx.getSource();
-        Collection<GameProfile> profiles = GameProfileArgument.getGameProfiles(ctx, "players");
-        for (GameProfile profile : profiles) {
-            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
+        var namesAndIds = GameProfileArgument.getGameProfiles(ctx, "players");
+        for (var nameAndId : namesAndIds) {
+            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(nameAndId.id());
             restrictions.remTotalAllowedChunks();
-            src.sendSuccess(() -> Component.translatable(ALLOWED_CHUNKS_RESET_FOR, profile.getName()), true);
+            src.sendSuccess(() -> Component.translatable(ALLOWED_CHUNKS_RESET_FOR, nameAndId.name()), true);
         }
-        return profiles.size();
+        return namesAndIds.size();
     }
 
     public static int setChunksPerLoaderFor(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack src = ctx.getSource();
-        Collection<GameProfile> profiles = GameProfileArgument.getGameProfiles(ctx, "players");
+        var namesAndIds = GameProfileArgument.getGameProfiles(ctx, "players");
         int chunks = IntegerArgumentType.getInteger(ctx, "chunks_per_loader");
-        for (GameProfile profile : profiles) {
-            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
+        for (var nameAndId : namesAndIds) {
+            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(nameAndId.id());
             restrictions.setChunksPerLoader(chunks);
-            src.sendSuccess(() -> Component.translatable(CHUNKS_PER_LOADER_SET_FOR, profile.getName(), chunks), true);
+            src.sendSuccess(() -> Component.translatable(CHUNKS_PER_LOADER_SET_FOR, nameAndId.name(), chunks), true);
         }
-        return profiles.size();
+        return namesAndIds.size();
     }
 
     private static int resetChunksPerLoaderFor(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack src = ctx.getSource();
-        Collection<GameProfile> profiles = GameProfileArgument.getGameProfiles(ctx, "players");
-        for (GameProfile profile : profiles) {
-            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(profile.getId());
+        var namesAndIds = GameProfileArgument.getGameProfiles(ctx, "players");
+        for (var nameAndId : namesAndIds) {
+            ChickenChunksConfig.Restrictions restrictions = ChickenChunksConfig.getOrCreateRestrictions(nameAndId.id());
             restrictions.remChunksPerLoader();
-            src.sendSuccess(() -> Component.translatable(CHUNKS_PER_LOADER_RESET_FOR, profile.getName()), true);
+            src.sendSuccess(() -> Component.translatable(CHUNKS_PER_LOADER_RESET_FOR, nameAndId.name()), true);
         }
-        return profiles.size();
+        return namesAndIds.size();
     }
 
     private static ChickenChunksConfig.Restrictions getPlayerRestrictions(UUID player) {
