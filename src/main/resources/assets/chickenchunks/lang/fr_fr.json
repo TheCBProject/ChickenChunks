@@ -1,6 +1,6 @@
 {
-  "block.chickenchunks.chunk_loader": "Chargeur de Chunk",
-  "block.chickenchunks.spot_loader": "Chargeur de Lieu",
+  "item.chickenchunks.chunk_loader": "Chargeur de Chunk",
+  "item.chickenchunks.spot_loader": "Chargeur de Lieu",
   "chickenchunks.gui.name": "Chargeur de Chunk",
   "chickenchunks.gui.showlasers": "Montrer les rayons",
   "chickenchunks.gui.hidelasers": "Cacher les rayons",

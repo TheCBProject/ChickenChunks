@@ -1,6 +1,6 @@
 {
-  "block.chickenchunks.chunk_loader": "区块载入器",
-  "block.chickenchunks.spot_loader": "节点载入器",
+  "item.chickenchunks.chunk_loader": "区块载入器",
+  "item.chickenchunks.spot_loader": "节点载入器",
   "chickenchunks.gui.name": "区块载入器",
   "chickenchunks.gui.showlasers": "显示镭射",
   "chickenchunks.gui.hidelasers": "隐藏镭射",

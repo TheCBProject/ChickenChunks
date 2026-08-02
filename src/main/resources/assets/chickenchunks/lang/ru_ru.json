@@ -1,6 +1,6 @@
 {
-  "block.chickenchunks.chunk_loader": "Загрузчик чанков",
-  "block.chickenchunks.spot_loader": "Загрузчик чанка",
+  "item.chickenchunks.chunk_loader": "Загрузчик чанков",
+  "item.chickenchunks.spot_loader": "Загрузчик чанка",
   "chickenchunks.gui.name": "Загрузчик чанков",
   "chickenchunks.gui.showlasers": "Показать лазеры",
   "chickenchunks.gui.hidelasers": "Скрыть Лазеры",

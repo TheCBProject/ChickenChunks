@@ -1,6 +1,6 @@
 {
-  "block.chickenchunks.chunk_loader": "チャンクローダー",
-  "block.chickenchunks.spot_loader": "スポットローダー",
+  "item.chickenchunks.chunk_loader": "チャンクローダー",
+  "item.chickenchunks.spot_loader": "スポットローダー",
   "chickenchunks.gui.name": "チャンクローダー",
   "chickenchunks.gui.showlasers": "レーザー:表示",
   "chickenchunks.gui.hidelasers": "レーザー:非表示",

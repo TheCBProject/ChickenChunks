@@ -1,6 +1,6 @@
 {
-  "block.chickenchunks.chunk_loader": "Načítač chunků",
-  "block.chickenchunks.spot_loader": "Načítač míst",
+  "item.chickenchunks.chunk_loader": "Načítač chunků",
+  "item.chickenchunks.spot_loader": "Načítač míst",
   "chickenchunks.gui.name": "Načítač chunků",
   "chickenchunks.gui.showlasers": "Zobrazit lasery",
   "chickenchunks.gui.hidelasers": "Schovat lasery",

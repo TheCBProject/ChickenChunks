@@ -1,6 +1,6 @@
 {
-  "block.chickenchunks.chunk_loader": "Chunk Yükleyici",
-  "block.chickenchunks.spot_loader": "Nokta Yükleyici",
+  "item.chickenchunks.chunk_loader": "Chunk Yükleyici",
+  "item.chickenchunks.spot_loader": "Nokta Yükleyici",
   "chickenchunks.gui.name": "Chunk Yükleyici",
   "chickenchunks.gui.showlasers": "Lazerleri Aç",
   "chickenchunks.gui.hidelasers": "Lazerleri Kapat",

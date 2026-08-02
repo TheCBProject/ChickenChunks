@@ -1,6 +1,6 @@
 {
-  "block.chickenchunks.chunk_loader": "Carica-chunk",
-  "block.chickenchunks.spot_loader": "Carica-punto",
+  "item.chickenchunks.chunk_loader": "Carica-chunk",
+  "item.chickenchunks.spot_loader": "Carica-punto",
   "chickenchunks.gui.name": "Carica-chunk",
   "chickenchunks.gui.showlasers": "mostra lasers",
   "chickenchunks.gui.hidelasers": "Nascondi lasers",

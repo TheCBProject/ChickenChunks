@@ -1,6 +1,6 @@
 {
-  "block.chickenchunks.chunk_loader": "Carregador de Chunk",
-  "block.chickenchunks.spot_loader": "Carregador Local",
+  "item.chickenchunks.chunk_loader": "Carregador de Chunk",
+  "item.chickenchunks.spot_loader": "Carregador Local",
   "chickenchunks.gui.name": "Carregador de Chunk",
   "chickenchunks.gui.showlasers": "Mostrar Lasers",
   "chickenchunks.gui.hidelasers": "Esconder Lasers",

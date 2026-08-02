@@ -1,6 +1,6 @@
 {
-  "block.chickenchunks.chunk_loader": "Chunkloader",
-  "block.chickenchunks.spot_loader": "Spotloader",
+  "item.chickenchunks.chunk_loader": "Chunkloader",
+  "item.chickenchunks.spot_loader": "Spotloader",
   "chickenchunks.gui.name": "Chunkloader",
   "chickenchunks.gui.showlasers": "Zeige Laser",
   "chickenchunks.gui.hidelasers": "Verstecke Laser",
