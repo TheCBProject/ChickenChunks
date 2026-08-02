@@ -33,7 +33,8 @@ public class TileChunkLoader extends TileChunkLoaderBase {
     public boolean setShapeAndRadius(@Nullable ServerPlayer player, ChunkLoaderShape newShape, int newRadius) {
         if (owner == null || newRadius < 0 || newRadius > 255) return false;
         // Is the player authenticated to make this change.
-        if (player != null && (!owner.equals(player.getUUID()) || !ChickenChunksConfig.doesBypassLoaderAccess(player))) return false;
+        // Must be a player making the change, if the owner is different and the player doesn't have bypass access, block it.
+        if (player != null && !owner.equals(player.getUUID()) && !ChickenChunksConfig.doesBypassLoaderAccess(player)) return false;
 
         assert level != null;
 
