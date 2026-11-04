@@ -2,6 +2,7 @@ package codechicken.chunkloader.init;
 
 import codechicken.chunkloader.client.ChunkLoaderPearlItemRenderer;
 import codechicken.chunkloader.client.TileChunkLoaderRenderer;
+import codechicken.chunkloader.network.ChickenChunksNetworkClient;
 import net.covers1624.quack.util.CrashLock;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.resources.Identifier;
@@ -17,6 +18,8 @@ public class ClientInit {
 
     public static void init(IEventBus modBus) {
         LOCK.lock();
+        ChickenChunksNetworkClient.initClient();
+
         modBus.addListener(ClientInit::onRegisterRenderers);
         modBus.addListener(ClientInit::onRegisterSpecialModelRenderers);
     }

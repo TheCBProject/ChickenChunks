@@ -22,9 +22,6 @@ public class ChickenChunks {
 
         ChickenChunksModContent.init(modBus);
 
-        if (FMLEnvironment.getDist().isClient()) {
-            ClientInit.init(modBus);
-        }
 
         ChickenChunksCommand.init();
         ChickenChunksNetwork.init(modBus, container);
@@ -32,5 +29,9 @@ public class ChickenChunks {
         ChunkLoaderHandler.init(modBus);
 
         DataGenerators.init(modBus);
+
+        if (FMLEnvironment.getDist().isClient()) {
+            ClientInit.init(modBus);
+        }
     }
 }
